@@ -1,0 +1,1650 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Work Orders — Production Intelligence</title>
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    /* ── Reset ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    /* ── Design tokens ── */
+    :root {
+      --nav-bg:        #0f1117;
+      --page-bg:       #f8f9fa;
+      --surface:       #ffffff;
+      --border:        #e5e7eb;
+      --text-primary:  #111827;
+      --text-secondary:#6b7280;
+      --text-tertiary: #9ca3af;
+
+      --green-text:    #16a34a;
+      --green-bg:      #dcfce7;
+      --red-text:      #dc2626;
+      --red-bg:        #fee2e2;
+      --amber-text:    #d97706;
+      --amber-bg:      #fef3c7;
+      --amber-border:  #fcd34d;
+      --blue-text:     #185FA5;
+      --blue-bg:       #eff6ff;
+      --grey-text:     #6b7280;
+      --grey-bg:       #f3f4f6;
+
+      --radius-sm:  4px;
+      --radius-md:  6px;
+      --radius-lg:  8px;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--page-bg);
+      color: var(--text-primary);
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    /* ── Nav ── */
+    .nav {
+      background: var(--nav-bg);
+      display: flex;
+      align-items: center;
+      padding: 0 24px;
+      height: 48px;
+      gap: 2px;
+      position: sticky;
+      top: 0;
+      z-index: 200;
+      border-bottom: 1px solid rgba(255,255,255,.06);
+    }
+    .nav-brand {
+      font-size: 15px;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: -.1px;
+      margin-right: 28px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .nav-brand-green { color: #16a34a; }
+    .nav-links { display: flex; align-items: center; gap: 2px; flex: 1; }
+    .nav-link {
+      color: rgba(255,255,255,.6);
+      text-decoration: none;
+      padding: 5px 12px;
+      border-radius: var(--radius-md);
+      font-size: 14px;
+      font-weight: 500;
+      transition: color .12s, background .12s;
+      white-space: nowrap;
+    }
+    .nav-link:hover { color: rgba(255,255,255,.9); background: rgba(255,255,255,.06); }
+    .nav-link.active {
+      background: #16a34a;
+      color: #fff;
+      font-weight: 600;
+    }
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-left: auto;
+    }
+    .nav-icon-btn {
+      background: transparent;
+      border: none;
+      color: rgba(255,255,255,.5);
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: color .12s, background .12s;
+    }
+    .nav-icon-btn:hover { color: rgba(255,255,255,.9); background: rgba(255,255,255,.07); }
+    .nav-avatar {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      margin-left: 6px;
+      padding: 4px 8px;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: background .12s;
+    }
+    .nav-avatar:hover { background: rgba(255,255,255,.07); }
+    .nav-avatar-circle {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: #16a34a;
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .nav-avatar-name { color: rgba(255,255,255,.8); font-size: 13px; font-weight: 500; }
+
+    /* ── Page layout ── */
+    .page { max-width: 1680px; margin: 0 auto; padding: 24px 28px; }
+
+    /* ── Page header ── */
+    .page-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      gap: 16px;
+    }
+    .page-title { font-size: 22px; font-weight: 600; color: var(--text-primary); letter-spacing: -.2px; }
+    .page-subtitle { font-size: 13px; color: var(--text-secondary); margin-top: 3px; }
+    .page-header-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; padding-top: 2px; }
+
+    /* ── Buttons ── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 14px;
+      border-radius: var(--radius-md);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background .12s, box-shadow .12s;
+      border: none;
+      line-height: 1;
+    }
+    .btn-primary {
+      background: var(--text-primary);
+      color: #fff;
+    }
+    .btn-primary:hover { background: #1f2937; }
+    .btn-secondary {
+      background: var(--surface);
+      color: #374151;
+      border: 1px solid var(--border);
+    }
+    .btn-secondary:hover { background: #f9fafb; }
+    .btn-success {
+      background: #16a34a;
+      color: #fff;
+      font-weight: 600;
+      animation: popIn .18s ease;
+    }
+    .btn-success:hover { background: #15803d; }
+    .btn-ghost {
+      background: transparent;
+      color: var(--text-secondary);
+      border: 1px solid var(--border);
+    }
+    .btn-ghost:hover { background: #f9fafb; color: var(--text-primary); }
+    .btn-sm { padding: 5px 10px; font-size: 12px; }
+
+    @keyframes popIn {
+      from { opacity: 0; transform: scale(.92); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+
+    /* Unsaved badge */
+    .unsaved-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: var(--amber-bg);
+      color: var(--amber-text);
+      border: 1px solid var(--amber-border);
+      border-radius: 99px;
+      padding: 3px 10px;
+      font-size: 11px;
+      font-weight: 600;
+      animation: popIn .18s ease;
+    }
+    .unsaved-dot {
+      width: 5px; height: 5px; border-radius: 50%;
+      background: var(--amber-text); flex-shrink: 0;
+    }
+
+    /* ── Morning Setup Banner ── */
+    .setup-banner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      background: var(--amber-bg);
+      border: 1px solid var(--amber-border);
+      border-radius: var(--radius-lg);
+      padding: 12px 16px;
+      margin-bottom: 14px;
+    }
+    .setup-banner-left {
+      display: flex; align-items: center; gap: 8px; min-width: 0;
+    }
+    .setup-banner-lightning { font-size: 15px; flex-shrink: 0; }
+    .setup-banner-text {
+      font-size: 13px; color: #92400e; white-space: nowrap;
+    }
+    .setup-banner-text strong { font-weight: 700; }
+    .setup-banner-right {
+      display: flex; align-items: center; gap: 12px; flex-shrink: 0;
+    }
+    .setup-progress-bar {
+      width: 120px; height: 6px; background: #fde68a;
+      border-radius: 99px; overflow: hidden;
+    }
+    .setup-progress-fill {
+      height: 100%; background: #16a34a;
+      border-radius: 99px; transition: width .4s ease;
+    }
+    .setup-dismiss {
+      background: none; border: none; cursor: pointer;
+      font-size: 12px; color: #b45309; font-family: inherit;
+      padding: 0; text-decoration: underline; text-underline-offset: 2px;
+      opacity: .75; transition: opacity .12s;
+    }
+    .setup-dismiss:hover { opacity: 1; }
+
+    /* ── Filter bar ── */
+    .filter-bar {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+    .filter-label {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      margin-right: 4px;
+    }
+    .filter-sep { width: 1px; height: 18px; background: var(--border); margin: 0 4px; }
+    .filter-select {
+      appearance: none;
+      -webkit-appearance: none;
+      background: var(--surface)
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%236b7280'/%3E%3C/svg%3E")
+        no-repeat right 9px center;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 5px 28px 5px 10px;
+      font-size: 13px;
+      color: var(--text-primary);
+      cursor: pointer;
+      transition: border-color .12s;
+      font-family: inherit;
+    }
+    .filter-select:focus { outline: none; border-color: var(--blue-text); }
+    .filter-date {
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 5px 10px;
+      font-size: 13px;
+      color: var(--text-primary);
+      font-family: inherit;
+      cursor: pointer;
+    }
+    .filter-date:focus { outline: none; border-color: var(--blue-text); }
+
+    /* ── Status tabs ── */
+    .tabs {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 14px;
+    }
+    .tab {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 12px;
+      border-radius: 99px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: background .1s, color .1s, border-color .1s;
+      white-space: nowrap;
+    }
+    .tab:hover { background: #f9fafb; color: var(--text-primary); }
+    .tab.active { background: var(--text-primary); color: #fff; border-color: var(--text-primary); }
+    .tab-count {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+    .tab.active .tab-count { color: rgba(255,255,255,.65); }
+
+    /* ── Table container ── */
+    .table-wrap {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      /* Do NOT use overflow:hidden — it clips the dropdown menu.
+         Instead clip only the decorative corners with this approach: */
+      overflow: visible;
+      /* Mask the table corners without clipping positioned children */
+      isolation: isolate;
+    }
+    /* Clip the inner table to the rounded corners without affecting dropdowns */
+    .table-wrap > .hint-bar:first-child,
+    .table-wrap table {
+      border-radius: 0;
+    }
+    .table-wrap > .hint-bar:first-child {
+      border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+      overflow: hidden;
+    }
+    .table-wrap > table:first-child thead tr:first-child th:first-child { border-top-left-radius: var(--radius-lg); }
+    .table-wrap > table:first-child thead tr:first-child th:last-child  { border-top-right-radius: var(--radius-lg); }
+    .table-wrap > table:last-child  tbody tr:last-child  td:first-child { border-bottom-left-radius: var(--radius-lg); }
+    .table-wrap > table:last-child  tbody tr:last-child  td:last-child  { border-bottom-right-radius: var(--radius-lg); }
+
+    /* ── Keyboard hint bar ── */
+    .hint-bar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      padding: 7px 16px;
+      background: #f9fafb;
+      border-bottom: 1px solid var(--border);
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+    .hint-bar-setup {
+      background: #fffbeb;
+      border-bottom-color: #fde68a;
+      color: #92400e;
+    }
+    .hint-bar-sep { color: var(--border); }
+    kbd {
+      display: inline-block;
+      background: var(--surface);
+      border: 1px solid #d1d5db;
+      border-radius: var(--radius-sm);
+      padding: 1px 6px;
+      font-size: 10px;
+      font-weight: 600;
+      font-family: inherit;
+      color: var(--text-primary);
+      line-height: 1.6;
+    }
+
+    /* ── Table ── */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+    }
+    col.c-ready   { width: 26px; }
+    col.c-dirty   { width: 16px; }
+    col.c-woid    { width: 160px; }
+    col.c-line    { width: 64px; }
+    col.c-customer{ width: 140px; }
+    col.c-sku     { width: 166px; }
+    col.c-status  { width: 96px; }
+    col.c-sched   { width: 92px; }
+    col.c-qty     { width: 114px; }
+    col.c-tpm     { width: 72px; }
+    col.c-pw      { width: 68px; }
+    col.c-aw      { width: 68px; }
+    col.c-ppmh    { width: 68px; }
+    col.c-ppm     { width: 58px; }
+    col.c-prog    { width: 96px; }
+    col.c-actions { width: 92px; }
+
+    thead th {
+      background: #f9fafb;
+      padding: 10px 12px 10px;
+      text-align: left;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    thead th.th-center { text-align: center; }
+    thead th.th-indicator { padding: 0; width: 26px; }
+    thead th.sorted { color: var(--text-primary); }
+    .sort-arrow { font-size: 8px; margin-left: 2px; color: var(--blue-text); }
+
+    tbody tr {
+      border-bottom: 1px solid var(--border);
+      transition: background .08s;
+    }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: #fafafa; }
+    tbody tr.row-placeholder { background: #fafafa; }
+    tbody tr.row-placeholder:hover { background: #f3f4f6; }
+    tbody tr.row-dirty { background: #f0fdf4; }
+    tbody tr.row-dirty:hover { background: #ecfdf5; }
+    tbody tr.row-cancelled { opacity: .45; }
+
+    td {
+      padding: 0 12px;
+      height: 52px;
+      vertical-align: middle;
+      font-size: 13px;
+      color: var(--text-primary);
+      overflow: hidden;
+    }
+    td.td-indicator { padding: 0; text-align: center; }
+
+    /* ── Ready indicator ── */
+    .ready-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      display: inline-block;
+    }
+    .ready-green  { background: #16a34a; }
+    .ready-amber  { background: #d97706; }
+    .ready-red    { background: #dc2626; }
+    .ready-grey   { background: #d1d5db; }
+    .ready-check  { color: #16a34a; font-size: 13px; font-weight: 700; }
+
+    /* ── Dirty dot ── */
+    .dirty-dot {
+      width: 5px; height: 5px; border-radius: 50%;
+      background: #16a34a; display: inline-block;
+    }
+
+    /* ── WO ID ── */
+    .wo-id {
+      font-family: 'SF Mono', 'Fira Code', ui-monospace, monospace;
+      font-size: 11.5px;
+      font-weight: 500;
+      color: var(--text-primary);
+      display: block;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .wo-id-placeholder {
+      font-size: 12px;
+      color: var(--text-tertiary);
+      font-style: italic;
+    }
+
+    /* ── Line badge ── */
+    .line-badge {
+      display: inline-block;
+      background: var(--grey-bg);
+      color: var(--text-secondary);
+      border-radius: var(--radius-sm);
+      padding: 2px 8px;
+      font-size: 12px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    /* ── Status pills ── */
+    .pill {
+      display: inline-block;
+      border-radius: 99px;
+      padding: 3px 10px;
+      font-size: 12px;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+    .pill-scheduled  { background: var(--blue-bg);  color: var(--blue-text); }
+    .pill-inprogress { background: var(--green-bg); color: var(--green-text); }
+    .pill-completed  { background: var(--grey-bg);  color: var(--grey-text); }
+    .pill-cancelled  { background: var(--red-bg);   color: var(--red-text); }
+
+    /* ── Output ── */
+    .output-actual { font-weight: 500; color: var(--text-primary); }
+    .output-sep    { color: var(--text-tertiary); margin: 0 2px; font-size: 11px; }
+    .output-target { color: var(--text-secondary); font-size: 12px; }
+
+    /* ── Metrics ── */
+    .metric-val { font-weight: 500; color: var(--text-primary); display: block; text-align: center; }
+    .metric-na  { color: var(--text-tertiary); display: block; text-align: center; }
+
+    /* ── Progress bar ── */
+    .progress-bg   { background: var(--grey-bg); border-radius: 99px; height: 5px; overflow: hidden; }
+    .progress-fill { height: 100%; border-radius: 99px; transition: width .3s; }
+    .progress-pct  { font-size: 10px; color: var(--text-tertiary); margin-top: 3px; text-align: right; }
+
+    /* ── Inline editable cells ── */
+    .cell-editable {
+      display: flex;
+      align-items: center;
+      padding: 3px 7px;
+      min-height: 30px;
+      border-radius: var(--radius-sm);
+      border: 1px solid transparent;
+      cursor: text;
+      transition: background .1s, border-color .1s;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+    .cell-editable:hover {
+      border: 1px dashed var(--blue-text);
+      background: var(--blue-bg);
+    }
+    .cell-empty {
+      color: var(--text-tertiary);
+      font-style: italic;
+      font-size: 12px;
+    }
+    /* Attention: amber for missing required fields in setup mode */
+    .cell-attention {
+      border: 1px dashed var(--amber-text) !important;
+      background: #fffbeb !important;
+      color: var(--amber-text) !important;
+    }
+    .cell-attention:hover {
+      border-color: #d97706 !important;
+      background: var(--amber-bg) !important;
+    }
+    /* Unsaved: light blue */
+    .cell-unsaved {
+      background: var(--blue-bg);
+      border: 1px solid #bfdbfe;
+    }
+
+    /* Active edit input */
+    .cell-input {
+      width: 100%;
+      border: 1px solid var(--blue-text);
+      border-radius: var(--radius-sm);
+      padding: 4px 8px;
+      font-size: 13px;
+      font-family: inherit;
+      color: var(--text-primary);
+      background: var(--surface);
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(24,95,165,.12);
+    }
+    .cell-input::-webkit-inner-spin-button,
+    .cell-input::-webkit-outer-spin-button { -webkit-appearance: none; }
+    .cell-input-sku { font-family: 'SF Mono','Fira Code',ui-monospace,monospace; font-size: 11.5px; }
+
+    /* ── Fill-down popover ── */
+    .fill-down-btn {
+      position: absolute;
+      bottom: -24px;
+      right: 0;
+      background: var(--text-primary);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius-sm);
+      padding: 3px 8px;
+      font-size: 11px;
+      font-weight: 500;
+      font-family: inherit;
+      cursor: pointer;
+      white-space: nowrap;
+      z-index: 40;
+      box-shadow: 0 2px 8px rgba(0,0,0,.18);
+      animation: popIn .14s ease;
+    }
+    .fill-down-btn:hover { background: #1f2937; }
+
+    /* ── Row save check button ── */
+    .btn-row-save {
+      width: 28px; height: 28px;
+      display: inline-flex; align-items: center; justify-content: center;
+      background: var(--green-bg); border: 1px solid #86efac; border-radius: var(--radius-sm);
+      color: var(--green-text); font-size: 13px; font-weight: 700;
+      cursor: pointer; flex-shrink: 0; transition: background .1s;
+    }
+    .btn-row-save:hover { background: #bbf7d0; }
+
+    /* ── Actions cell ── */
+    .actions-cell { display: flex; align-items: center; gap: 5px; }
+
+    /* ── Dots menu ── */
+    .dots-wrap { position: relative; z-index: 1000; }
+    .btn-dots {
+      width: 28px; height: 28px;
+      display: inline-flex; align-items: center; justify-content: center;
+      background: transparent; border: 1px solid var(--border); border-radius: var(--radius-sm);
+      color: var(--text-secondary); cursor: pointer; transition: background .1s;
+      flex-shrink: 0;
+    }
+    .btn-dots:hover { background: #f3f4f6; color: var(--text-primary); }
+    .dropdown-menu {
+      position: absolute; top: 32px; right: 0;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius-md); box-shadow: 0 8px 24px rgba(0,0,0,.14);
+      z-index: 1000; min-width: 160px; overflow: visible;
+    }
+    .dropdown-item {
+      padding: 8px 14px; font-size: 13px; cursor: pointer;
+      color: var(--text-primary); transition: background .08s;
+    }
+    .dropdown-item:hover { background: #f9fafb; }
+    .dropdown-item.danger { color: var(--red-text); }
+    .dropdown-item.danger:hover { background: var(--red-bg); }
+
+    /* ── Empty state ── */
+    .empty-state { text-align: center; padding: 64px 20px; color: var(--text-secondary); }
+    .empty-state-icon { margin-bottom: 12px; color: #d1d5db; }
+    .empty-state-title { font-size: 15px; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px; }
+    .empty-state-sub   { font-size: 13px; color: var(--text-tertiary); }
+
+    /* ── Table footer ── */
+    .table-footer {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 0 0;
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+
+    /* ── Modal ── */
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.4);
+      backdrop-filter: blur(2px);
+      z-index: 300;
+      display: flex; align-items: center; justify-content: center;
+      padding: 20px;
+    }
+    .modal {
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      width: 100%; max-width: 620px;
+      max-height: 90vh; overflow-y: auto;
+      box-shadow: 0 20px 48px rgba(0,0,0,.18);
+    }
+    .modal-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 18px 24px 16px;
+      border-bottom: 1px solid var(--border);
+      position: sticky; top: 0; background: var(--surface); z-index: 1;
+    }
+    .modal-title    { font-size: 16px; font-weight: 600; color: var(--text-primary); }
+    .modal-subtitle { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+    .modal-close {
+      width: 28px; height: 28px;
+      display: flex; align-items: center; justify-content: center;
+      background: #f3f4f6; border: none; border-radius: var(--radius-sm);
+      color: var(--text-secondary); cursor: pointer; font-size: 14px;
+      transition: background .1s;
+    }
+    .modal-close:hover { background: var(--border); }
+    .modal-body { padding: 20px 24px; }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .form-group { display: flex; flex-direction: column; gap: 5px; }
+    .form-group.full { grid-column: 1/-1; }
+    .form-label {
+      font-size: 11px; font-weight: 600; color: var(--text-secondary);
+      text-transform: uppercase; letter-spacing: .05em;
+    }
+    .form-label-opt { font-size: 11px; font-weight: 400; color: var(--text-tertiary); text-transform: none; letter-spacing: 0; margin-left: 3px; }
+    .form-input, .form-select-modal {
+      border: 1px solid var(--border); border-radius: var(--radius-md);
+      padding: 7px 11px; font-size: 13px; color: var(--text-primary);
+      background: #f9fafb; font-family: inherit; width: 100%;
+      transition: border-color .12s, background .12s;
+    }
+    .form-input:focus, .form-select-modal:focus {
+      outline: none; border-color: var(--blue-text); background: var(--surface);
+    }
+    .form-select-modal {
+      appearance: none; -webkit-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%236b7280'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 10px center;
+      background-color: #f9fafb; padding-right: 28px;
+    }
+    .form-select-modal:focus { background-color: var(--surface); }
+    .section-divider { grid-column:1/-1; display:flex; align-items:center; gap:10px; margin:4px 0; }
+    .section-divider-label { font-size:11px; font-weight:600; color:var(--text-secondary); text-transform:uppercase; letter-spacing:.05em; white-space:nowrap; }
+    .section-divider-line  { flex:1; height:1px; background:var(--border); }
+    .breaks-section { grid-column:1/-1; }
+    .break-row { display:grid; grid-template-columns:1fr 1fr auto; gap:8px; align-items:end; margin-bottom:8px; }
+    .btn-remove-break {
+      width:30px; height:33px; background:var(--red-bg); border:none; border-radius:var(--radius-sm);
+      color:var(--red-text); font-size:16px; cursor:pointer;
+      display:flex; align-items:center; justify-content:center;
+    }
+    .btn-remove-break:hover { background:#fca5a5; }
+    .btn-add-break {
+      width:100%; background:transparent; border:1px dashed var(--border);
+      border-radius:var(--radius-md); padding:7px 12px;
+      font-size:12px; font-weight:500; color:var(--text-secondary);
+      cursor:pointer; display:flex; align-items:center; gap:5px;
+      transition:border-color .12s, color .12s; margin-top:2px; font-family:inherit;
+    }
+    .btn-add-break:hover { border-color:var(--blue-text); color:var(--blue-text); }
+    .modal-footer {
+      display:flex; justify-content:flex-end; gap:8px;
+      padding:14px 24px 20px; border-top:1px solid var(--border);
+      position:sticky; bottom:0; background:var(--surface);
+    }
+    .modal::-webkit-scrollbar { width:5px; }
+    .modal::-webkit-scrollbar-track { background:transparent; }
+    .modal::-webkit-scrollbar-thumb { background:var(--border); border-radius:99px; }
+
+    /* ── Toast ── */
+    .toast {
+      position:fixed; bottom:24px; right:24px;
+      background:var(--text-primary); color:#fff;
+      padding:10px 16px; border-radius:var(--radius-md);
+      font-size:13px; font-weight:500;
+      box-shadow:0 8px 24px rgba(0,0,0,.2);
+      z-index:400; display:flex; align-items:center; gap:8px;
+      animation:slideUp .22s ease;
+    }
+    .toast-success { border-left:3px solid #4ade80; }
+    .toast-cancel  { border-left:3px solid #f87171; }
+    @keyframes slideUp {
+      from { opacity:0; transform:translateY(10px); }
+      to   { opacity:1; transform:translateY(0); }
+    }
+
+    /* ── SVG icons (inline) ── */
+    .icon { display:inline-block; vertical-align:middle; flex-shrink:0; }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState, useRef, useEffect, useCallback, useMemo } = React;
+
+/* ── SVG icons ───────────────────────────────────────────────── */
+const Icon = ({ name, size=16, color="currentColor", style={} }) => {
+  const paths = {
+    bell: <><path d="M15 17H1l2-4V8a5 5 0 0110 0v5l2 4z"/><path d="M9 17a1 1 0 01-2 0"/></>,
+    help: <><circle cx="8" cy="8" r="7"/><text x="8" y="12.5" textAnchor="middle" fontSize="10" fontWeight="700" fill={color} stroke="none">?</text></>,
+    settings: <><circle cx="8" cy="8" r="2.5"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.1 3.1l1.4 1.4M11.5 11.5l1.4 1.4M3.1 12.9l1.4-1.4M11.5 4.5l1.4-1.4"/></>,
+    dots: <><circle cx="4" cy="8" r="1.2"/><circle cx="8" cy="8" r="1.2"/><circle cx="12" cy="8" r="1.2"/></>,
+    plus: <><path d="M8 1v14M1 8h14"/></>,
+    check: <path d="M2 8l4 4 8-8"/>,
+    lightning: <path d="M9 1L3 9h5l-1 6 6-8H8l1-6z" fill={color} stroke="none"/>,
+    clipboard: <><rect x="4" y="2" width="8" height="12" rx="1"/><path d="M6 2V1h4v1"/></>,
+    pencil: <><path d="M11 2l3 3-9 9H2v-3l9-9z"/><path d="M9 4l3 3"/></>,
+  };
+  return (
+    <svg className="icon" width={size} height={size} viewBox="0 0 16 16"
+         fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"
+         style={style}>
+      {paths[name]}
+    </svg>
+  );
+};
+
+/* ── Design tokens ───────────────────────────────────────────── */
+const LINES     = ["E9", "F2", "G2", "I1", "LINE-06", "LINE-07"];
+const CUSTOMERS = ["SAIE Beauty", "Farmacy Beauty", "ROC", "Danessa Myricks"];
+const SHIFTS    = ["Day (06:00–14:00)", "Swing (14:00–22:00)", "Night (22:00–06:00)"];
+const STATUS_TABS = ["All", "Scheduled", "In Progress", "Completed", "Cancelled"];
+const TAB_ORDER = ["customer","sku","plannedQty","targetPcsMin","plannedWorkers","actualWorkers"];
+const EDITABLE_FIELDS = {
+  customer:      { type:"datalist", placeholder:"add customer" },
+  sku:           { type:"text",     placeholder:"add SKU" },
+  plannedQty:    { type:"number",   placeholder:"add qty" },
+  targetPcsMin:  { type:"number",   placeholder:"target" },
+  plannedWorkers:{ type:"number",   placeholder:"—" },
+  actualWorkers: { type:"number",   placeholder:"—" },
+};
+
+/* ── Seed data ───────────────────────────────────────────────── */
+// 10 rows total:  4 green (ready) · 3 red (missing all) · 2 yellow (partial) · 1 grey (no shift)
+const SEED_ORDERS = [
+  // ── GREEN ✓ (Customer + SKU + Qty all filled) ─────────────────
+  { id:"WO-20240501-E9-01",     line:"E9",      customer:"SAIE Beauty",    sku:"SB-BLUSH-OMBR-004",    productCode:"PC-4481", status:"Scheduled", scheduledStart:"06:00", scheduledEnd:"14:00", plannedQty:11625, actualOutput:0, targetPcsMin:24, plannedWorkers:8,  actualWorkers:0, breaks:[{start:"09:00",end:"09:15"},{start:"12:00",end:"12:30"}] },
+  { id:"WO-20240501-F2-01",     line:"F2",      customer:"Farmacy Beauty", sku:"FB-SERUM-VIT-C-012",   productCode:"PC-2210", status:"Scheduled", scheduledStart:"06:00", scheduledEnd:"14:00", plannedQty:8400,  actualOutput:0, targetPcsMin:18, plannedWorkers:6,  actualWorkers:0, breaks:[{start:"09:00",end:"09:15"},{start:"12:00",end:"12:30"}] },
+  { id:"WO-20240501-G2-01",     line:"G2",      customer:"ROC",            sku:"ROC-RETINOL-NTX-7",    productCode:"PC-0934", status:"Scheduled", scheduledStart:"06:00", scheduledEnd:"14:00", plannedQty:9600,  actualOutput:0, targetPcsMin:20, plannedWorkers:7,  actualWorkers:0, breaks:[{start:"09:00",end:"09:15"},{start:"12:00",end:"12:30"}] },
+  { id:"WO-20240501-LINE06-01", line:"LINE-06", customer:"Farmacy Beauty", sku:"FB-MASK-HONEY-HIVE",   productCode:"PC-3380", status:"Scheduled", scheduledStart:"06:00", scheduledEnd:"14:00", plannedQty:7200,  actualOutput:0, targetPcsMin:15, plannedWorkers:5,  actualWorkers:0, breaks:[{start:"09:00",end:"09:15"}] },
+  // ── YELLOW ◑ (partial — has Customer but missing Qty, or has Qty but missing identity) ──
+  { id:"WO-20240501-I1-01",     line:"I1",      customer:"SAIE Beauty",    sku:"",                     productCode:"",        status:"Scheduled", scheduledStart:"06:00", scheduledEnd:"14:00", plannedQty:"",    actualOutput:0, targetPcsMin:30, plannedWorkers:10, actualWorkers:0, breaks:[{start:"09:00",end:"09:15"},{start:"12:00",end:"12:30"}] },
+  { id:"WO-20240501-LINE07-01", line:"LINE-07", customer:"",               sku:"",                     productCode:"",        status:"Scheduled", scheduledStart:"06:00", scheduledEnd:"14:00", plannedQty:4800,  actualOutput:0, targetPcsMin:22, plannedWorkers:8,  actualWorkers:0, breaks:[{start:"09:00",end:"09:15"}] },
+  // ── RED ● (missing everything — Customer, SKU, and Qty) ────────
+  { id:"WO-20240501-E9-02",     line:"E9",      customer:"",               sku:"",                     productCode:"",        status:"Scheduled", scheduledStart:"14:00", scheduledEnd:"22:00", plannedQty:"",    actualOutput:0, targetPcsMin:"", plannedWorkers:4,  actualWorkers:0, breaks:[] },
+  { id:"WO-20240501-F2-02",     line:"F2",      customer:"",               sku:"",                     productCode:"",        status:"Scheduled", scheduledStart:"14:00", scheduledEnd:"22:00", plannedQty:"",    actualOutput:0, targetPcsMin:"", plannedWorkers:4,  actualWorkers:0, breaks:[] },
+  { id:"WO-20240501-LINE06-02", line:"LINE-06", customer:"",               sku:"",                     productCode:"",        status:"Scheduled", scheduledStart:"14:00", scheduledEnd:"22:00", plannedQty:"",    actualOutput:0, targetPcsMin:15, plannedWorkers:5,  actualWorkers:0, breaks:[] },
+  // ── GREY ○ (no shift today — placeholder for G2 night) — handled via isPlaceholder below
+  // We add one real "no shift" row manually so it appears in the table
+  { id:"WO-20240501-G2-NIGHT",  line:"G2",      customer:"",               sku:"",                     productCode:"",        status:"Scheduled", scheduledStart:"22:00", scheduledEnd:"06:00", plannedQty:"",    actualOutput:0, targetPcsMin:"", plannedWorkers:0,  actualWorkers:0, breaks:[], noShift:true },
+];
+
+/* ── Helpers ─────────────────────────────────────────────────── */
+function shiftOrder(s) { return s==="06:00"?0:s==="14:00"?1:s==="22:00"?2:9; }
+function sortByShift(rows) { return [...rows].sort((a,b)=>shiftOrder(a.scheduledStart)-shiftOrder(b.scheduledStart)); }
+
+function buildDisplayRows(orders) {
+  const linesSeen = new Set(orders.map(o=>o.line));
+  const placeholders = LINES.filter(l=>!linesSeen.has(l)).map(l=>({
+    id:`__ph__${l}`, line:l, isPlaceholder:true,
+    customer:"", sku:"", productCode:"", status:"Scheduled",
+    scheduledStart:"22:00", scheduledEnd:"06:00",
+    plannedQty:"", actualOutput:0, targetPcsMin:"", plannedWorkers:"", actualWorkers:0, breaks:[],
+  }));
+  return sortByShift([...orders, ...placeholders]);
+}
+
+function rowReadiness(o) {
+  if (o.isPlaceholder || o.noShift) return "none";
+  const hasQty   = o.plannedQty && Number(o.plannedQty) > 0;
+  const hasIdent = (o.customer||"").trim() || (o.sku||"").trim();
+  if (hasQty && hasIdent) return "ready";
+  if (hasQty || hasIdent) return "partial";
+  return "missing";
+}
+
+// Which specific fields are missing on a row (for per-field amber highlighting)
+function missingFields(o) {
+  const out = new Set();
+  const hasQty   = o.plannedQty && Number(o.plannedQty) > 0;
+  const hasCust  = (o.customer||"").trim().length > 0;
+  const hasSku   = (o.sku||"").trim().length > 0;
+  if (!hasQty)                out.add("plannedQty");
+  // Only flag customer/sku as missing if NEITHER is filled — once one is filled the identity
+  // requirement is met, so only highlight the remaining empty one.
+  if (!hasCust && !hasSku) { out.add("customer"); out.add("sku"); }
+  return out;
+}
+
+function ppmh(o) {
+  if (!o.actualWorkers || !o.actualOutput) return null;
+  return Math.round(o.actualOutput / (o.actualWorkers * 8));
+}
+function ppm(o) {
+  if (!o.actualWorkers || !o.actualOutput) return null;
+  return (o.actualOutput / (8*60)).toFixed(1);
+}
+function progressPct(o) {
+  if (!o.plannedQty) return 0;
+  return Math.min(100, Math.round((o.actualOutput/o.plannedQty)*100));
+}
+function progressColor(pct) {
+  if (pct>=90) return "#16a34a"; if (pct>=60) return "#d97706"; return "#dc2626";
+}
+function pillClass(status) {
+  return { "Scheduled":"pill-scheduled","In Progress":"pill-inprogress","Completed":"pill-completed","Cancelled":"pill-cancelled" }[status]||"pill-scheduled";
+}
+function generateWOId() {
+  const d = new Date().toISOString().slice(0,10).replace(/-/g,"");
+  return `WO-${d}-NEW-${Math.floor(Math.random()*900+100)}`;
+}
+
+/* ── Dots menu ───────────────────────────────────────────────── */
+function DotsMenu({ onCancel, onDuplicate }) {
+  const [open,setOpen]=useState(false);
+  const ref=useRef();
+  useEffect(()=>{
+    const h=e=>{if(ref.current&&!ref.current.contains(e.target))setOpen(false);};
+    document.addEventListener("mousedown",h);
+    return()=>document.removeEventListener("mousedown",h);
+  },[]);
+  return (
+    <div className="dots-wrap" ref={ref}>
+      <button className="btn-dots" onClick={()=>setOpen(o=>!o)} title="More options">
+        <Icon name="dots" size={14}/>
+      </button>
+      {open&&(
+        <div className="dropdown-menu">
+          <div className="dropdown-item" onClick={()=>{setOpen(false);onDuplicate();}}>Duplicate</div>
+          <div className="dropdown-item danger" onClick={()=>{setOpen(false);onCancel();}}>Cancel Work Order</div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ── Inline editable cell ────────────────────────────────────── */
+function EditableCell({ value, field, orderId, isEditing, onStartEdit, onCommit, onKeyDown,
+                        inputRef, isDirty, fieldMissing, showFillDown, onFillDown }) {
+  const cfg = EDITABLE_FIELDS[field];
+  const empty = value===""||value===null||value===undefined;
+
+  if (isEditing) {
+    const commonProps = {
+      ref: inputRef,
+      className: `cell-input${field==="sku"?" cell-input-sku":""}`,
+      defaultValue: value,
+      onBlur: e=>onCommit(field,e.target.value),
+      onKeyDown: e=>onKeyDown(e,field,orderId),
+      autoFocus: true,
+    };
+    return (
+      <td style={{padding:"0 12px", position:"relative"}}>
+        {cfg.type==="datalist"
+          ?<><input {...commonProps} list={`dl-${field}-${orderId}`} placeholder={cfg.placeholder}/>
+            <datalist id={`dl-${field}-${orderId}`}>{CUSTOMERS.map(c=><option key={c} value={c}/>)}</datalist>
+           </>
+          :<input {...commonProps} type={cfg.type} placeholder={cfg.placeholder}/>
+        }
+        {showFillDown&&(
+          <button className="fill-down-btn"
+                  onMouseDown={e=>{e.preventDefault();onFillDown(field,value);}}>
+            Apply to rows below ↓
+          </button>
+        )}
+      </td>
+    );
+  }
+
+  const displayVal = empty
+    ? <span className="cell-empty">— {cfg.placeholder}</span>
+    : field==="sku"
+      ? <span style={{fontFamily:"'SF Mono','Fira Code',monospace",fontSize:"11.5px"}}>{value}</span>
+      : field==="plannedQty" ? Number(value).toLocaleString() : value;
+
+  // fieldMissing = this specific field is a required field that is empty
+  const cls = ["cell-editable",
+    fieldMissing&&empty ? "cell-attention" : "",
+    isDirty&&!empty ? "cell-unsaved" : "",
+  ].filter(Boolean).join(" ");
+
+  return (
+    <td style={{padding:"0 12px"}} onClick={()=>onStartEdit(orderId,field)}>
+      <div className={cls}>{displayVal}</div>
+    </td>
+  );
+}
+
+/* ── Table Row ───────────────────────────────────────────────── */
+function WORow({ order, rowEdits, activeCell, onStartEdit, onCommit, onKeyDown,
+                 onRowSave, onEdit, onCancel, onDuplicate, onFillDown, inputRef, inSetupMode }) {
+  const pct = progressPct(order);
+  const ph  = ppmh(order);
+  const pm  = ppm(order);
+  const isRowDirty = rowEdits && Object.keys(rowEdits).length>0;
+  const readiness  = rowReadiness(order);
+  // Per-field missing set — only populated in setup mode for non-ready rows
+  const missingSet = (inSetupMode && (readiness==="missing"||readiness==="partial"))
+    ? missingFields(order)
+    : new Set();
+
+  const editCell = (field) => {
+    const isEditing = activeCell?.orderId===order.id && activeCell?.field===field;
+    const val = rowEdits?.[field]!==undefined ? rowEdits[field] : order[field];
+    return (
+      <EditableCell
+        key={field} field={field} value={val} orderId={order.id}
+        isEditing={isEditing}
+        onStartEdit={onStartEdit} onCommit={onCommit} onKeyDown={onKeyDown}
+        inputRef={isEditing?inputRef:null}
+        isDirty={rowEdits?.[field]!==undefined}
+        fieldMissing={missingSet.has(field)}
+        showFillDown={isEditing&&(field==="customer"||field==="sku")}
+        onFillDown={onFillDown}
+      />
+    );
+  };
+
+  /* Readiness dot */
+  let readyEl;
+  if      (readiness==="ready")   readyEl=<span className="ready-check" title="Ready for shift">✓</span>;
+  else if (readiness==="partial") readyEl=<span className="ready-dot ready-amber" title="Partially filled — some fields still needed"/>;
+  else if (readiness==="missing") readyEl=<span className="ready-dot ready-red"   title="Missing required fields"/>;
+  else                            readyEl=<span className="ready-dot ready-grey"  title="No shift scheduled today"/>;
+
+  const rowCls=[
+    isRowDirty?"row-dirty":"",
+    order.status==="Cancelled"?"row-cancelled":"",
+    order.isPlaceholder?"row-placeholder":"",
+    order.noShift?"row-placeholder":"",
+  ].filter(Boolean).join(" ");
+
+  /* Planned qty inline */
+  const qtyEditing = activeCell?.orderId===order.id && activeCell?.field==="plannedQty";
+  const qtyVal  = rowEdits?.plannedQty!==undefined ? rowEdits.plannedQty : order.plannedQty;
+  const qtyEmpty = qtyVal===""||qtyVal===null||qtyVal===undefined;
+  const qtyDirty = rowEdits?.plannedQty!==undefined;
+
+  const qtyCls=["output-target cell-editable",
+    qtyEmpty?"cell-empty":"",
+    missingSet.has("plannedQty")&&qtyEmpty?"cell-attention":"",
+    qtyDirty&&!qtyEmpty?"cell-unsaved":"",
+  ].filter(Boolean).join(" ");
+
+  return (
+    <tr className={rowCls}>
+      {/* Ready indicator */}
+      <td className="td-indicator" style={{paddingLeft:10}}>{readyEl}</td>
+      {/* Dirty dot */}
+      <td className="td-indicator">{isRowDirty&&<span className="dirty-dot" title="Unsaved"/>}</td>
+      {/* WO ID */}
+      <td>
+        {order.isPlaceholder
+          ? <span className="wo-id-placeholder">no WO yet</span>
+          : <span className="wo-id">{order.id}</span>}
+      </td>
+      {/* Line */}
+      <td><span className="line-badge">{order.line}</span></td>
+      {/* Customer */}
+      {editCell("customer")}
+      {/* SKU */}
+      {editCell("sku")}
+      {/* Status */}
+      <td>
+        {order.isPlaceholder
+          ? <span style={{color:"var(--text-tertiary)",fontSize:12}}>—</span>
+          : <span className={`pill ${pillClass(order.status)}`}>{order.status}</span>}
+      </td>
+      {/* Scheduled */}
+      <td style={{color:"var(--text-secondary)",fontSize:12,whiteSpace:"nowrap"}}>
+        {order.scheduledStart}–{order.scheduledEnd}
+      </td>
+      {/* Output / Target */}
+      <td style={{padding:"0 12px", whiteSpace:"nowrap"}}>
+        {!order.isPlaceholder&&<span className="output-actual">{order.actualOutput.toLocaleString()}</span>}
+        {" "}
+        <span
+          className={qtyCls}
+          style={{display:"inline-flex",padding:"2px 5px",cursor:"text",fontSize:12,minHeight:24}}
+          onClick={()=>onStartEdit(order.id,"plannedQty")}
+        >
+          {qtyEditing
+            ?<input ref={inputRef} className="cell-input" type="number"
+                    defaultValue={qtyVal}
+                    onBlur={e=>onCommit("plannedQty",e.target.value)}
+                    onKeyDown={e=>onKeyDown(e,"plannedQty",order.id)}
+                    autoFocus style={{width:72,fontSize:12}}/>
+            :`/ ${qtyVal?Number(qtyVal).toLocaleString():"—"}`}
+        </span>
+      </td>
+      {/* Target pcs/min */}
+      {editCell("targetPcsMin")}
+      {/* Planned workers */}
+      {editCell("plannedWorkers")}
+      {/* Actual workers */}
+      {editCell("actualWorkers")}
+      {/* PPMH */}
+      <td>
+        {ph!==null?<span className="metric-val">{ph.toLocaleString()}</span>
+                  :<span className="metric-na">—</span>}
+      </td>
+      {/* PPM */}
+      <td>
+        {pm!==null?<span className="metric-val">{pm}</span>
+                  :<span className="metric-na">—</span>}
+      </td>
+      {/* Progress */}
+      <td>
+        <div className="progress-bg">
+          <div className="progress-fill" style={{width:`${pct}%`,background:progressColor(pct)}}/>
+        </div>
+        <div className="progress-pct">{pct}%</div>
+      </td>
+      {/* Actions */}
+      <td>
+        <div className="actions-cell">
+          {isRowDirty&&(
+            <button className="btn-row-save" title="Save row" onClick={()=>onRowSave(order.id)}>
+              <Icon name="check" size={13} color="#16a34a"/>
+            </button>
+          )}
+          {order.isPlaceholder
+            ?<button className="btn btn-secondary btn-sm" onClick={()=>onEdit(order)}
+                     style={{color:"#185FA5",borderColor:"#bfdbfe",background:"#eff6ff"}}>
+               + Add
+             </button>
+            :<button className="btn btn-secondary btn-sm" onClick={()=>onEdit(order)}>
+               <Icon name="pencil" size={11}/> Edit
+             </button>}
+          {!isRowDirty&&!order.isPlaceholder&&<DotsMenu onCancel={()=>onCancel(order.id)} onDuplicate={()=>onDuplicate(order)}/>}
+        </div>
+      </td>
+    </tr>
+  );
+}
+
+/* ── Modal ───────────────────────────────────────────────────── */
+function WOModal({ order, onClose, onSave, isNew }) {
+  const [form,setForm]=useState(()=>order
+    ?{...order,breaks:order.breaks.map(b=>({...b}))}
+    :{id:generateWOId(),line:"E9",customer:"",sku:"",productCode:"",
+      status:"Scheduled",scheduledStart:"06:00",scheduledEnd:"14:00",
+      plannedQty:"",actualOutput:0,targetPcsMin:"",plannedWorkers:"",actualWorkers:0,breaks:[]});
+  const set=(f,v)=>setForm(p=>({...p,[f]:v}));
+  const setBreak=(i,f,v)=>setForm(p=>({...p,breaks:p.breaks.map((r,j)=>j===i?{...r,[f]:v}:r)}));
+  const addBreak=()=>setForm(p=>({...p,breaks:[...p.breaks,{start:"",end:""}]}));
+  const removeBreak=i=>setForm(p=>({...p,breaks:p.breaks.filter((_,j)=>j!==i)}));
+  const handleSave=()=>onSave({...form,
+    plannedQty:Number(form.plannedQty),targetPcsMin:Number(form.targetPcsMin),
+    plannedWorkers:Number(form.plannedWorkers),actualWorkers:Number(form.actualWorkers)});
+
+  return (
+    <div className="modal-overlay" onClick={e=>e.target===e.currentTarget&&onClose()}>
+      <div className="modal">
+        <div className="modal-header">
+          <div>
+            <div className="modal-title">{isNew?"New Work Order":"Edit Work Order"}</div>
+            <div className="modal-subtitle">{isNew?"Fill in the details below":`WO ID: ${order.id}`}</div>
+          </div>
+          <button className="modal-close" onClick={onClose}>✕</button>
+        </div>
+        <div className="modal-body">
+          <div className="form-grid">
+            <div className="form-group full">
+              <label className="form-label">WO ID</label>
+              <input className="form-input" value={form.id} onChange={e=>set("id",e.target.value)} placeholder="WO-20240501-E9-01"/>
+            </div>
+            <div className="form-group">
+              <label className="form-label">Line</label>
+              <select className="form-select-modal" value={form.line} onChange={e=>set("line",e.target.value)}>
+                {LINES.map(l=><option key={l}>{l}</option>)}
+              </select>
+            </div>
+            <div className="form-group">
+              <label className="form-label">Status</label>
+              <select className="form-select-modal" value={form.status} onChange={e=>set("status",e.target.value)}>
+                {["Scheduled","In Progress","Completed","Cancelled"].map(s=><option key={s}>{s}</option>)}
+              </select>
+            </div>
+            <div className="form-group">
+              <label className="form-label">Customer<span className="form-label-opt">(optional)</span></label>
+              <input className="form-input" value={form.customer} onChange={e=>set("customer",e.target.value)} placeholder="e.g. SAIE Beauty" list="dl-cust-modal"/>
+              <datalist id="dl-cust-modal">{CUSTOMERS.map(c=><option key={c} value={c}/>)}</datalist>
+            </div>
+            <div className="form-group">
+              <label className="form-label">SKU<span className="form-label-opt">(optional)</span></label>
+              <input className="form-input" value={form.sku} onChange={e=>set("sku",e.target.value)} placeholder="e.g. SB-BLUSH-OMBR-004" style={{fontFamily:"monospace",fontSize:12}}/>
+            </div>
+            <div className="form-group">
+              <label className="form-label">Product Code<span className="form-label-opt">(optional)</span></label>
+              <input className="form-input" value={form.productCode} onChange={e=>set("productCode",e.target.value)} placeholder="e.g. PC-4481"/>
+            </div>
+            <div className="form-group">
+              <label className="form-label">Planned Quantity</label>
+              <input className="form-input" type="number" value={form.plannedQty} onChange={e=>set("plannedQty",e.target.value)} placeholder="e.g. 11625" min="0"/>
+            </div>
+            <div className="form-group">
+              <label className="form-label">Target Pcs / Min</label>
+              <input className="form-input" type="number" value={form.targetPcsMin} onChange={e=>set("targetPcsMin",e.target.value)} placeholder="e.g. 24" min="0"/>
+            </div>
+            <div className="form-group">
+              <label className="form-label">Planned Workers</label>
+              <input className="form-input" type="number" value={form.plannedWorkers} onChange={e=>set("plannedWorkers",e.target.value)} placeholder="e.g. 8" min="0"/>
+            </div>
+            <div className="form-group">
+              <label className="form-label">Actual Workers</label>
+              <input className="form-input" type="number" value={form.actualWorkers} onChange={e=>set("actualWorkers",e.target.value)} placeholder="0" min="0"/>
+            </div>
+            <div className="form-group">
+              <label className="form-label">Start Time</label>
+              <input className="form-input" type="time" value={form.scheduledStart} onChange={e=>set("scheduledStart",e.target.value)}/>
+            </div>
+            <div className="form-group">
+              <label className="form-label">End Time</label>
+              <input className="form-input" type="time" value={form.scheduledEnd} onChange={e=>set("scheduledEnd",e.target.value)}/>
+            </div>
+            <div className="section-divider">
+              <span className="section-divider-label">Break Schedule</span>
+              <div className="section-divider-line"/>
+            </div>
+            <div className="breaks-section">
+              {form.breaks.length===0&&<div style={{color:"var(--text-tertiary)",fontSize:12,marginBottom:8}}>No breaks added.</div>}
+              {form.breaks.map((brk,i)=>(
+                <div key={i} className="break-row">
+                  <div className="form-group" style={{margin:0}}>
+                    <label className="form-label">Break {i+1} Start</label>
+                    <input className="form-input" type="time" value={brk.start} onChange={e=>setBreak(i,"start",e.target.value)}/>
+                  </div>
+                  <div className="form-group" style={{margin:0}}>
+                    <label className="form-label">End</label>
+                    <input className="form-input" type="time" value={brk.end} onChange={e=>setBreak(i,"end",e.target.value)}/>
+                  </div>
+                  <button className="btn-remove-break" onClick={()=>removeBreak(i)}>−</button>
+                </div>
+              ))}
+              <button className="btn-add-break" onClick={addBreak}>+ Add break</button>
+            </div>
+          </div>
+        </div>
+        <div className="modal-footer">
+          <button className="btn btn-secondary" onClick={onClose}>Cancel</button>
+          <button className="btn btn-primary" onClick={handleSave}>Save Changes</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── Toast ───────────────────────────────────────────────────── */
+function Toast({ message, type }) {
+  return <div className={`toast toast-${type}`}>{type==="success"?"✓":"✕"} {message}</div>;
+}
+
+/* ── Main App ────────────────────────────────────────────────── */
+function App() {
+  const [orders,setOrders]         = useState(SEED_ORDERS);
+  const [activeTab,setActiveTab]   = useState("All");
+  const [filterLine,setFilterLine] = useState("All Lines");
+  const [filterCustomer,setFilterCustomer] = useState("All Customers");
+  const [filterShift,setFilterShift] = useState("All Shifts");
+  const [filterDate,setFilterDate] = useState("2024-05-01");
+  const [modal,setModal]           = useState(null);
+  const [toast,setToast]           = useState(null);
+  const [pendingEdits,setPendingEdits] = useState({});
+  const [activeCell,setActiveCell] = useState(null);
+  const inputRef = useRef(null);
+
+  const [setupDismissed, setSetupDismissed] = useState(false);
+
+  const hasDirty   = Object.keys(pendingEdits).length>0;
+  const dirtyCount = Object.keys(pendingEdits).length;
+
+  const showToast=(msg,type="success")=>{
+    setToast({message:msg,type});
+    setTimeout(()=>setToast(null),2800);
+  };
+
+  const mergedOrders = useMemo(()=>
+    orders.map(o=>pendingEdits[o.id]?{...o,...pendingEdits[o.id]}:o),
+    [orders,pendingEdits]);
+
+  const allDisplayRows = useMemo(()=>buildDisplayRows(mergedOrders),[mergedOrders]);
+
+  // Setup mode: active whenever there are non-ready rows (ignores In Progress status so demo always shows it)
+  const setupRows  = allDisplayRows.filter(r=>!r.isPlaceholder&&!r.noShift&&r.status!=="Cancelled"&&r.status!=="Completed");
+  const readyCount = setupRows.filter(r=>rowReadiness(r)==="ready").length;
+  const totalSetup = setupRows.length;
+  const inSetupMode = !setupDismissed && setupRows.some(r=>rowReadiness(r)!=="ready");
+
+  const tabCounts = STATUS_TABS.reduce((acc,tab)=>{
+    acc[tab]=tab==="All"?orders.length:orders.filter(o=>o.status===tab).length;
+    return acc;
+  },{});
+
+  const visible = useMemo(()=>allDisplayRows.filter(r=>{
+    if(r.isPlaceholder){
+      if(activeTab!=="All") return false;
+      if(filterLine!=="All Lines"&&r.line!==filterLine) return false;
+      return true;
+    }
+    if(activeTab!=="All"&&r.status!==activeTab) return false;
+    if(filterLine!=="All Lines"&&r.line!==filterLine) return false;
+    if(filterCustomer!=="All Customers"&&r.customer!==filterCustomer) return false;
+    if(filterShift!=="All Shifts"){
+      const m={"Day (06:00–14:00)":"06:00","Swing (14:00–22:00)":"14:00","Night (22:00–06:00)":"22:00"};
+      if(r.scheduledStart!==m[filterShift]) return false;
+    }
+    return true;
+  }),[allDisplayRows,activeTab,filterLine,filterCustomer,filterShift]);
+
+  /* Cell editing */
+  const handleStartEdit=useCallback((orderId,field)=>{
+    setActiveCell({orderId,field});
+  },[]);
+
+  const commitValue=useCallback((orderId,field,rawValue)=>{
+    const order=orders.find(o=>o.id===orderId)||allDisplayRows.find(r=>r.id===orderId);
+    if(!order) return;
+    const numF=["plannedQty","targetPcsMin","plannedWorkers","actualWorkers"];
+    const value=numF.includes(field)?(rawValue===""?"":Number(rawValue)):rawValue;
+    const orig=order[field];
+    const same=value===orig||(value===""&&(orig===""||orig===0||orig===null||orig===undefined));
+    setPendingEdits(prev=>{
+      const re={...(prev[orderId]||{})};
+      if(same){delete re[field];}else{re[field]=value;}
+      if(Object.keys(re).length===0){const n={...prev};delete n[orderId];return n;}
+      return{...prev,[orderId]:re};
+    });
+  },[orders,allDisplayRows]);
+
+  const handleCommit=useCallback((field,rawValue)=>{
+    const id=activeCell?.orderId;
+    if(!id) return;
+    commitValue(id,field,rawValue);
+    setActiveCell(null);
+  },[activeCell,commitValue]);
+
+  const handleKeyDown=useCallback((e,field,orderId)=>{
+    if(e.key==="Escape"){e.preventDefault();setActiveCell(null);return;}
+    const fwd=e.key==="Enter"||(e.key==="Tab"&&!e.shiftKey);
+    const bwd=e.key==="Tab"&&e.shiftKey;
+    if(!fwd&&!bwd) return;
+    e.preventDefault();
+    commitValue(orderId,field,e.target.value);
+    const ids=visible.map(r=>r.id);
+    const fi=TAB_ORDER.indexOf(field);
+    const ri=ids.indexOf(orderId);
+    if(fwd){
+      if(fi<TAB_ORDER.length-1){setActiveCell({orderId,field:TAB_ORDER[fi+1]});}
+      else if(ri<ids.length-1){setActiveCell({orderId:ids[ri+1],field:TAB_ORDER[0]});}
+      else{setActiveCell(null);}
+    }else{
+      if(fi>0){setActiveCell({orderId,field:TAB_ORDER[fi-1]});}
+      else if(ri>0){setActiveCell({orderId:ids[ri-1],field:TAB_ORDER[TAB_ORDER.length-1]});}
+      else{setActiveCell(null);}
+    }
+  },[visible,commitValue]);
+
+  const handleFillDown=useCallback((field,value)=>{
+    if(!activeCell||value===""||value===null||value===undefined) return;
+    const ri=visible.findIndex(r=>r.id===activeCell.orderId);
+    if(ri===-1) return;
+    const targets=visible.slice(ri+1).filter(r=>{
+      const cur=pendingEdits[r.id]?.[field]??r[field];
+      return cur===""||cur===null||cur===undefined;
+    });
+    if(!targets.length){showToast("No empty rows below to fill.","cancel");return;}
+    setPendingEdits(prev=>{
+      const next={...prev};
+      targets.forEach(r=>{next[r.id]={...(next[r.id]||{}),[field]:value};});
+      return next;
+    });
+    showToast(`Applied "${value}" to ${targets.length} row${targets.length!==1?"s":""} below.`);
+    setActiveCell(null);
+  },[activeCell,visible,pendingEdits]);
+
+  const handleRowSave=(orderId)=>{
+    const edits=pendingEdits[orderId];
+    if(!edits) return;
+    if(orderId.startsWith("__ph__")){
+      const line=orderId.replace("__ph__","");
+      const newOrder={id:generateWOId(),line,isPlaceholder:false,customer:edits.customer||"",sku:edits.sku||"",productCode:"",status:"Scheduled",scheduledStart:edits.scheduledStart||"06:00",scheduledEnd:edits.scheduledEnd||"14:00",plannedQty:edits.plannedQty||"",actualOutput:0,targetPcsMin:edits.targetPcsMin||"",plannedWorkers:edits.plannedWorkers||"",actualWorkers:0,breaks:[],...edits};
+      setOrders(prev=>[...prev,newOrder]);
+      setPendingEdits(prev=>{const n={...prev};delete n[orderId];return n;});
+      showToast("Work order created.");
+    }else{
+      setOrders(prev=>prev.map(o=>o.id===orderId?{...o,...edits}:o));
+      setPendingEdits(prev=>{const n={...prev};delete n[orderId];return n;});
+      showToast("Row saved.");
+    }
+  };
+
+  const handleSaveAll=()=>{
+    const count=Object.keys(pendingEdits).length;
+    setOrders(prev=>prev.map(o=>{const e=pendingEdits[o.id];return e?{...o,...e}:o;}));
+    Object.keys(pendingEdits).forEach(id=>{
+      if(id.startsWith("__ph__")){
+        const line=id.replace("__ph__","");const edits=pendingEdits[id];
+        const nw={id:generateWOId(),line,isPlaceholder:false,customer:edits.customer||"",sku:edits.sku||"",productCode:"",status:"Scheduled",scheduledStart:edits.scheduledStart||"06:00",scheduledEnd:edits.scheduledEnd||"14:00",plannedQty:edits.plannedQty||"",actualOutput:0,targetPcsMin:edits.targetPcsMin||"",plannedWorkers:edits.plannedWorkers||"",actualWorkers:0,breaks:[],...edits};
+        setOrders(prev=>[...prev,nw]);
+      }
+    });
+    setPendingEdits({});
+    showToast(`${count} work order${count!==1?"s":""} saved.`);
+  };
+
+  const handleDiscard=()=>{
+    setPendingEdits({});setActiveCell(null);
+    showToast("Changes discarded.","cancel");
+  };
+
+  useEffect(()=>{
+    const h=e=>{
+      if(!activeCell) return;
+      if(e.target.closest&&(e.target.closest('.cell-input')||e.target.closest('td'))) return;
+      setActiveCell(null);
+    };
+    document.addEventListener("mousedown",h);
+    return()=>document.removeEventListener("mousedown",h);
+  },[activeCell]);
+
+  const handleEdit=(order)=>{setActiveCell(null);setModal({order,isNew:false});};
+  const handleNew=()=>{setActiveCell(null);setModal({order:null,isNew:true});};
+  const handleModalSave=(updated)=>{
+    if(modal.isNew){
+      setOrders(prev=>[updated,...prev]);
+      showToast("Work order created.");
+    }else{
+      if(updated.id.startsWith("__ph__")){
+        setOrders(prev=>[...prev,{...updated,isPlaceholder:false}]);
+      }else{
+        setOrders(prev=>prev.map(o=>o.id===updated.id?updated:o));
+        setPendingEdits(prev=>{const n={...prev};delete n[updated.id];return n;});
+      }
+      showToast("Work order saved.");
+    }
+    setModal(null);
+  };
+  const handleCancel=(id)=>{
+    setOrders(prev=>prev.map(o=>o.id===id?{...o,status:"Cancelled"}:o));
+    showToast("Work order cancelled.","cancel");
+  };
+
+  const handleDuplicate=(order)=>{
+    const d=new Date().toISOString().slice(0,10).replace(/-/g,"");
+    const newOrder={
+      ...order,
+      id:`WO-${d}-${order.line.replace("-","")}-COPY`,
+      status:"Scheduled",
+      actualOutput:0,
+      actualWorkers:0,
+      breaks:order.breaks.map(b=>({...b})),
+      isPlaceholder:false,
+    };
+    setOrders(prev=>{
+      const idx=prev.findIndex(o=>o.id===order.id);
+      const next=[...prev];
+      next.splice(idx+1,0,newOrder);
+      return next;
+    });
+    showToast(`Duplicated as ${newOrder.id}`);
+  };
+
+  const nonPlaceholderVisible = visible.filter(r=>!r.isPlaceholder);
+  const placeholderVisible    = visible.filter(r=>r.isPlaceholder);
+
+  return (
+    <>
+      {/* ── Navigation ── */}
+      <nav className="nav">
+        <div className="nav-brand">
+          Production&nbsp;<span className="nav-brand-green">Intelligence</span>
+        </div>
+        <div className="nav-links">
+          {["Dashboard","Lines","Downtime","Issues","Work Orders"].map(item=>(
+            <a key={item} href="#"
+               className={`nav-link${item==="Work Orders"?" active":""}`}
+               onClick={e=>e.preventDefault()}>{item}</a>
+          ))}
+        </div>
+        <div className="nav-right">
+          <button className="nav-icon-btn" title="Notifications"><Icon name="bell" size={15}/></button>
+          <button className="nav-icon-btn" title="Help"><Icon name="help" size={15}/></button>
+          <button className="nav-icon-btn" title="Settings"><Icon name="settings" size={15}/></button>
+          <div className="nav-avatar">
+            <div className="nav-avatar-circle">RG</div>
+            <span className="nav-avatar-name">R. Guinto</span>
+          </div>
+        </div>
+      </nav>
+
+      <div className="page">
+        {/* ── Page header ── */}
+        <div className="page-header">
+          <div>
+            <div className="page-title">Work Orders</div>
+            <div className="page-subtitle">Manage daily production work orders across all lines</div>
+          </div>
+          <div className="page-header-right">
+            {hasDirty&&(
+              <>
+                <div className="unsaved-badge">
+                  <span className="unsaved-dot"/>
+                  {dirtyCount} row{dirtyCount!==1?"s":""} with unsaved changes
+                </div>
+                <button className="btn btn-ghost" onClick={handleDiscard}>Discard</button>
+                <button className="btn btn-success" onClick={handleSaveAll}>
+                  <Icon name="check" size={13} color="#fff"/> Save all changes
+                </button>
+              </>
+            )}
+            <button className="btn btn-primary" onClick={handleNew}>
+              <Icon name="plus" size={13} color="#fff"/> New WO
+            </button>
+          </div>
+        </div>
+
+        {/* ── Filter bar ── */}
+        <div className="filter-bar">
+          <span className="filter-label">Date</span>
+          <input type="date" className="filter-date" value={filterDate} onChange={e=>setFilterDate(e.target.value)}/>
+          <div className="filter-sep"/>
+          <select className="filter-select" value={filterLine} onChange={e=>setFilterLine(e.target.value)}>
+            <option>All Lines</option>{LINES.map(l=><option key={l}>{l}</option>)}
+          </select>
+          <select className="filter-select" value={filterCustomer} onChange={e=>setFilterCustomer(e.target.value)}>
+            <option>All Customers</option>{CUSTOMERS.map(c=><option key={c}>{c}</option>)}
+          </select>
+          <select className="filter-select" value={filterShift} onChange={e=>setFilterShift(e.target.value)}>
+            <option>All Shifts</option>{SHIFTS.map(s=><option key={s}>{s}</option>)}
+          </select>
+          <select className="filter-select"><option>All SKUs</option></select>
+        </div>
+
+        {/* ── Status tabs ── */}
+        <div className="tabs">
+          {STATUS_TABS.map(tab=>(
+            <button key={tab} className={`tab${activeTab===tab?" active":""}`}
+                    onClick={()=>setActiveTab(tab)}>
+              {tab}&nbsp;<span className="tab-count">{tabCounts[tab]}</span>
+            </button>
+          ))}
+        </div>
+
+        {/* ── Morning Setup Banner (between tabs and table) ── */}
+        {inSetupMode&&(
+          <div className="setup-banner">
+            <div className="setup-banner-left">
+              <span className="setup-banner-lightning">⚡</span>
+              <span className="setup-banner-text">
+                <strong>Morning setup</strong> — {readyCount} of {totalSetup} lines ready for shift
+              </span>
+            </div>
+            <div className="setup-banner-right">
+              <div className="setup-progress-bar">
+                <div className="setup-progress-fill" style={{width:`${totalSetup>0?Math.round(readyCount/totalSetup*100):0}%`}}/>
+              </div>
+              <button className="setup-dismiss" onClick={()=>setSetupDismissed(true)}>Dismiss</button>
+            </div>
+          </div>
+        )}
+
+        {/* ── Table ── */}
+        <div className="table-wrap">
+          {/* Hint bar */}
+          {visible.length>0&&(
+            <div className={`hint-bar${inSetupMode?" hint-bar-setup":""}`}>
+              {inSetupMode
+                ?<><Icon name="lightning" size={13} color="#d97706"/>
+                   <strong>Setup mode:</strong> Amber cells need your attention.
+                   &nbsp;<span className="hint-bar-sep">|</span>&nbsp;
+                   ✓ = ready &nbsp;· <span style={{color:"#d97706"}}>●</span> = partial &nbsp;·
+                   <span style={{color:"#dc2626"}}> ●</span> = missing
+                 </>
+                :<><Icon name="pencil" size={12}/>
+                   Click any cell to edit inline.
+                   &nbsp;<span className="hint-bar-sep">|</span>&nbsp;
+                   <kbd>Tab</kbd> next &nbsp;<kbd>Shift+Tab</kbd> prev &nbsp;<kbd>Enter</kbd> confirm &nbsp;<kbd>Esc</kbd> cancel
+                   <span style={{marginLeft:"auto",fontSize:11}}>Breaks &amp; shift times → <strong>Edit</strong> button</span>
+                 </>
+              }
+            </div>
+          )}
+
+          {visible.length===0
+            ? <div className="empty-state">
+                <div className="empty-state-icon">
+                  <Icon name="clipboard" size={40} color="#d1d5db"/>
+                </div>
+                <div className="empty-state-title">No work orders for this date</div>
+                <div className="empty-state-sub">Create one using the <strong>New WO</strong> button.</div>
+              </div>
+            : <table>
+                <colgroup>
+                  <col className="c-ready"/>
+                  <col className="c-dirty"/>
+                  <col className="c-woid"/>
+                  <col className="c-line"/>
+                  <col className="c-customer"/>
+                  <col className="c-sku"/>
+                  <col className="c-status"/>
+                  <col className="c-sched"/>
+                  <col className="c-qty"/>
+                  <col className="c-tpm"/>
+                  <col className="c-pw"/>
+                  <col className="c-aw"/>
+                  <col className="c-ppmh"/>
+                  <col className="c-ppm"/>
+                  <col className="c-prog"/>
+                  <col className="c-actions"/>
+                </colgroup>
+                <thead>
+                  <tr>
+                    <th className="th-indicator" title="Shift readiness"/>
+                    <th className="th-indicator"/>
+                    <th>WO ID</th>
+                    <th>Line</th>
+                    <th>Customer ✎</th>
+                    <th>SKU ✎</th>
+                    <th>Status</th>
+                    <th className="sorted">Scheduled<span className="sort-arrow">▲</span></th>
+                    <th>Output / Target ✎</th>
+                    <th className="th-center">Tgt/Min ✎</th>
+                    <th className="th-center">Plan W ✎</th>
+                    <th className="th-center">Act W ✎</th>
+                    <th className="th-center">PPMH 👷</th>
+                    <th className="th-center">PPM 👷</th>
+                    <th>Progress</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {visible.map(order=>{
+                    const re=pendingEdits[order.id]||{};
+                    return (
+                      <WORow
+                        key={order.id}
+                        order={{...order,...re}}
+                        rowEdits={re}
+                        activeCell={activeCell}
+                        onStartEdit={handleStartEdit}
+                        onCommit={handleCommit}
+                        onKeyDown={handleKeyDown}
+                        onRowSave={handleRowSave}
+                        onEdit={()=>handleEdit(order)}
+                        onCancel={handleCancel}
+                        onDuplicate={handleDuplicate}
+                        onFillDown={handleFillDown}
+                        inputRef={inputRef}
+                        inSetupMode={inSetupMode}
+                      />
+                    );
+                  })}
+                </tbody>
+              </table>
+          }
+        </div>
+
+        {/* ── Footer ── */}
+        <div className="table-footer">
+          <span>Showing {nonPlaceholderVisible.length} work orders{placeholderVisible.length>0?` · ${placeholderVisible.length} lines unscheduled`:""}</span>
+          <span>
+            {orders.filter(o=>o.status==="In Progress").length} in progress
+            &nbsp;·&nbsp;
+            {orders.filter(o=>o.status==="Completed").length} completed
+            &nbsp;·&nbsp;
+            {orders.filter(o=>o.status==="Scheduled").length} scheduled
+          </span>
+        </div>
+      </div>
+
+      {modal&&<WOModal order={modal.order} isNew={modal.isNew} onClose={()=>setModal(null)} onSave={handleModalSave}/>}
+      {toast&&<Toast message={toast.message} type={toast.type}/>}
+    </>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>
