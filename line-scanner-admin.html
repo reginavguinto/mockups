@@ -898,6 +898,23 @@
         </div>
         <div class="row-chevron">›</div>
       </div>
+
+      <!-- Check Out All Workers -->
+      <div class="list-row" onclick="openModal('modal-checkout-all')" style="border-top: 1px solid #f0c0c0;">
+        <div class="menu-icon-tile" style="background:#fdecea;">
+          <!-- clock with outward arrow -->
+          <svg viewBox="0 0 24 24" fill="none" stroke="#c0392b" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="11" cy="12" r="8"/>
+            <path d="M11 8v4l2.5 2"/>
+            <path d="M17 17l4 0M19 15l2 2-2 2"/>
+          </svg>
+        </div>
+        <div class="row-text">
+          <div class="row-label" style="color:#c0392b;">Check Out All Workers</div>
+          <div class="row-sub">Check out all current workers on this line.</div>
+        </div>
+        <div class="row-chevron" style="color:#c0392b;">›</div>
+      </div>
     </div>
 
     <div class="ec-footer">EC</div>
@@ -1234,6 +1251,24 @@
       <div class="modal-actions">
         <button class="btn-full btn-danger" onclick="closeModal('modal-logout')">Log Out</button>
         <button class="btn-full btn-secondary" onclick="closeModal('modal-logout')">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="modal-checkout-all">
+    <div class="modal">
+      <div class="modal-icon-row">
+        <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#c0392b" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="12" r="8"/>
+          <path d="M11 8v4l2.5 2"/>
+          <path d="M17 17l4 0M19 15l2 2-2 2"/>
+        </svg>
+      </div>
+      <div class="modal-title-center">Check Out All Workers?</div>
+      <div class="modal-body-center">This will check out all 8 workers currently on LINE-14. This cannot be undone.</div>
+      <div class="modal-actions">
+        <button class="btn-full btn-danger" onclick="closeModal('modal-checkout-all')">Check Out All</button>
+        <button class="btn-full btn-secondary" onclick="closeModal('modal-checkout-all')">Cancel</button>
       </div>
     </div>
   </div>
