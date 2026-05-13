@@ -1,0 +1,1835 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EC Line Scanner — Admin</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --blue:        #2980b9;
+      --blue-dark:   #1f6391;
+      --blue-light:  #d6eaf8;
+      --teal:        #1abc9c;
+      --green-text:  #27ae60;
+      --green-bg:    #d5f5e3;
+      --red-text:    #c0392b;
+      --red-bg:      #fdecea;
+      --orange-text: #e67e22;
+      --orange-bg:   #fef3e2;
+      --gray-text:   #7f8c8d;
+      --gray-bg:     #ecf0f1;
+      --gray-border: #bdc3c7;
+      --text:        #2c3e50;
+      --text-sub:    #7f8c8d;
+      --surface:     #ffffff;
+      --page-bg:     #f4f6f8;
+      --header-h:    72px;
+      --row-min:     72px;
+      --touch-min:   56px;
+    }
+
+    html, body {
+      height: 100%;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--page-bg);
+      color: var(--text);
+      font-size: 16px;
+      line-height: 1.4;
+      overflow-x: hidden;
+    }
+
+    /* ── Tablet shell ── */
+    #app {
+      max-width: 1024px;
+      min-height: 100vh;
+      margin: 0 auto;
+      background: var(--surface);
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* ── Screens ── */
+    .screen {
+      display: none;
+      flex-direction: column;
+      min-height: 100vh;
+      background: var(--surface);
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      animation: slideIn 0.18s ease;
+    }
+    .screen.active { display: flex; position: relative; }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(18px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+
+    /* ── Header ── */
+    .header {
+      display: flex;
+      align-items: center;
+      background: var(--blue);
+      color: #fff;
+      height: var(--header-h);
+      padding: 0 16px;
+      flex-shrink: 0;
+      gap: 12px;
+    }
+    .header-title {
+      flex: 1;
+      font-size: 20px;
+      font-weight: 600;
+      letter-spacing: 0.01em;
+    }
+    .header-btn {
+      background: none;
+      border: none;
+      color: #fff;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: var(--header-h);
+      height: var(--header-h);
+      font-size: 26px;
+      border-radius: 6px;
+      transition: background 0.12s;
+      -webkit-tap-highlight-color: transparent;
+      flex-shrink: 0;
+    }
+    .header-btn:active { background: rgba(255,255,255,0.15); }
+    .header-logout-btn {
+      min-width: unset;
+      width: auto;
+      padding: 0 16px;
+      gap: 8px;
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    /* ── Menu icon tile ── */
+    .menu-icon-tile {
+      width: 40px;
+      height: 40px;
+      border-radius: 9px;
+      background: #e8f4fc;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .menu-icon-tile svg {
+      width: 22px;
+      height: 22px;
+      stroke: #2980b9;
+      fill: none;
+      stroke-width: 1.75;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    /* ── List rows ── */
+    .list-row {
+      display: flex;
+      align-items: center;
+      min-height: var(--row-min);
+      padding: 14px 20px;
+      background: var(--surface);
+      border-bottom: 1px solid #e8ecef;
+      cursor: pointer;
+      gap: 16px;
+      -webkit-tap-highlight-color: transparent;
+      transition: background 0.1s;
+    }
+    .list-row:active { background: #f0f4f8; }
+
+    .row-text { flex: 1; min-width: 0; }
+    .row-label {
+      font-size: 17px;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .row-sub {
+      font-size: 13px;
+      color: var(--text-sub);
+      margin-top: 2px;
+    }
+    .row-chevron {
+      color: var(--gray-text);
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    /* ── Worker row stacked layout (Check-In & Training Types) ── */
+    .worker-row-text { flex: 1; min-width: 0; }
+    .worker-row-name {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .worker-row-role {
+      font-size: 13px;
+      color: var(--text-sub);
+      margin-top: 1px;
+    }
+    .worker-row-checkin {
+      font-size: 14px;
+      color: var(--text-sub);
+      margin-top: 5px;
+    }
+    .worker-row-checkin strong {
+      color: var(--text);
+      font-weight: 600;
+    }
+    .worker-row-badge { margin-top: 6px; }
+
+    /* ── Avatar ── */
+    .avatar {
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      background: var(--blue-light);
+      color: var(--blue);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+
+    /* ── Badges ── */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 12px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .badge-green  { background: var(--green-bg);  color: var(--green-text); }
+    .badge-red    { background: var(--red-bg);    color: var(--red-text);   }
+    .badge-orange { background: var(--orange-bg); color: var(--orange-text);}
+    .badge-gray   { background: var(--gray-bg);   color: var(--gray-text);  }
+    .badge-blue   { background: var(--blue-light); color: var(--blue);      }
+
+    /* ── Alert banner ── */
+    .alert-banner {
+      display: flex;
+      align-items: center;
+      background: #fef3e2;
+      border-bottom: 2px solid #f39c12;
+      padding: 14px 20px;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+    .alert-text {
+      flex: 1;
+      font-size: 15px;
+      color: #7d4e00;
+      font-weight: 500;
+    }
+    .alert-btn {
+      background: #e67e22;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 18px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      min-height: var(--touch-min);
+      -webkit-tap-highlight-color: transparent;
+    }
+    .alert-btn:active { background: #d35400; }
+
+    /* ── Filter pill bar ── */
+    .filter-bar {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 20px;
+      background: var(--surface);
+      border-bottom: 1px solid #e8ecef;
+      flex-shrink: 0;
+    }
+    .filter-divider {
+      width: 1px;
+      height: 28px;
+      background: #d0d5db;
+      margin: 0 4px;
+      flex-shrink: 0;
+    }
+    .filter-pill {
+      padding: 10px 24px;
+      border-radius: 999px;
+      border: 2px solid var(--blue);
+      background: transparent;
+      color: var(--blue);
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      min-height: var(--touch-min);
+      -webkit-tap-highlight-color: transparent;
+      transition: background 0.12s, color 0.12s;
+    }
+    .filter-pill.active {
+      background: var(--blue);
+      color: #fff;
+    }
+    .filter-pill:active { opacity: 0.8; }
+
+    /* ── Scrollable list area ── */
+    .list-body {
+      flex: 1;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    /* ── Footer EC mark ── */
+    .ec-footer {
+      text-align: center;
+      padding: 20px;
+      font-size: 24px;
+      font-weight: 900;
+      color: var(--teal);
+      letter-spacing: 2px;
+      flex-shrink: 0;
+    }
+
+    /* ── User card (admin menu) ── */
+    .user-card {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 20px 20px;
+      background: #f0f7ff;
+      border-bottom: 2px solid var(--blue-light);
+    }
+    .user-card .avatar {
+      width: 54px;
+      height: 54px;
+      font-size: 20px;
+    }
+
+    /* ── Clock events ── */
+    .worker-expandable {
+      border-bottom: 1px solid #e8ecef;
+    }
+    .worker-row-header {
+      display: flex;
+      align-items: center;
+      min-height: var(--row-min);
+      padding: 14px 20px;
+      cursor: pointer;
+      gap: 16px;
+      -webkit-tap-highlight-color: transparent;
+      transition: background 0.1s;
+    }
+    .worker-row-header:active { background: #f0f4f8; }
+
+    .event-count-badge {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: var(--blue);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 15px;
+      flex-shrink: 0;
+    }
+    .expand-chevron {
+      font-size: 18px;
+      color: var(--gray-text);
+      flex-shrink: 0;
+      transition: transform 0.2s;
+    }
+    .expand-chevron.open { transform: rotate(180deg); }
+
+    .events-list {
+      display: none;
+      background: #f8fafc;
+    }
+    .events-list.open { display: block; }
+
+    .event-row {
+      display: flex;
+      align-items: center;
+      padding: 12px 20px 12px 36px;
+      gap: 14px;
+      border-top: 1px solid #e8ecef;
+      min-height: 60px;
+    }
+    .event-icon {
+      flex-shrink: 0;
+      width: 22px;
+      height: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .event-icon svg { width: 18px; height: 18px; }
+    .event-type {
+      font-weight: 700;
+      font-size: 14px;
+    }
+    .event-type.in  { color: var(--green-text); }
+    .event-type.out { color: var(--red-text); }
+    .event-info { flex: 1; min-width: 0; }
+    .event-datetime {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .event-line {
+      font-size: 12px;
+      color: var(--text-sub);
+      margin-top: 2px;
+    }
+    .event-edit-btn {
+      background: none;
+      border: 1px solid var(--gray-border);
+      border-radius: 8px;
+      padding: 8px 14px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--blue);
+      cursor: pointer;
+      min-height: 44px;
+      flex-shrink: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .event-edit-btn:active { background: var(--blue-light); }
+
+    /* ── Worker badge info ── */
+    .worker-badge-info { flex: 1; min-width: 0; }
+    .worker-badge-id {
+      font-size: 13px;
+      color: var(--blue);
+      font-weight: 600;
+    }
+    .worker-badge-dept {
+      font-size: 12px;
+      color: var(--text-sub);
+    }
+
+    /* ── Modal backdrop ── */
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.45);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .modal-backdrop.open { display: flex; }
+
+    .modal {
+      background: var(--surface);
+      border-radius: 16px;
+      padding: 28px 24px 20px;
+      width: 100%;
+      max-width: 520px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    .modal-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+    .modal-subtitle {
+      font-size: 15px;
+      color: var(--text-sub);
+      margin-bottom: 20px;
+    }
+    .modal-context {
+      font-size: 13px;
+      color: var(--text-sub);
+    }
+
+    /* ── Modal ref line (de-emphasised context under subtitle) ── */
+    .modal-ref-line {
+      font-size: 13px;
+      color: var(--text-sub);
+      margin-bottom: 20px;
+      line-height: 1.5;
+    }
+    .modal-ref-time { color: var(--text); font-weight: 600; }
+    .modal-ref-link {
+      background: none;
+      border: none;
+      color: var(--blue);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+      text-decoration: underline;
+    }
+    .modal-ref-link:active { opacity: 0.7; }
+
+    /* ── Numeric keypad ── */
+    .numpad {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    .numpad-key {
+      background: #f0f2f5;
+      border: none;
+      border-radius: 10px;
+      font-size: 22px;
+      font-weight: 500;
+      color: var(--text);
+      min-height: 64px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      -webkit-tap-highlight-color: transparent;
+      transition: background 0.08s;
+      user-select: none;
+    }
+    .numpad-key:active { background: #d6dce4; }
+    .numpad-key:disabled { background: transparent; cursor: default; }
+    .numpad-back { color: var(--text-sub); }
+    .numpad-back:active { background: #d6dce4; }
+
+    /* wider modal for the keypad */
+    .modal-time-entry { max-width: 440px; }
+
+    /* ── Time input group ── */
+    /*
+      Layout: | HH (25%) | : (fixed) | MM (25%) | AM/PM (remaining, split 2) |
+      Use a CSS grid so all four zones share the modal width without overflow.
+    */
+    .time-input-group {
+      display: grid;
+      grid-template-columns: 1fr 20px 1fr 1fr;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+    .time-input {
+      width: 100%;
+      height: 72px;
+      font-size: 32px;
+      font-weight: 700;
+      text-align: center;
+      border: 2px solid var(--gray-border);
+      border-radius: 10px;
+      background: var(--surface);
+      color: var(--text);
+      outline: none;
+      -webkit-appearance: none;
+      appearance: none;
+      box-sizing: border-box;
+    }
+    .time-input:focus { border-color: var(--blue); }
+    .time-input.time-input-active { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(41,128,185,0.18); }
+    .time-colon {
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--text);
+      text-align: center;
+    }
+    /* AM/PM occupies the 4th grid column as a flex row */
+    .ampm-group {
+      display: flex;
+      gap: 6px;
+      height: 72px;
+    }
+    .ampm-btn {
+      flex: 1;
+      height: 100%;
+      border: 2px solid var(--gray-border);
+      border-radius: 10px;
+      background: transparent;
+      color: var(--text-sub);
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      transition: background 0.12s, color 0.12s, border-color 0.12s;
+    }
+    .ampm-btn.active {
+      background: var(--blue);
+      border-color: var(--blue);
+      color: #fff;
+    }
+
+    /* ── Modal action buttons ── */
+    .modal-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 8px;
+    }
+    .btn-full {
+      width: 100%;
+      min-height: 64px;
+      border-radius: 10px;
+      font-size: 17px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      -webkit-tap-highlight-color: transparent;
+      transition: opacity 0.12s;
+    }
+    .btn-full:active { opacity: 0.8; }
+    .btn-primary {
+      background: var(--blue);
+      color: #fff;
+    }
+    .btn-secondary {
+      background: transparent;
+      border: 2px solid var(--gray-border);
+      color: var(--gray-text);
+    }
+    .btn-danger {
+      background: #c0392b;
+      color: #fff;
+    }
+    .btn-orange {
+      background: #e67e22;
+      color: #fff;
+    }
+
+    /* ── Training Types inline screen ── */
+    .tt-worker-card {
+      padding: 16px 20px 20px;
+      border-bottom: 1px solid #e8ecef;
+      background: var(--surface);
+    }
+    .tt-worker-card.hidden { display: none; }
+    .tt-worker-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 12px;
+    }
+    .tt-worker-meta { flex: 1; min-width: 0; }
+    .tt-worker-name { font-size: 17px; font-weight: 700; color: var(--text); }
+    .tt-worker-role { font-size: 13px; color: var(--text-sub); margin-top: 2px; }
+    .tt-no-types {
+      font-size: 13px;
+      color: var(--red-text);
+      margin-top: 4px;
+      font-weight: 500;
+    }
+    .tt-chip-area { margin-left: 60px; }
+    .tt-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .tt-chip {
+      padding: 10px 16px;
+      border-radius: 999px;
+      border: 2px solid var(--gray-border);
+      background: transparent;
+      color: var(--text);
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      min-height: 44px;
+      -webkit-tap-highlight-color: transparent;
+      transition: background 0.12s, color 0.12s, border-color 0.12s;
+      user-select: none;
+    }
+    .tt-chip.selected {
+      background: var(--blue);
+      border-color: var(--blue);
+      color: #fff;
+    }
+    .tt-chip.chip-na { color: var(--gray-text); }
+    .tt-chip.chip-na.selected {
+      background: var(--gray-text);
+      border-color: var(--gray-text);
+      color: #fff;
+    }
+    .tt-other-note {
+      display: none;
+      margin-top: 10px;
+      align-items: center;
+      gap: 8px;
+    }
+    .tt-other-note.open { display: flex; }
+    .tt-other-input {
+      flex: 1;
+      border: 2px solid var(--blue);
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 15px;
+      outline: none;
+      min-height: 44px;
+      font-family: inherit;
+    }
+    .tt-other-save {
+      background: var(--blue);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 18px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      min-height: 44px;
+      white-space: nowrap;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .tt-other-save:active { opacity: 0.85; }
+    .tt-other-preview {
+      margin-top: 8px;
+      font-size: 13px;
+      color: var(--text-sub);
+      font-style: italic;
+    }
+
+    /* ── Coming soon placeholder ── */
+    .coming-soon {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-sub);
+      gap: 14px;
+      padding: 40px;
+    }
+    .coming-soon-icon { font-size: 56px; }
+    .coming-soon-title { font-size: 22px; font-weight: 700; color: var(--text); }
+    .coming-soon-sub { font-size: 15px; text-align: center; }
+
+    /* ── Logout confirm dialog (reuses .modal) ── */
+    .modal-icon-row {
+      text-align: center;
+      font-size: 40px;
+      margin-bottom: 12px;
+    }
+    .modal-title-center {
+      text-align: center;
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .modal-body-center {
+      text-align: center;
+      font-size: 15px;
+      color: var(--text-sub);
+      margin-bottom: 24px;
+    }
+
+    /* ── Supervisor auth modal extra styles ── */
+    .scan-badge-btn {
+      width: 100%;
+      min-height: 64px;
+      border-radius: 10px;
+      font-size: 17px;
+      font-weight: 600;
+      cursor: pointer;
+      background: var(--blue);
+      color: #fff;
+      border: none;
+      margin-bottom: 10px;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .scan-badge-btn:active { opacity: 0.85; }
+
+    /* hidden workers in filter */
+    .list-row.hidden { display: none; }
+
+    /* training types rows: top-align for stacked badge layout */
+    .list-row.worker-row { align-items: flex-start; padding-top: 16px; padding-bottom: 16px; }
+
+    /* ── Success toast ── */
+    .toast {
+      position: fixed;
+      bottom: 36px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: #1e7e3e;
+      color: #fff;
+      font-size: 15px;
+      font-weight: 600;
+      padding: 14px 24px;
+      border-radius: 12px;
+      box-shadow: 0 6px 24px rgba(0,0,0,0.22);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+      z-index: 200;
+      white-space: nowrap;
+    }
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+  </style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ══════════════════════════════════════════
+       SCREEN 1 — Admin Menu
+  ══════════════════════════════════════════ -->
+  <div id="screen-admin" class="screen active">
+    <div class="header">
+      <button class="header-btn" aria-label="Back">←</button>
+      <span class="header-title">Admin Menu</span>
+      <button class="header-btn header-logout-btn" id="logout-btn" aria-label="Log Out">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+          <polyline points="16 17 21 12 16 7"/>
+          <line x1="21" y1="12" x2="9" y2="12"/>
+        </svg>
+        <span>Log Out</span>
+      </button>
+    </div>
+
+    <!-- Logged-in user card -->
+    <div class="user-card">
+      <div class="avatar">RG</div>
+      <div>
+        <div style="font-size:18px;font-weight:700;">Regina Guinto</div>
+        <div style="font-size:14px;color:var(--text-sub);">Administrator</div>
+      </div>
+    </div>
+
+    <div class="list-body">
+      <!-- Check-In Times -->
+      <div class="list-row" onclick="navigate('screen-checkin')">
+        <div class="menu-icon-tile">
+          <!-- person silhouette + clock -->
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="9" cy="7" r="3"/>
+            <path d="M2 21c0-4 3.1-7 7-7"/>
+            <circle cx="18" cy="17" r="4"/>
+            <path d="M18 15v2.5l1.5 1.5"/>
+          </svg>
+        </div>
+        <div class="row-text">
+          <div class="row-label">Check-In Times <span style="font-weight:400;color:var(--gray-text)">(Line 5)</span></div>
+          <div class="row-sub">Review and edit worker check-in times</div>
+        </div>
+        <div class="row-chevron">›</div>
+      </div>
+
+      <!-- Training Types -->
+      <div class="list-row" onclick="navigate('screen-training')">
+        <div class="menu-icon-tile">
+          <!-- graduation cap -->
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M22 10l-10-6L2 10l10 6 10-6z"/>
+            <path d="M6 12.5v4.5c0 1.5 2.7 3 6 3s6-1.5 6-3v-4.5"/>
+            <line x1="22" y1="10" x2="22" y2="16"/>
+          </svg>
+        </div>
+        <div class="row-text">
+          <div class="row-label">Training Types <span style="font-weight:400;color:var(--gray-text)">(Line 5)</span></div>
+          <div class="row-sub">View and assign training types for workers</div>
+        </div>
+        <div class="row-chevron">›</div>
+      </div>
+
+      <!-- Clock Events -->
+      <div class="list-row" onclick="navigate('screen-clock-events')">
+        <div class="menu-icon-tile">
+          <!-- clock face -->
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="12" cy="12" r="9"/>
+            <path d="M12 7v5l3 3"/>
+          </svg>
+        </div>
+        <div class="row-text">
+          <div class="row-label">Clock Events <span style="font-weight:400;color:var(--gray-text)">(All Lines)</span></div>
+          <div class="row-sub">View clock history and manual adjustments</div>
+        </div>
+        <div class="row-chevron">›</div>
+      </div>
+
+      <!-- Badge Scans -->
+      <div class="list-row" onclick="navigate('screen-coming-soon', 'Badge Scans')">
+        <div class="menu-icon-tile">
+          <!-- ID card rectangle -->
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <rect x="2" y="5" width="20" height="14" rx="2"/>
+            <circle cx="8" cy="12" r="2"/>
+            <path d="M13 10h5M13 14h3"/>
+          </svg>
+        </div>
+        <div class="row-text">
+          <div class="row-label">Badge Scans <span style="font-weight:400;color:var(--gray-text)">(All Lines)</span></div>
+          <div class="row-sub">View scan history and abandoned scans</div>
+        </div>
+        <div class="row-chevron">›</div>
+      </div>
+
+      <!-- System Settings -->
+      <div class="list-row" onclick="navigate('screen-coming-soon', 'System Settings')">
+        <div class="menu-icon-tile">
+          <!-- gear -->
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+          </svg>
+        </div>
+        <div class="row-text">
+          <div class="row-label">System Settings</div>
+          <div class="row-sub">Device config, line code, network</div>
+        </div>
+        <div class="row-chevron">›</div>
+      </div>
+    </div>
+
+    <div class="ec-footer">EC</div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════
+       SCREEN 2 — Check-In Times
+  ══════════════════════════════════════════ -->
+  <div id="screen-checkin" class="screen">
+    <div class="header">
+      <button class="header-btn" onclick="navigate('screen-admin')" aria-label="Back">←</button>
+      <span class="header-title">Check-In Times (8)</span>
+    </div>
+
+    <div class="list-body">
+      <div class="list-row" onclick="openCheckinModal('Jessica Le', '12:30 PM')">
+        <div class="avatar">JL</div>
+        <div class="worker-badge-info">
+          <div class="row-label">Jessica Le</div>
+          <div class="worker-badge-dept">Line Worker</div>
+          <div class="worker-badge-dept" style="margin-top:3px;color:var(--text)">Checked in: <strong>12:30 PM</strong></div>
+        </div>
+        <button class="event-edit-btn" onclick="event.stopPropagation(); openCheckinModal('Jessica Le', '12:30 PM')"><svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="flex-shrink:0"><path d="M9.95 1.05a1.5 1.5 0 0 1 2.12 0l.88.88a1.5 1.5 0 0 1 0 2.12L4.5 12.5 1 13l.5-3.5 8.45-8.45z"/><path d="M1 13l.5-3.5 3 3L1 13z"/></svg> Edit</button>
+      </div>
+
+      <div class="list-row" onclick="openCheckinModal('Emma Moore', '12:30 PM')">
+        <div class="avatar">EM</div>
+        <div class="worker-badge-info">
+          <div class="row-label">Emma Moore</div>
+          <div class="worker-badge-dept">Line Worker</div>
+          <div class="worker-badge-dept" style="margin-top:3px;color:var(--text)">Checked in: <strong>12:30 PM</strong></div>
+        </div>
+        <button class="event-edit-btn" onclick="event.stopPropagation(); openCheckinModal('Emma Moore', '12:30 PM')"><svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="flex-shrink:0"><path d="M9.95 1.05a1.5 1.5 0 0 1 2.12 0l.88.88a1.5 1.5 0 0 1 0 2.12L4.5 12.5 1 13l.5-3.5 8.45-8.45z"/><path d="M1 13l.5-3.5 3 3L1 13z"/></svg> Edit</button>
+      </div>
+
+      <div class="list-row" onclick="openCheckinModal('James Lee', '10:44 AM')">
+        <div class="avatar">JL</div>
+        <div class="worker-badge-info">
+          <div class="row-label">James Lee</div>
+          <div class="worker-badge-dept">Line Worker</div>
+          <div class="worker-badge-dept" style="margin-top:3px;color:var(--text)">Checked in: <strong>10:44 AM</strong></div>
+        </div>
+        <button class="event-edit-btn" onclick="event.stopPropagation(); openCheckinModal('James Lee', '10:44 AM')"><svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="flex-shrink:0"><path d="M9.95 1.05a1.5 1.5 0 0 1 2.12 0l.88.88a1.5 1.5 0 0 1 0 2.12L4.5 12.5 1 13l.5-3.5 8.45-8.45z"/><path d="M1 13l.5-3.5 3 3L1 13z"/></svg> Edit</button>
+      </div>
+
+      <div class="list-row" onclick="openCheckinModal('Frank Lim', '12:30 PM')">
+        <div class="avatar">FL</div>
+        <div class="worker-badge-info">
+          <div class="row-label">Frank Lim</div>
+          <div class="worker-badge-dept">Line Worker</div>
+          <div class="worker-badge-dept" style="margin-top:3px;color:var(--text)">Checked in: <strong>12:30 PM</strong></div>
+        </div>
+        <button class="event-edit-btn" onclick="event.stopPropagation(); openCheckinModal('Frank Lim', '12:30 PM')"><svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="flex-shrink:0"><path d="M9.95 1.05a1.5 1.5 0 0 1 2.12 0l.88.88a1.5 1.5 0 0 1 0 2.12L4.5 12.5 1 13l.5-3.5 8.45-8.45z"/><path d="M1 13l.5-3.5 3 3L1 13z"/></svg> Edit</button>
+      </div>
+
+      <div class="list-row" onclick="openCheckinModal('Lily Baker', '12:30 PM')">
+        <div class="avatar">LB</div>
+        <div class="worker-badge-info">
+          <div class="row-label">Lily Baker</div>
+          <div class="worker-badge-dept">Line Worker</div>
+          <div class="worker-badge-dept" style="margin-top:3px;color:var(--text)">Checked in: <strong>12:30 PM</strong></div>
+        </div>
+        <button class="event-edit-btn" onclick="event.stopPropagation(); openCheckinModal('Lily Baker', '12:30 PM')"><svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="flex-shrink:0"><path d="M9.95 1.05a1.5 1.5 0 0 1 2.12 0l.88.88a1.5 1.5 0 0 1 0 2.12L4.5 12.5 1 13l.5-3.5 8.45-8.45z"/><path d="M1 13l.5-3.5 3 3L1 13z"/></svg> Edit</button>
+      </div>
+
+      <div class="list-row" onclick="openCheckinModal('Carlos Rivera', '11:15 AM')">
+        <div class="avatar">CR</div>
+        <div class="worker-badge-info">
+          <div class="row-label">Carlos Rivera</div>
+          <div class="worker-badge-dept">Line Worker</div>
+          <div class="worker-badge-dept" style="margin-top:3px;color:var(--text)">Checked in: <strong>11:15 AM</strong></div>
+        </div>
+        <button class="event-edit-btn" onclick="event.stopPropagation(); openCheckinModal('Carlos Rivera', '11:15 AM')"><svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="flex-shrink:0"><path d="M9.95 1.05a1.5 1.5 0 0 1 2.12 0l.88.88a1.5 1.5 0 0 1 0 2.12L4.5 12.5 1 13l.5-3.5 8.45-8.45z"/><path d="M1 13l.5-3.5 3 3L1 13z"/></svg> Edit</button>
+      </div>
+
+      <div class="list-row" onclick="openCheckinModal('Anh Nguyen', '12:30 PM')">
+        <div class="avatar">AN</div>
+        <div class="worker-badge-info">
+          <div class="row-label">Anh Nguyen</div>
+          <div class="worker-badge-dept">Line Worker</div>
+          <div class="worker-badge-dept" style="margin-top:3px;color:var(--text)">Checked in: <strong>12:30 PM</strong></div>
+        </div>
+        <button class="event-edit-btn" onclick="event.stopPropagation(); openCheckinModal('Anh Nguyen', '12:30 PM')"><svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="flex-shrink:0"><path d="M9.95 1.05a1.5 1.5 0 0 1 2.12 0l.88.88a1.5 1.5 0 0 1 0 2.12L4.5 12.5 1 13l.5-3.5 8.45-8.45z"/><path d="M1 13l.5-3.5 3 3L1 13z"/></svg> Edit</button>
+      </div>
+
+      <div class="list-row" onclick="openCheckinModal('David Mitchell', '9:58 AM')">
+        <div class="avatar">DM</div>
+        <div class="worker-badge-info">
+          <div class="row-label">David Mitchell</div>
+          <div class="worker-badge-dept">Line Worker</div>
+          <div class="worker-badge-dept" style="margin-top:3px;color:var(--text)">Checked in: <strong>9:58 AM</strong></div>
+        </div>
+        <button class="event-edit-btn" onclick="event.stopPropagation(); openCheckinModal('David Mitchell', '9:58 AM')"><svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="flex-shrink:0"><path d="M9.95 1.05a1.5 1.5 0 0 1 2.12 0l.88.88a1.5 1.5 0 0 1 0 2.12L4.5 12.5 1 13l.5-3.5 8.45-8.45z"/><path d="M1 13l.5-3.5 3 3L1 13z"/></svg> Edit</button>
+      </div>
+    </div>
+
+    <div class="ec-footer">EC</div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════
+       SCREEN 3 — Training Types
+  ══════════════════════════════════════════ -->
+  <div id="screen-training" class="screen">
+    <div class="header">
+      <button class="header-btn" onclick="navigate('screen-admin')" aria-label="Back">←</button>
+      <span class="header-title">Training Types (8)</span>
+    </div>
+
+    <!-- Alert banner -->
+    <div class="alert-banner" id="tt-alert-banner">
+      <div class="alert-text">⚠ Missing Training Types: 3 workers have no types assigned.</div>
+      <button class="alert-btn" id="tt-filter-btn" onclick="toggleMissingFilter()">Show missing only</button>
+    </div>
+
+    <div class="list-body" id="tt-list-body" style="padding-bottom:80px">
+      <!-- Workers rendered by JS — see initTrainingScreen() -->
+    </div>
+
+    <!-- Fixed Save All bar -->
+    <div style="position:fixed;bottom:0;left:0;right:0;padding:12px 16px;background:#fff;border-top:1px solid #e8ecef;z-index:50;max-width:1024px;margin:0 auto">
+      <button class="btn-full btn-primary" style="min-height:64px;font-size:18px" onclick="saveAllTrainingTypes()">Save all</button>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════
+       SCREEN 4 — Clock Events
+  ══════════════════════════════════════════ -->
+  <div id="screen-clock-events" class="screen">
+    <div class="header">
+      <button class="header-btn" onclick="navigate('screen-admin')" aria-label="Back">←</button>
+      <span class="header-title">Clock Events</span>
+    </div>
+
+    <div class="filter-bar">
+      <button class="filter-pill active" id="filter-this-line" onclick="setLineFilter('this')">This Line</button>
+      <button class="filter-pill" id="filter-all-lines" onclick="setLineFilter('all')">All Lines</button>
+      <div class="filter-divider"></div>
+      <button class="filter-pill active" id="filter-all-events" onclick="setEventFilter('all')">All Events</button>
+      <button class="filter-pill" id="filter-clock-in" onclick="setEventFilter('in')">Clock-In</button>
+      <button class="filter-pill" id="filter-clock-out" onclick="setEventFilter('out')">Clock-Out</button>
+    </div>
+
+    <div class="list-body">
+
+      <!-- Worker 1: Sergey Gorbach (expanded by default) -->
+      <div class="worker-expandable">
+        <div class="worker-row-header" onclick="toggleExpand('worker-1')">
+          <div class="avatar">SG</div>
+          <div class="worker-badge-info">
+            <div class="row-label">Sergey Gorbach</div>
+            <div class="worker-badge-id">ECS 8</div>
+            <div class="worker-badge-dept">SDE</div>
+          </div>
+          <div class="event-count-badge">4</div>
+          <div class="expand-chevron open" id="chevron-worker-1">▼</div>
+        </div>
+
+        <div class="events-list open" id="events-worker-1">
+          <!-- Event 1 — LINE-14 (same line, no auth) -->
+          <div class="event-row" style="cursor:pointer" onclick="handleEditEvent(event, 'LINE-14', 'Sergey Gorbach', '9:01 PM', '05/12 9:01 PM · From LINE-03 → LINE-14')">
+            <div class="event-icon"><svg viewBox="0 0 10 10" fill="#27ae60" xmlns="http://www.w3.org/2000/svg"><circle cx="5" cy="5" r="5"/></svg></div>
+            <div class="event-info">
+              <div class="event-type in">CLOCK-IN</div>
+              <div class="event-datetime">05/12 9:01 PM</div>
+              <div class="event-line">From LINE-03 → LINE-14</div>
+            </div>
+            <button class="event-edit-btn" onclick="event.stopPropagation(); handleEditEvent(event, 'LINE-14', 'Sergey Gorbach', '9:01 PM', '05/12 9:01 PM · From LINE-03 → LINE-14')"><svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="flex-shrink:0"><path d="M9.95 1.05a1.5 1.5 0 0 1 2.12 0l.88.88a1.5 1.5 0 0 1 0 2.12L4.5 12.5 1 13l.5-3.5 8.45-8.45z"/><path d="M1 13l.5-3.5 3 3L1 13z"/></svg> Edit</button>
+          </div>
+          <!-- Event 2 — LINE-03 (other line, requires auth) -->
+          <div class="event-row" style="cursor:pointer" onclick="handleEditEvent(event, 'LINE-03', 'Sergey Gorbach', '1:07 PM', '05/12 1:07 PM · From LINE-17 → LINE-03')">
+            <div class="event-icon"><svg viewBox="0 0 10 10" fill="#27ae60" xmlns="http://www.w3.org/2000/svg"><circle cx="5" cy="5" r="5"/></svg></div>
+            <div class="event-info">
+              <div class="event-type in">CLOCK-IN</div>
+              <div class="event-datetime">05/12 1:07 PM</div>
+              <div class="event-line">From LINE-17 → LINE-03</div>
+            </div>
+            <button class="event-edit-btn" onclick="event.stopPropagation(); handleEditEvent(event, 'LINE-03', 'Sergey Gorbach', '1:07 PM', '05/12 1:07 PM · From LINE-17 → LINE-03')"><svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="flex-shrink:0"><path d="M9.95 1.05a1.5 1.5 0 0 1 2.12 0l.88.88a1.5 1.5 0 0 1 0 2.12L4.5 12.5 1 13l.5-3.5 8.45-8.45z"/><path d="M1 13l.5-3.5 3 3L1 13z"/></svg> Edit</button>
+          </div>
+          <!-- Event 3 — LINE-17 (other line, requires auth) -->
+          <div class="event-row" style="cursor:pointer" onclick="handleEditEvent(event, 'LINE-17', 'Sergey Gorbach', '8:20 PM', '05/11 8:20 PM · From LINE-03 → LINE-17')">
+            <div class="event-icon"><svg viewBox="0 0 10 10" fill="#27ae60" xmlns="http://www.w3.org/2000/svg"><circle cx="5" cy="5" r="5"/></svg></div>
+            <div class="event-info">
+              <div class="event-type in">CLOCK-IN</div>
+              <div class="event-datetime">05/11 8:20 PM</div>
+              <div class="event-line">From LINE-03 → LINE-17</div>
+            </div>
+            <button class="event-edit-btn" onclick="event.stopPropagation(); handleEditEvent(event, 'LINE-17', 'Sergey Gorbach', '8:20 PM', '05/11 8:20 PM · From LINE-03 → LINE-17')"><svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="flex-shrink:0"><path d="M9.95 1.05a1.5 1.5 0 0 1 2.12 0l.88.88a1.5 1.5 0 0 1 0 2.12L4.5 12.5 1 13l.5-3.5 8.45-8.45z"/><path d="M1 13l.5-3.5 3 3L1 13z"/></svg> Edit</button>
+          </div>
+          <!-- Event 4 — LINE-03 (other line) -->
+          <div class="event-row" style="cursor:pointer" onclick="handleEditEvent(event, 'LINE-03', 'Sergey Gorbach', '2:47 PM', '05/11 2:47 PM · LINE-03')">
+            <div class="event-icon"><svg viewBox="0 0 10 10" fill="#27ae60" xmlns="http://www.w3.org/2000/svg"><circle cx="5" cy="5" r="5"/></svg></div>
+            <div class="event-info">
+              <div class="event-type in">CLOCK-IN</div>
+              <div class="event-datetime">05/11 2:47 PM</div>
+              <div class="event-line">LINE-03</div>
+            </div>
+            <button class="event-edit-btn" onclick="event.stopPropagation(); handleEditEvent(event, 'LINE-03', 'Sergey Gorbach', '2:47 PM', '05/11 2:47 PM · LINE-03')"><svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="flex-shrink:0"><path d="M9.95 1.05a1.5 1.5 0 0 1 2.12 0l.88.88a1.5 1.5 0 0 1 0 2.12L4.5 12.5 1 13l.5-3.5 8.45-8.45z"/><path d="M1 13l.5-3.5 3 3L1 13z"/></svg> Edit</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Worker 2: Chulwoo Kim (collapsed) -->
+      <div class="worker-expandable">
+        <div class="worker-row-header" onclick="toggleExpand('worker-2')">
+          <div class="avatar">CK</div>
+          <div class="worker-badge-info">
+            <div class="row-label">Chulwoo Kim</div>
+            <div class="worker-badge-id">ECS 3.0</div>
+            <div class="worker-badge-dept">SDE</div>
+          </div>
+          <div class="event-count-badge">3</div>
+          <div class="expand-chevron" id="chevron-worker-2">▼</div>
+        </div>
+
+        <div class="events-list" id="events-worker-2">
+          <div class="event-row" style="cursor:pointer" onclick="handleEditEvent(event, 'LINE-14', 'Chulwoo Kim', '8:45 AM', '05/12 8:45 AM · LINE-14')">
+            <div class="event-icon"><svg viewBox="0 0 10 10" fill="#27ae60" xmlns="http://www.w3.org/2000/svg"><circle cx="5" cy="5" r="5"/></svg></div>
+            <div class="event-info">
+              <div class="event-type in">CLOCK-IN</div>
+              <div class="event-datetime">05/12 8:45 AM</div>
+              <div class="event-line">LINE-14</div>
+            </div>
+            <button class="event-edit-btn" onclick="event.stopPropagation(); handleEditEvent(event, 'LINE-14', 'Chulwoo Kim', '8:45 AM', '05/12 8:45 AM · LINE-14')"><svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="flex-shrink:0"><path d="M9.95 1.05a1.5 1.5 0 0 1 2.12 0l.88.88a1.5 1.5 0 0 1 0 2.12L4.5 12.5 1 13l.5-3.5 8.45-8.45z"/><path d="M1 13l.5-3.5 3 3L1 13z"/></svg> Edit</button>
+          </div>
+          <div class="event-row" style="cursor:pointer" onclick="handleEditEvent(event, 'LINE-14', 'Chulwoo Kim', '12:00 PM', '05/12 12:00 PM · LINE-14')">
+            <div class="event-icon"><svg viewBox="0 0 10 10" fill="#c0392b" xmlns="http://www.w3.org/2000/svg"><circle cx="5" cy="5" r="5"/></svg></div>
+            <div class="event-info">
+              <div class="event-type out">CLOCK-OUT</div>
+              <div class="event-datetime">05/12 12:00 PM</div>
+              <div class="event-line">LINE-14</div>
+            </div>
+            <button class="event-edit-btn" onclick="event.stopPropagation(); handleEditEvent(event, 'LINE-14', 'Chulwoo Kim', '12:00 PM', '05/12 12:00 PM · LINE-14')"><svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="flex-shrink:0"><path d="M9.95 1.05a1.5 1.5 0 0 1 2.12 0l.88.88a1.5 1.5 0 0 1 0 2.12L4.5 12.5 1 13l.5-3.5 8.45-8.45z"/><path d="M1 13l.5-3.5 3 3L1 13z"/></svg> Edit</button>
+          </div>
+          <div class="event-row" style="cursor:pointer" onclick="handleEditEvent(event, 'LINE-14', 'Chulwoo Kim', '1:00 PM', '05/12 1:00 PM · LINE-14')">
+            <div class="event-icon"><svg viewBox="0 0 10 10" fill="#27ae60" xmlns="http://www.w3.org/2000/svg"><circle cx="5" cy="5" r="5"/></svg></div>
+            <div class="event-info">
+              <div class="event-type in">CLOCK-IN</div>
+              <div class="event-datetime">05/12 1:00 PM</div>
+              <div class="event-line">LINE-14</div>
+            </div>
+            <button class="event-edit-btn" onclick="event.stopPropagation(); handleEditEvent(event, 'LINE-14', 'Chulwoo Kim', '1:00 PM', '05/12 1:00 PM · LINE-14')"><svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="flex-shrink:0"><path d="M9.95 1.05a1.5 1.5 0 0 1 2.12 0l.88.88a1.5 1.5 0 0 1 0 2.12L4.5 12.5 1 13l.5-3.5 8.45-8.45z"/><path d="M1 13l.5-3.5 3 3L1 13z"/></svg> Edit</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Worker 3: Alexander Taylor (collapsed) -->
+      <div class="worker-expandable">
+        <div class="worker-row-header" onclick="toggleExpand('worker-3')">
+          <div class="avatar">AT</div>
+          <div class="worker-badge-info">
+            <div class="row-label">Alexander Taylor</div>
+            <div class="worker-badge-id">SAA 9895</div>
+          </div>
+          <div class="event-count-badge">3</div>
+          <div class="expand-chevron" id="chevron-worker-3">▼</div>
+        </div>
+
+        <div class="events-list" id="events-worker-3">
+          <div class="event-row" style="cursor:pointer" onclick="handleEditEvent(event, 'LINE-14', 'Alexander Taylor', '7:00 AM', '05/13 7:00 AM · LINE-14')">
+            <div class="event-icon"><svg viewBox="0 0 10 10" fill="#27ae60" xmlns="http://www.w3.org/2000/svg"><circle cx="5" cy="5" r="5"/></svg></div>
+            <div class="event-info">
+              <div class="event-type in">CLOCK-IN</div>
+              <div class="event-datetime">05/13 7:00 AM</div>
+              <div class="event-line">LINE-14</div>
+            </div>
+            <button class="event-edit-btn" onclick="event.stopPropagation(); handleEditEvent(event, 'LINE-14', 'Alexander Taylor', '7:00 AM', '05/13 7:00 AM · LINE-14')"><svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="flex-shrink:0"><path d="M9.95 1.05a1.5 1.5 0 0 1 2.12 0l.88.88a1.5 1.5 0 0 1 0 2.12L4.5 12.5 1 13l.5-3.5 8.45-8.45z"/><path d="M1 13l.5-3.5 3 3L1 13z"/></svg> Edit</button>
+          </div>
+          <div class="event-row" style="cursor:pointer" onclick="handleEditEvent(event, 'LINE-14', 'Alexander Taylor', '3:30 PM', '05/13 3:30 PM · LINE-14')">
+            <div class="event-icon"><svg viewBox="0 0 10 10" fill="#c0392b" xmlns="http://www.w3.org/2000/svg"><circle cx="5" cy="5" r="5"/></svg></div>
+            <div class="event-info">
+              <div class="event-type out">CLOCK-OUT</div>
+              <div class="event-datetime">05/13 3:30 PM</div>
+              <div class="event-line">LINE-14</div>
+            </div>
+            <button class="event-edit-btn" onclick="event.stopPropagation(); handleEditEvent(event, 'LINE-14', 'Alexander Taylor', '3:30 PM', '05/13 3:30 PM · LINE-14')"><svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="flex-shrink:0"><path d="M9.95 1.05a1.5 1.5 0 0 1 2.12 0l.88.88a1.5 1.5 0 0 1 0 2.12L4.5 12.5 1 13l.5-3.5 8.45-8.45z"/><path d="M1 13l.5-3.5 3 3L1 13z"/></svg> Edit</button>
+          </div>
+          <div class="event-row" style="cursor:pointer" onclick="handleEditEvent(event, 'LINE-14', 'Alexander Taylor', '4:00 PM', '05/13 4:00 PM · LINE-14')">
+            <div class="event-icon"><svg viewBox="0 0 10 10" fill="#27ae60" xmlns="http://www.w3.org/2000/svg"><circle cx="5" cy="5" r="5"/></svg></div>
+            <div class="event-info">
+              <div class="event-type in">CLOCK-IN</div>
+              <div class="event-datetime">05/13 4:00 PM</div>
+              <div class="event-line">LINE-14</div>
+            </div>
+            <button class="event-edit-btn" onclick="event.stopPropagation(); handleEditEvent(event, 'LINE-14', 'Alexander Taylor', '4:00 PM', '05/13 4:00 PM · LINE-14')"><svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="flex-shrink:0"><path d="M9.95 1.05a1.5 1.5 0 0 1 2.12 0l.88.88a1.5 1.5 0 0 1 0 2.12L4.5 12.5 1 13l.5-3.5 8.45-8.45z"/><path d="M1 13l.5-3.5 3 3L1 13z"/></svg> Edit</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <div class="ec-footer">EC</div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════
+       SCREEN 5 — Coming Soon placeholder
+  ══════════════════════════════════════════ -->
+  <div id="screen-coming-soon" class="screen">
+    <div class="header">
+      <button class="header-btn" onclick="navigate('screen-admin')" aria-label="Back">←</button>
+      <span class="header-title" id="coming-soon-title">Coming Soon</span>
+    </div>
+    <div class="coming-soon">
+      <div class="coming-soon-icon">
+        <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#bdc3c7" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="12" y1="8" x2="12" y2="12"/>
+          <line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+      </div>
+      <div class="coming-soon-title">Coming Soon</div>
+      <div class="coming-soon-sub">This feature is not yet available.<br>Check back in a future update.</div>
+    </div>
+    <div class="ec-footer">EC</div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════
+       MODAL — Logout Confirm
+  ══════════════════════════════════════════ -->
+  <div class="modal-backdrop" id="modal-logout">
+    <div class="modal">
+      <div class="modal-icon-row">
+        <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#c0392b" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+          <polyline points="16 17 21 12 16 7"/>
+          <line x1="21" y1="12" x2="9" y2="12"/>
+        </svg>
+      </div>
+      <div class="modal-title-center">Log Out?</div>
+      <div class="modal-body-center">You will be returned to the login screen. Any unsaved changes will be lost.</div>
+      <div class="modal-actions">
+        <button class="btn-full btn-danger" onclick="closeModal('modal-logout')">Log Out</button>
+        <button class="btn-full btn-secondary" onclick="closeModal('modal-logout')">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════
+       MODAL — Edit Check-In Time
+  ══════════════════════════════════════════ -->
+  <div class="modal-backdrop" id="modal-checkin-edit">
+    <div class="modal modal-time-entry">
+      <div class="modal-title">Edit Check-In Time</div>
+      <div class="modal-subtitle" id="checkin-modal-worker-name">Worker Name</div>
+      <div class="modal-ref-line">
+        Currently recorded: <span id="checkin-current-time" class="modal-ref-time">12:30 PM</span>
+        · <button class="modal-ref-link" onclick="useCurrentTime('checkin')">Use current time</button>
+      </div>
+
+      <div class="time-input-group">
+        <input class="time-input" id="checkin-hh" type="text" inputmode="none"
+               placeholder="HH" maxlength="2" readonly
+               onfocus="setActiveField('checkin','hh')" onclick="setActiveField('checkin','hh')" />
+        <div class="time-colon">:</div>
+        <input class="time-input" id="checkin-mm" type="text" inputmode="none"
+               placeholder="MM" maxlength="2" readonly
+               onfocus="setActiveField('checkin','mm')" onclick="setActiveField('checkin','mm')" />
+        <div class="ampm-group">
+          <button class="ampm-btn active" id="checkin-am" onclick="selectAMPM('checkin', 'AM')">AM</button>
+          <button class="ampm-btn" id="checkin-pm" onclick="selectAMPM('checkin', 'PM')">PM</button>
+        </div>
+      </div>
+
+      <div class="numpad" id="checkin-numpad" data-prefix="checkin">
+        <button class="numpad-key" onclick="numpadPress('checkin',1)">1</button>
+        <button class="numpad-key" onclick="numpadPress('checkin',2)">2</button>
+        <button class="numpad-key" onclick="numpadPress('checkin',3)">3</button>
+        <button class="numpad-key" onclick="numpadPress('checkin',4)">4</button>
+        <button class="numpad-key" onclick="numpadPress('checkin',5)">5</button>
+        <button class="numpad-key" onclick="numpadPress('checkin',6)">6</button>
+        <button class="numpad-key" onclick="numpadPress('checkin',7)">7</button>
+        <button class="numpad-key" onclick="numpadPress('checkin',8)">8</button>
+        <button class="numpad-key" onclick="numpadPress('checkin',9)">9</button>
+        <button class="numpad-key numpad-blank" disabled></button>
+        <button class="numpad-key" onclick="numpadPress('checkin',0)">0</button>
+        <button class="numpad-key numpad-back" onclick="numpadBack('checkin')">
+          <svg width="20" height="14" viewBox="0 0 24 16" fill="currentColor"><path d="M9 0L0 8l9 8V11h15V5H9V0z"/></svg>
+        </button>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn-full btn-primary" onclick="closeModal('modal-checkin-edit'); showToast('Check-in time updated')">OK</button>
+        <button class="btn-full btn-secondary" onclick="closeModal('modal-checkin-edit')">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Training Types modal removed — inline chips on screen -->
+
+
+  <!-- ══════════════════════════════════════════
+       MODAL — Edit Clock Event Time
+  ══════════════════════════════════════════ -->
+  <div class="modal-backdrop" id="modal-clock-edit">
+    <div class="modal modal-time-entry">
+      <div class="modal-title">Edit Clock Event</div>
+      <div class="modal-subtitle" id="clock-modal-worker-name">Worker Name</div>
+      <div class="modal-ref-line" id="clock-ref-line">
+        Original: <span id="clock-original-ref">—</span>
+      </div>
+
+      <div class="time-input-group">
+        <input class="time-input" id="clock-hh" type="text" inputmode="none"
+               placeholder="HH" maxlength="2" readonly
+               onfocus="setActiveField('clock','hh')" onclick="setActiveField('clock','hh')" />
+        <div class="time-colon">:</div>
+        <input class="time-input" id="clock-mm" type="text" inputmode="none"
+               placeholder="MM" maxlength="2" readonly
+               onfocus="setActiveField('clock','mm')" onclick="setActiveField('clock','mm')" />
+        <div class="ampm-group">
+          <button class="ampm-btn active" id="clock-am" onclick="selectAMPM('clock', 'AM')">AM</button>
+          <button class="ampm-btn" id="clock-pm" onclick="selectAMPM('clock', 'PM')">PM</button>
+        </div>
+      </div>
+
+      <div class="numpad" id="clock-numpad" data-prefix="clock">
+        <button class="numpad-key" onclick="numpadPress('clock',1)">1</button>
+        <button class="numpad-key" onclick="numpadPress('clock',2)">2</button>
+        <button class="numpad-key" onclick="numpadPress('clock',3)">3</button>
+        <button class="numpad-key" onclick="numpadPress('clock',4)">4</button>
+        <button class="numpad-key" onclick="numpadPress('clock',5)">5</button>
+        <button class="numpad-key" onclick="numpadPress('clock',6)">6</button>
+        <button class="numpad-key" onclick="numpadPress('clock',7)">7</button>
+        <button class="numpad-key" onclick="numpadPress('clock',8)">8</button>
+        <button class="numpad-key" onclick="numpadPress('clock',9)">9</button>
+        <button class="numpad-key numpad-blank" disabled></button>
+        <button class="numpad-key" onclick="numpadPress('clock',0)">0</button>
+        <button class="numpad-key numpad-back" onclick="numpadBack('clock')">
+          <svg width="20" height="14" viewBox="0 0 24 16" fill="currentColor"><path d="M9 0L0 8l9 8V11h15V5H9V0z"/></svg>
+        </button>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn-full btn-primary" onclick="closeModal('modal-clock-edit'); showToast('Clock event updated')">OK</button>
+        <button class="btn-full btn-secondary" onclick="closeModal('modal-clock-edit')">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════
+       MODAL — Supervisor Auth Required
+  ══════════════════════════════════════════ -->
+  <div class="modal-backdrop" id="modal-supervisor-auth">
+    <div class="modal">
+      <div class="modal-icon-row">
+        <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#2980b9" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+        </svg>
+      </div>
+      <div class="modal-title-center">Supervisor Auth Required</div>
+      <div class="modal-body-center">
+        Editing events on other lines requires supervisor authorization.<br>
+        Please scan a supervisor badge to continue.
+      </div>
+      <button class="scan-badge-btn" onclick="simulateSupervisorScan()">Scan Badge</button>
+      <button class="btn-full btn-secondary" onclick="closeModal('modal-supervisor-auth')">Cancel</button>
+    </div>
+  </div>
+
+</div><!-- end #app -->
+
+<div class="toast" id="toast" role="status" aria-live="polite">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+  <span id="toast-msg">Time updated</span>
+</div>
+
+<script>
+  // ─── State ───────────────────────────────────────────────────────
+  const CURRENT_LINE = 'LINE-14';
+  let pendingEditWorker = '';
+  let pendingEditTime   = '';
+  let missingFilterActive = false;
+
+  // ─── Navigation ──────────────────────────────────────────────────
+  function navigate(screenId, titleOverride) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    const target = document.getElementById(screenId);
+    if (target) {
+      if (titleOverride) {
+        const t = target.querySelector('.header-title');
+        if (t) t.textContent = titleOverride;
+      }
+      target.classList.add('active');
+      target.scrollTop = 0;
+      if (screenId === 'screen-training') initTrainingScreen();
+    }
+  }
+
+  // ─── Modals ──────────────────────────────────────────────────────
+  function openModal(id) {
+    document.getElementById(id).classList.add('open');
+  }
+  function closeModal(id) {
+    document.getElementById(id).classList.remove('open');
+  }
+
+  // Close on backdrop click
+  document.querySelectorAll('.modal-backdrop').forEach(backdrop => {
+    backdrop.addEventListener('click', (e) => {
+      if (e.target === backdrop) closeModal(backdrop.id);
+    });
+  });
+
+  // ─── Logout ──────────────────────────────────────────────────────
+  document.getElementById('logout-btn').addEventListener('click', () => {
+    openModal('modal-logout');
+  });
+
+  // ─── Active field tracking (shared by both time modals) ──────────
+  const activeField = { checkin: 'hh', clock: 'hh' };
+
+  function setActiveField(prefix, field) {
+    activeField[prefix] = field;
+    const hhEl = document.getElementById(prefix + '-hh');
+    const mmEl = document.getElementById(prefix + '-mm');
+    hhEl.classList.toggle('time-input-active', field === 'hh');
+    mmEl.classList.toggle('time-input-active', field === 'mm');
+  }
+
+  // ─── Numpad logic ─────────────────────────────────────────────────
+  function numpadPress(prefix, digit) {
+    const field = activeField[prefix];
+    const el    = document.getElementById(prefix + '-' + field);
+    let val     = el.value.replace(/\D/g, '');
+
+    if (field === 'hh') {
+      if (val.length >= 2) {
+        // Field full — replace from scratch
+        val = String(digit);
+      } else {
+        val += String(digit);
+      }
+      el.value = val;
+
+      // Auto-advance rules:
+      // • First digit 2–9: no valid 12-hr hour starts with these beyond a single
+      //   digit (2–9 are all single-digit hours), so advance immediately.
+      // • First digit 0 or 1: could be 01–09 or 10–12, wait for second digit.
+      // • Two digits entered: always advance.
+      const firstDigit = parseInt(val[0], 10);
+      if (val.length === 2 || (val.length === 1 && firstDigit >= 2)) {
+        setActiveField(prefix, 'mm');
+        document.getElementById(prefix + '-mm').focus();
+      }
+    } else if (field === 'mm') {
+      if (val.length >= 2) {
+        val = String(digit);
+      } else {
+        val += String(digit);
+      }
+      el.value = val;
+
+      // After two MM digits, highlight AM button to cue the user
+      if (val.length === 2) {
+        const amBtn = document.getElementById(prefix + '-am');
+        const pmBtn = document.getElementById(prefix + '-pm');
+        // Pulse the currently-inactive toggle to draw the eye
+        const currentAmpm = amBtn.classList.contains('active') ? 'AM' : 'PM';
+        const toFlash     = currentAmpm === 'AM' ? amBtn : pmBtn;
+        toFlash.style.transition = 'box-shadow 0.15s';
+        toFlash.style.boxShadow  = '0 0 0 3px rgba(41,128,185,0.35)';
+        setTimeout(() => { toFlash.style.boxShadow = ''; }, 600);
+      }
+    }
+  }
+
+  function numpadBack(prefix) {
+    const field = activeField[prefix];
+    const el    = document.getElementById(prefix + '-' + field);
+    let val     = el.value.replace(/\D/g, '');
+    el.value    = val.slice(0, -1);
+  }
+
+  // ─── Check-In Times modal ─────────────────────────────────────────
+  function openCheckinModal(workerName, currentTime) {
+    document.getElementById('checkin-modal-worker-name').textContent = workerName;
+    document.getElementById('checkin-current-time').textContent = currentTime;
+
+    const [timePart, ampm] = currentTime.split(' ');
+    const [hh, mm] = timePart.split(':');
+    document.getElementById('checkin-hh').value = hh;
+    document.getElementById('checkin-mm').value = mm;
+    selectAMPM('checkin', ampm);
+
+    openModal('modal-checkin-edit');
+    setTimeout(() => {
+      setActiveField('checkin', 'hh');
+      document.getElementById('checkin-hh').focus();
+    }, 80);
+  }
+
+  // ─── Training Types inline screen ────────────────────────────────
+  const TT_TYPES = ['Stocking','Packing','Folding','Gluing','Palletizing',
+                    'Weighing','Tray Making','Inspecting','Fastening','Other'];
+
+  // Initial state per worker
+  const ttWorkers = [
+    { id:'jl', initials:'JL', name:'Jessica Le',    role:'Line Worker', selected:['Stocking'], na:false, otherNote:'' },
+    { id:'em', initials:'EM', name:'Emma Moore',     role:'Line Worker', selected:['Stocking'], na:false, otherNote:'' },
+    { id:'jl2',initials:'JL', name:'James Lee',      role:'Line Worker', selected:['Packing'],  na:false, otherNote:'' },
+    { id:'fl', initials:'FL', name:'Frank Lim',      role:'Line Worker', selected:['Stocking'], na:false, otherNote:'' },
+    { id:'lb', initials:'LB', name:'Lily Baker',     role:'Line Worker', selected:[],           na:false, otherNote:'' },
+    { id:'cr', initials:'CR', name:'Carlos Rivera',  role:'Line Worker', selected:[],           na:false, otherNote:'' },
+    { id:'an', initials:'AN', name:'Anh Nguyen',     role:'Line Worker', selected:['Folding'],  na:false, otherNote:'' },
+    { id:'dm', initials:'DM', name:'David Mitchell', role:'Line Worker', selected:[],           na:true,  otherNote:'' },
+  ];
+
+  function workerIsAssigned(w) {
+    return w.na || w.selected.length > 0;
+  }
+
+  function initTrainingScreen() {
+    const body = document.getElementById('tt-list-body');
+    body.innerHTML = '';
+    ttWorkers.forEach((w, idx) => {
+      const card = document.createElement('div');
+      card.className = 'tt-worker-card' + (ttMissingFilter && workerIsAssigned(w) ? ' hidden' : '');
+      card.id = 'tt-card-' + w.id;
+      card.dataset.idx = idx;
+
+      // Header row: avatar + name/role
+      const noTypesHtml = (!workerIsAssigned(w))
+        ? '<div class="tt-no-types">⚠ No types assigned</div>' : '';
+
+      var previewHtml = w.otherNote
+        ? '<div class="tt-other-preview" id="tt-other-preview-' + w.id + '">Other: &ldquo;' + w.otherNote + '&rdquo;</div>'
+        : '<div class="tt-other-preview" id="tt-other-preview-' + w.id + '" style="display:none"></div>';
+
+      card.innerHTML =
+        '<div class="tt-worker-header">' +
+          '<div class="avatar">' + w.initials + '</div>' +
+          '<div class="tt-worker-meta">' +
+            '<div class="tt-worker-name">' + w.name + '</div>' +
+            '<div class="tt-worker-role">' + w.role + '</div>' +
+            noTypesHtml +
+          '</div>' +
+        '</div>' +
+        '<div class="tt-chip-area">' +
+          '<div class="tt-grid" id="tt-grid-' + w.id + '"></div>' +
+          '<div class="tt-other-note" id="tt-other-note-' + w.id + '">' +
+            '<input class="tt-other-input" id="tt-other-input-' + w.id + '"' +
+                   ' type="text" placeholder="Describe other training type…"' +
+                   ' value="' + w.otherNote + '" />' +
+            '<button class="tt-other-save" onclick="saveOtherNote(\'' + w.id + '\', ' + idx + ')">Save</button>' +
+          '</div>' +
+          previewHtml +
+        '</div>';
+
+      body.appendChild(card);
+      renderChips(w, idx);
+    });
+  }
+
+  function renderChips(w, idx) {
+    const grid = document.getElementById('tt-grid-' + w.id);
+    grid.innerHTML = '';
+
+    TT_TYPES.forEach(type => {
+      const btn = document.createElement('button');
+      const isOther    = type === 'Other';
+      const isSelected = w.selected.includes(type);
+      btn.className = 'tt-chip' + (isSelected ? ' selected' : '');
+      btn.textContent = type;
+      btn.onclick = () => toggleChip(w, idx, type, btn, grid);
+      grid.appendChild(btn);
+    });
+
+    // None / N/A chip
+    const naBtn = document.createElement('button');
+    naBtn.className = 'tt-chip chip-na' + (w.na ? ' selected' : '');
+    naBtn.textContent = 'None / N/A';
+    naBtn.onclick = () => toggleNA(w, idx, naBtn, grid);
+    grid.appendChild(naBtn);
+  }
+
+  function toggleChip(w, idx, type, btn, grid) {
+    // If Other: toggle note input open/closed
+    if (type === 'Other') {
+      const wasSelected = w.selected.includes('Other');
+      if (!wasSelected) {
+        // Select and open input
+        w.selected.push('Other');
+        btn.classList.add('selected');
+        // Deselect NA if active
+        if (w.na) { w.na = false; refreshNAChip(w); }
+        openOtherNote(w, idx);
+      } else {
+        // Already selected — re-open input to edit
+        openOtherNote(w, idx);
+      }
+      refreshNoTypesLabel(w, idx);
+      return;
+    }
+
+    // Regular chip toggle
+    const alreadyOn = w.selected.includes(type);
+    if (alreadyOn) {
+      w.selected = w.selected.filter(t => t !== type);
+      btn.classList.remove('selected');
+    } else {
+      w.selected.push(type);
+      btn.classList.add('selected');
+      // Deselect NA
+      if (w.na) { w.na = false; refreshNAChip(w); }
+    }
+    refreshNoTypesLabel(w, idx);
+  }
+
+  function toggleNA(w, idx, naBtn, grid) {
+    w.na = !w.na;
+    if (w.na) {
+      // Deselect all work-type chips
+      w.selected = [];
+      w.otherNote = '';
+      grid.querySelectorAll('.tt-chip:not(.chip-na)').forEach(c => c.classList.remove('selected'));
+      closeOtherNote(w);
+      naBtn.classList.add('selected');
+    } else {
+      naBtn.classList.remove('selected');
+    }
+    refreshNoTypesLabel(w, idx);
+  }
+
+  function refreshNAChip(w) {
+    const grid = document.getElementById('tt-grid-' + w.id);
+    if (!grid) return;
+    const naChip = grid.querySelector('.chip-na');
+    if (naChip) naChip.classList.toggle('selected', w.na);
+  }
+
+  function openOtherNote(w, idx) {
+    const wrap  = document.getElementById('tt-other-note-' + w.id);
+    const input = document.getElementById('tt-other-input-' + w.id);
+    wrap.classList.add('open');
+    input.value = w.otherNote;
+    setTimeout(() => input.focus(), 50);
+  }
+
+  function closeOtherNote(w) {
+    const wrap = document.getElementById('tt-other-note-' + w.id);
+    if (wrap) wrap.classList.remove('open');
+  }
+
+  function saveOtherNote(wid, idx) {
+    const input   = document.getElementById('tt-other-input-' + wid);
+    const preview = document.getElementById('tt-other-preview-' + wid);
+    const note    = input.value.trim();
+    ttWorkers[idx].otherNote = note;
+    closeOtherNote(ttWorkers[idx]);
+    if (note) {
+      preview.innerHTML = 'Other: &ldquo;' + note + '&rdquo;';
+      preview.style.display = '';
+    } else {
+      preview.style.display = 'none';
+    }
+  }
+
+  function refreshNoTypesLabel(w, idx) {
+    const card = document.getElementById('tt-card-' + w.id);
+    if (!card) return;
+    let label = card.querySelector('.tt-no-types');
+    const assigned = workerIsAssigned(w);
+    if (!assigned && !label) {
+      const meta = card.querySelector('.tt-worker-meta');
+      const el = document.createElement('div');
+      el.className = 'tt-no-types';
+      el.textContent = '⚠ No types assigned';
+      meta.appendChild(el);
+    } else if (assigned && label) {
+      label.remove();
+    }
+    // Update filter visibility
+    if (ttMissingFilter) {
+      card.classList.toggle('hidden', assigned);
+    }
+  }
+
+  // ─── Missing filter ───────────────────────────────────────────────
+  let ttMissingFilter = false;
+  function toggleMissingFilter() {
+    ttMissingFilter = !ttMissingFilter;
+    const btn = document.getElementById('tt-filter-btn');
+    btn.textContent = ttMissingFilter ? 'Show all' : 'Show missing only';
+    btn.style.background = ttMissingFilter ? '#27ae60' : '';
+    document.querySelectorAll('.tt-worker-card').forEach(card => {
+      const idx = parseInt(card.dataset.idx, 10);
+      const w   = ttWorkers[idx];
+      card.classList.toggle('hidden', ttMissingFilter && workerIsAssigned(w));
+    });
+  }
+
+  function saveAllTrainingTypes() {
+    showToast('Training types saved');
+  }
+
+  // ─── Clock Events expand/collapse ────────────────────────────────
+  function toggleExpand(workerId) {
+    const events  = document.getElementById('events-' + workerId);
+    const chevron = document.getElementById('chevron-' + workerId);
+    const isOpen  = events.classList.contains('open');
+    events.classList.toggle('open', !isOpen);
+    chevron.classList.toggle('open', !isOpen);
+  }
+
+  // ─── Line filter (Clock Events screen) ───────────────────────────
+  function setLineFilter(mode) {
+    document.getElementById('filter-this-line').classList.toggle('active', mode === 'this');
+    document.getElementById('filter-all-lines').classList.toggle('active', mode === 'all');
+    // In a real app this would filter; for the mockup both show the same data
+  }
+
+  function setEventFilter(mode) {
+    document.getElementById('filter-all-events').classList.toggle('active', mode === 'all');
+    document.getElementById('filter-clock-in').classList.toggle('active', mode === 'in');
+    document.getElementById('filter-clock-out').classList.toggle('active', mode === 'out');
+
+    const screen = document.getElementById('screen-clock-events');
+    const eventRows = screen.querySelectorAll('.event-row');
+    eventRows.forEach(row => {
+      if (mode === 'all') {
+        row.style.display = '';
+      } else {
+        const typeEl = row.querySelector('.event-type');
+        const isIn  = typeEl && typeEl.classList.contains('in');
+        const isOut = typeEl && typeEl.classList.contains('out');
+        row.style.display = (mode === 'in' && isIn) || (mode === 'out' && isOut) ? '' : 'none';
+      }
+    });
+
+    // Hide worker header + events-list if all their events are filtered out
+    const workerGroups = screen.querySelectorAll('.worker-row-header');
+    workerGroups.forEach(header => {
+      const eventsList = header.nextElementSibling;
+      if (!eventsList) return;
+      let hasVisible = false;
+      if (mode === 'all') {
+        hasVisible = true;
+      } else {
+        eventsList.querySelectorAll('.event-row').forEach(r => {
+          if (r.style.display !== 'none') hasVisible = true;
+        });
+      }
+      header.style.display    = hasVisible ? '' : 'none';
+      eventsList.style.display = hasVisible ? '' : 'none';
+    });
+  }
+
+  // ─── Edit event button ────────────────────────────────────────────
+  let pendingEditLine     = '';
+  let pendingEditDatetime = '';
+
+  function handleEditEvent(e, eventLine, workerName, eventTime, eventDatetime) {
+    e.stopPropagation();
+    pendingEditWorker   = workerName;
+    pendingEditTime     = eventTime;
+    pendingEditLine     = eventLine;
+    pendingEditDatetime = eventDatetime || eventTime;
+
+    if (eventLine === CURRENT_LINE) {
+      openClockEditModal(workerName, eventTime, eventLine, pendingEditDatetime);
+    } else {
+      openModal('modal-supervisor-auth');
+    }
+  }
+
+  function simulateSupervisorScan() {
+    closeModal('modal-supervisor-auth');
+    setTimeout(() => openClockEditModal(pendingEditWorker, pendingEditTime, pendingEditLine, pendingEditDatetime), 150);
+  }
+
+  function openClockEditModal(workerName, eventTime, eventLine, eventDatetime) {
+    document.getElementById('clock-modal-worker-name').textContent = workerName;
+
+    // Build "Original: From LINE-03 → LINE-14 · 05/12 9:01 PM" reference line
+    const refParts = [eventDatetime || eventTime, eventLine].filter(Boolean);
+    document.getElementById('clock-original-ref').textContent = refParts.join(' · ');
+
+    const [timePart, ampm] = eventTime.split(' ');
+    const [hh, mm] = timePart.split(':');
+    document.getElementById('clock-hh').value = hh;
+    document.getElementById('clock-mm').value = mm || '00';
+    selectAMPM('clock', ampm || 'AM');
+
+    openModal('modal-clock-edit');
+    setTimeout(() => {
+      setActiveField('clock', 'hh');
+      document.getElementById('clock-hh').focus();
+    }, 80);
+  }
+
+  // ─── Time input helpers ───────────────────────────────────────────
+  function handleHHInput(input, nextId) {
+    // Strip non-numeric
+    input.value = input.value.replace(/\D/g, '');
+    if (input.value.length >= 2) {
+      document.getElementById(nextId).focus();
+    }
+  }
+
+  function selectAMPM(prefix, choice) {
+    document.getElementById(prefix + '-am').classList.toggle('active', choice === 'AM');
+    document.getElementById(prefix + '-pm').classList.toggle('active', choice === 'PM');
+  }
+
+  function useCurrentTime(prefix) {
+    const now  = new Date();
+    let h      = now.getHours();
+    const m    = now.getMinutes();
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    h = h % 12 || 12;
+
+    document.getElementById(prefix + '-hh').value = String(h).padStart(2, '0');
+    document.getElementById(prefix + '-mm').value = String(m).padStart(2, '0');
+    selectAMPM(prefix, ampm);
+  }
+
+  // ─── Toast ───────────────────────────────────────────────────────
+  let toastTimer = null;
+  function showToast(msg) {
+    const toast = document.getElementById('toast');
+    document.getElementById('toast-msg').textContent = msg;
+    toast.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toast.classList.remove('show'), 2800);
+  }
+</script>
+</body>
+</html>
