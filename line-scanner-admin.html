@@ -766,6 +766,10 @@
       flex-shrink: 0;
       align-items: center;
     }
+    .checkin-row-buttons.stacked {
+      flex-direction: column;
+      align-items: stretch;
+    }
     .checkin-action-btn {
       min-height: 56px;
       min-width: 110px;
@@ -1630,7 +1634,7 @@
 
   // ─── Check-In Times screen data ───────────────────────────────────
   const ciWorkers = [
-    { id:'jl',  initials:'JL', name:'Jessica Le',    agencyId:'SAA-1042', inTime:'12:30 PM', outTime:'' },
+    { id:'jl',  initials:'JL', name:'Jessica Le',    agencyId:'SAA-1042', inTime:'12:30 PM', outTime:'2:45 PM' },
     { id:'em',  initials:'EM', name:'Emma Moore',     agencyId:'SAA-2187', inTime:'12:30 PM', outTime:'' },
     { id:'jl2', initials:'JL', name:'James Lee',      agencyId:'SAA-3391', inTime:'10:44 AM', outTime:'' },
     { id:'fl',  initials:'FL', name:'Frank Lim',      agencyId:'SAA-4056', inTime:'12:30 PM', outTime:'' },
@@ -1652,47 +1656,60 @@
       row.className = 'list-row';
       row.style.alignItems = 'center';
 
-      // Left: avatar
+      // Avatar
       const avatar = '<div class="avatar">' + w.initials + '</div>';
 
-      // Middle: layout differs based on whether check-out exists
-      const lineStyle    = 'font-size:18px;font-weight:700;color:var(--text);';
-      const labelStyle   = 'font-weight:400;';
-      const agencyStyle  = 'font-size:13px;color:var(--text-sub);margin-top:2px;';
+      // Name + agency ID headline (shared by both states)
+      const headline =
+        '<div style="font-size:17px;font-weight:700;color:var(--text);">' +
+          w.name +
+          ' <span style="font-size:13px;font-weight:400;color:var(--text-sub);">· ' + w.agencyId + '</span>' +
+        '</div>';
 
       let info;
       if (hasOut) {
-        // Three lines: name / "Check-In: X · Check-Out: Y" / agency ID
+        // Two timestamp columns side by side
         info =
           '<div class="worker-badge-info">' +
-            '<div style="' + lineStyle + '">' + w.name + '</div>' +
-            '<div style="' + lineStyle + 'margin-top:2px;">' +
-              '<span style="' + labelStyle + '">Check-In:</span> ' + w.inTime +
-              ' <span style="' + labelStyle + '">· Check-Out:</span> ' + w.outTime +
+            headline +
+            '<div style="display:flex;gap:28px;margin-top:6px;">' +
+              '<div>' +
+                '<div style="font-size:11px;font-weight:700;color:var(--green-text);letter-spacing:0.06em;">CHECK-IN</div>' +
+                '<div style="font-size:20px;font-weight:700;color:var(--text);margin-top:2px;">' + w.inTime + '</div>' +
+              '</div>' +
+              '<div>' +
+                '<div style="font-size:11px;font-weight:700;color:var(--red-text);letter-spacing:0.06em;">CHECK-OUT</div>' +
+                '<div style="font-size:20px;font-weight:700;color:var(--text);margin-top:2px;">' + w.outTime + '</div>' +
+              '</div>' +
             '</div>' +
-            '<div style="' + agencyStyle + '">' + w.agencyId + '</div>' +
           '</div>';
       } else {
-        // Two lines: "Name · Check-In: X" / agency ID
+        // Single timestamp
         info =
           '<div class="worker-badge-info">' +
-            '<div style="' + lineStyle + '">' +
-              w.name +
-              ' <span style="' + labelStyle + '">· Check-In:</span> ' + w.inTime +
+            headline +
+            '<div style="margin-top:6px;">' +
+              '<div style="font-size:11px;font-weight:700;color:var(--green-text);letter-spacing:0.06em;">CHECK-IN</div>' +
+              '<div style="font-size:20px;font-weight:700;color:var(--text);margin-top:2px;">' + w.inTime + '</div>' +
             '</div>' +
-            '<div style="' + agencyStyle + '">' + w.agencyId + '</div>' +
           '</div>';
       }
 
-      // Right: two buttons side by side
-      const editLabel   = hasOut ? PENCIL_SVG + ' Edit Check-In'  : PENCIL_SVG + ' Edit Check-In';
-      const checkoutLabel = hasOut ? PENCIL_SVG + ' Edit Check-Out' : 'Check Out';
-
-      const buttons =
-        '<div class="checkin-row-buttons">' +
-          '<button class="checkin-action-btn btn-edit" onclick="event.stopPropagation();openCheckinModal(' + idx + ')">' + editLabel + '</button>' +
-          '<button class="checkin-action-btn btn-checkout" onclick="event.stopPropagation();openCheckoutModal(' + idx + ')">' + checkoutLabel + '</button>' +
-        '</div>';
+      // Buttons: stacked vertically for two-timestamp state, side-by-side for single
+      let buttons;
+      if (hasOut) {
+        buttons =
+          '<div class="checkin-row-buttons stacked">' +
+            '<button class="checkin-action-btn btn-edit" onclick="event.stopPropagation();openCheckinModal(' + idx + ')">' + PENCIL_SVG + ' Edit Check-In</button>' +
+            '<button class="checkin-action-btn btn-checkout" onclick="event.stopPropagation();openCheckoutModal(' + idx + ')">' + PENCIL_SVG + ' Edit Check-Out</button>' +
+          '</div>';
+      } else {
+        buttons =
+          '<div class="checkin-row-buttons">' +
+            '<button class="checkin-action-btn btn-edit" onclick="event.stopPropagation();openCheckinModal(' + idx + ')">' + PENCIL_SVG + ' Edit Check-In</button>' +
+            '<button class="checkin-action-btn btn-checkout" onclick="event.stopPropagation();openCheckoutModal(' + idx + ')">Check Out</button>' +
+          '</div>';
+      }
 
       row.innerHTML = avatar + info + buttons;
       row.addEventListener('click', () => openCheckinModal(idx));
