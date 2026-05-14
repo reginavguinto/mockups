@@ -289,14 +289,8 @@
       min-height: var(--touch-min);
       -webkit-tap-highlight-color: transparent;
     }
-    .alert-banner.amber .alert-btn { background: #e67e22; }
-    .alert-banner.amber .alert-btn:active { background: #d35400; }
-    .alert-btn.outline {
-      background: transparent;
-      border: 2px solid var(--text);
-      color: var(--text);
-    }
-    .alert-btn.outline:active { background: rgba(0,0,0,0.06); }
+    .alert-btn { background: var(--blue); }
+    .alert-btn:active { background: var(--blue-dark); }
 
     /* ── Filter pill bar ── */
     .filter-bar {
@@ -1082,7 +1076,7 @@
     <!-- Alert banner -->
     <div class="alert-banner blue" id="tt-alert-banner">
       <div class="alert-text" id="tt-alert-text">Select the type of work each worker performed during this shift. Tap a chip to assign — you can select more than one. Tap Save all when finished.</div>
-      <button class="alert-btn outline" id="tt-filter-btn" onclick="toggleMissingFilter()" style="display:none">Show missing only</button>
+      <button class="alert-btn" id="tt-filter-btn" onclick="toggleMissingFilter()" style="display:none">Show missing only</button>
     </div>
 
     <div class="list-body" id="tt-list-body" style="padding-bottom:80px">
@@ -1811,7 +1805,7 @@
       banner.className = 'alert-banner amber';
       alertText.textContent = '⚠ Action required: ' + missingCount + ' worker' + (missingCount !== 1 ? 's' : '') + ' are missing assigned training types.';
       filterBtn.style.display = '';
-      filterBtn.className = 'alert-btn outline';
+      filterBtn.className = 'alert-btn';
       filterBtn.textContent = ttMissingFilter ? 'Show all workers' : 'Show missing only';
     }
 
