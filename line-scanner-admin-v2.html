@@ -213,6 +213,33 @@
       transition: background 0.1s, color 0.1s, border-color 0.1s;
     }
     .date-pill.active { background: var(--blue); border-color: var(--blue); color: #fff; }
+    .date-pill.custom-toggle {
+      display: flex; align-items: center; justify-content: space-between;
+      color: var(--blue); border-color: var(--blue); font-weight: 600;
+    }
+    .date-pill.custom-toggle.active { background: var(--blue); color: #fff; }
+    .custom-cal-wrap { display: none; margin-top: 4px; border: 2px solid var(--blue); border-radius: 12px; overflow: hidden; }
+    .custom-cal-wrap.open { display: block; }
+    .cal-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; background: var(--blue); color: #fff; }
+    .cal-month-label { font-size: 15px; font-weight: 700; }
+    .cal-nav { background: none; border: none; color: #fff; font-size: 20px; cursor: pointer; padding: 4px 10px; border-radius: 6px; -webkit-tap-highlight-color: transparent; }
+    .cal-nav:active { background: rgba(255,255,255,0.2); }
+    .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); background: var(--surface); }
+    .cal-dow { text-align: center; font-size: 11px; font-weight: 700; color: var(--gray-text); padding: 8px 0; text-transform: uppercase; }
+    .cal-day {
+      text-align: center; padding: 9px 2px; font-size: 14px; font-weight: 500;
+      cursor: pointer; border-radius: 6px; margin: 2px; -webkit-tap-highlight-color: transparent;
+      transition: background 0.1s, color 0.1s;
+    }
+    .cal-day:hover { background: var(--blue-light); }
+    .cal-day.empty { cursor: default; }
+    .cal-day.today { font-weight: 700; color: var(--blue); }
+    .cal-day.selected-start, .cal-day.selected-end { background: var(--blue); color: #fff; border-radius: 6px; }
+    .cal-day.in-range { background: var(--blue-light); color: var(--blue); border-radius: 0; margin: 2px 0; }
+    .cal-day.selected-start { border-radius: 6px 0 0 6px; margin-right: 0; }
+    .cal-day.selected-end   { border-radius: 0 6px 6px 0; margin-left: 0; }
+    .cal-day.selected-start.selected-end { border-radius: 6px; margin: 2px; }
+    .cal-range-label { padding: 10px 14px; font-size: 13px; color: var(--text-sub); background: #f8fafc; border-top: 1px solid #e8ecef; text-align: center; min-height: 38px; }
     .filter-modal-footer {
       padding: 16px 20px; border-top: 1px solid #e8ecef; display: flex; gap: 10px; flex-shrink: 0;
     }
@@ -552,6 +579,20 @@
             <button class="date-pill"        id="mw-fp-date-yesterday" onclick="setMWFPDate('yesterday')">Yesterday</button>
             <button class="date-pill"        id="mw-fp-date-week"      onclick="setMWFPDate('week')">Past 7 Days</button>
             <button class="date-pill"        id="mw-fp-date-month"     onclick="setMWFPDate('month')">Past 30 Days</button>
+            <button class="date-pill custom-toggle" id="mw-fp-date-custom" onclick="setMWFPDate('custom')">
+              <span>Custom range…</span>
+              <span id="mw-cal-chevron" style="font-size:18px;transition:transform 0.2s;">›</span>
+            </button>
+          </div>
+          <!-- Inline calendar (shown when Custom is selected) -->
+          <div class="custom-cal-wrap" id="mw-cal-wrap">
+            <div class="cal-header">
+              <button class="cal-nav" onclick="calNav(-1)">‹</button>
+              <span class="cal-month-label" id="cal-month-label"></span>
+              <button class="cal-nav" onclick="calNav(1)">›</button>
+            </div>
+            <div class="cal-grid" id="cal-grid"></div>
+            <div class="cal-range-label" id="cal-range-label">Tap a date to set start, tap again to set end</div>
           </div>
         </div>
       </div>
@@ -832,9 +873,8 @@
   ];
 
   // ── Filter state (applied on modal close) ──
-  let mwFilters = { lines: [], shift: 'all', date: 'today' }; // lines:[] = current line only
-  // Pending state (inside modal before Apply)
-  let mwPending = { lines: [], shift: 'all', date: 'today' };
+  let mwFilters = { lines: [], shift: 'all', date: 'today', customStart: null, customEnd: null };
+  let mwPending = { lines: [], shift: 'all', date: 'today', customStart: null, customEnd: null };
 
   function openMWFilterModal() {
     // Sync pending from applied
@@ -882,21 +922,110 @@
   function setMWFPDate(val) {
     mwPending.date = val;
     syncMWFPDate();
+    const calWrap = document.getElementById('mw-cal-wrap');
+    const chevron = document.getElementById('mw-cal-chevron');
+    if (val === 'custom') {
+      calWrap.classList.add('open');
+      chevron.style.transform = 'rotate(90deg)';
+      renderCal();
+    } else {
+      calWrap.classList.remove('open');
+      chevron.style.transform = '';
+      calRangeStart = null; calRangeEnd = null;
+    }
   }
   function syncMWFPDate() {
-    ['today','yesterday','week','month'].forEach(v => {
+    ['today','yesterday','week','month','custom'].forEach(v => {
       const el = document.getElementById('mw-fp-date-' + v);
       if (el) el.classList.toggle('active', mwPending.date === v);
     });
   }
 
+  // ─── Inline calendar ─────────────────────────────────────────────
+  let calYear  = 2026;
+  let calMonth = 4; // 0-indexed: 4 = May
+  let calRangeStart = null; // {y,m,d}
+  let calRangeEnd   = null;
+
+  const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const DOW = ['Su','Mo','Tu','We','Th','Fr','Sa'];
+
+  function calNav(dir) {
+    calMonth += dir;
+    if (calMonth > 11) { calMonth = 0;  calYear++; }
+    if (calMonth < 0)  { calMonth = 11; calYear--; }
+    renderCal();
+  }
+
+  function renderCal() {
+    document.getElementById('cal-month-label').textContent = MONTH_NAMES[calMonth] + ' ' + calYear;
+    const grid = document.getElementById('cal-grid');
+    grid.innerHTML = '';
+    DOW.forEach(d => {
+      const el = document.createElement('div');
+      el.className = 'cal-dow'; el.textContent = d;
+      grid.appendChild(el);
+    });
+    const firstDow = new Date(calYear, calMonth, 1).getDay();
+    const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+    for (let i = 0; i < firstDow; i++) {
+      const el = document.createElement('div'); el.className = 'cal-day empty'; grid.appendChild(el);
+    }
+    for (let d = 1; d <= daysInMonth; d++) {
+      const el = document.createElement('div');
+      el.className = 'cal-day';
+      el.textContent = d;
+      const isToday = calYear === 2026 && calMonth === 4 && d === 14;
+      if (isToday) el.classList.add('today');
+      const ds = calRangeStart, de = calRangeEnd;
+      const thisD = { y: calYear, m: calMonth, d };
+      if (ds && sameDay(thisD, ds)) el.classList.add('selected-start');
+      if (de && sameDay(thisD, de)) el.classList.add('selected-end');
+      if (ds && de && afterDay(thisD, ds) && beforeDay(thisD, de)) el.classList.add('in-range');
+      el.addEventListener('click', () => calDayClick(calYear, calMonth, d));
+      grid.appendChild(el);
+    }
+    updateCalRangeLabel();
+  }
+
+  function calDayClick(y, m, d) {
+    const clicked = { y, m, d };
+    if (!calRangeStart || (calRangeStart && calRangeEnd)) {
+      calRangeStart = clicked; calRangeEnd = null;
+    } else {
+      if (beforeDay(clicked, calRangeStart)) { calRangeEnd = calRangeStart; calRangeStart = clicked; }
+      else if (sameDay(clicked, calRangeStart)) { calRangeEnd = clicked; }
+      else { calRangeEnd = clicked; }
+    }
+    mwPending.customStart = calRangeStart;
+    mwPending.customEnd   = calRangeEnd;
+    renderCal();
+  }
+
+  function sameDay(a, b)   { return a.y === b.y && a.m === b.m && a.d === b.d; }
+  function beforeDay(a, b) { return a.y < b.y || (a.y === b.y && (a.m < b.m || (a.m === b.m && a.d < b.d))); }
+  function afterDay(a, b)  { return !beforeDay(a, b) && !sameDay(a, b); }
+
+  function fmtDay(obj) { return MONTH_NAMES[obj.m].slice(0,3) + ' ' + obj.d + ', ' + obj.y; }
+
+  function updateCalRangeLabel() {
+    const lbl = document.getElementById('cal-range-label');
+    if (!calRangeStart) { lbl.textContent = 'Tap a date to set start, tap again to set end'; return; }
+    if (!calRangeEnd)   { lbl.textContent = 'Start: ' + fmtDay(calRangeStart) + ' — tap another date to set end'; return; }
+    lbl.textContent = fmtDay(calRangeStart) + ' → ' + fmtDay(calRangeEnd);
+  }
+
   function resetMWFilters() {
-    mwPending = { lines: [], shift: 'all', date: 'today' };
+    mwPending = { lines: [], shift: 'all', date: 'today', customStart: null, customEnd: null };
+    calRangeStart = null; calRangeEnd = null;
+    document.getElementById('mw-cal-wrap').classList.remove('open');
+    document.getElementById('mw-cal-chevron').style.transform = '';
     renderMWLineGrid(); syncMWFPShift(); syncMWFPDate();
   }
 
   function applyMWFilters() {
-    mwFilters = { lines: mwPending.lines.slice(), shift: mwPending.shift, date: mwPending.date };
+    mwFilters = { lines: mwPending.lines.slice(), shift: mwPending.shift, date: mwPending.date,
+                  customStart: mwPending.customStart, customEnd: mwPending.customEnd };
     closeMWFilterModal();
     renderMWScreen();
   }
@@ -921,9 +1050,14 @@
     // Active filter chips
     const chipsBar = document.getElementById('mw-active-filters');
     const chips = [];
-    if (mwFilters.lines.length > 0) chips.push('Line ' + mwFilters.lines.map(l => l).join(', '));
+    if (mwFilters.lines.length > 0) chips.push('Line ' + mwFilters.lines.join(', '));
     if (mwFilters.shift !== 'all')  chips.push('Shift ' + mwFilters.shift);
-    if (mwFilters.date !== 'today') chips.push({ today:'Today', yesterday:'Yesterday', week:'Past 7 Days', month:'Past 30 Days' }[mwFilters.date]);
+    if (mwFilters.date === 'custom') {
+      const s = mwFilters.customStart, e = mwFilters.customEnd;
+      chips.push(s ? (e ? fmtDay(s) + ' → ' + fmtDay(e) : fmtDay(s)) : 'Custom range');
+    } else if (mwFilters.date !== 'today') {
+      chips.push({ yesterday:'Yesterday', week:'Past 7 Days', month:'Past 30 Days' }[mwFilters.date]);
+    }
     const hasFilters = chips.length > 0;
     document.getElementById('mw-filter-btn').classList.toggle('has-filters', hasFilters);
     if (hasFilters) {
