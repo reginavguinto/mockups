@@ -208,7 +208,7 @@
     }
     .line-pill.active { background: var(--blue); border-color: var(--blue); color: #fff; }
     .line-pill:active { opacity: 0.8; }
-    .shift-pills { display: flex; gap: 10px; }
+    .shift-pills { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
     .shift-pill {
       flex: 1; padding: 12px; border-radius: 10px; border: 2px solid var(--gray-border);
       background: transparent; color: var(--text); font-size: 15px; font-weight: 600;
