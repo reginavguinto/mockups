@@ -342,7 +342,7 @@
       text-transform: uppercase; letter-spacing: 0.07em; white-space: nowrap;
     }
     .audit-col-hdr.event  { width: 136px; flex-shrink: 0; }
-    .audit-col-hdr.worker { width: 260px; flex-shrink: 0; }
+    .audit-col-hdr.worker { width: 360px; flex-shrink: 0; }
     .audit-col-hdr.time   { width: 160px; flex-shrink: 0; }
     .audit-col-hdr.lineshift { flex: 1; }
 
@@ -352,7 +352,7 @@
       border-bottom: 1px solid #e8ecef; background: var(--surface); min-height: var(--row-min);
     }
     .audit-col-event  { width: 136px; flex-shrink: 0; }
-    .audit-col-worker { width: 260px; flex-shrink: 0; padding-left: 0; }
+    .audit-col-worker { width: 360px; flex-shrink: 0; padding-left: 0; }
     .audit-col-time   { width: 160px; flex-shrink: 0; }
     .audit-col-ls     { flex: 1; min-width: 0; }
     .audit-worker-name { font-size: 15px; font-weight: 700; color: var(--text); }
@@ -756,7 +756,7 @@
     <!-- Column headers -->
     <div class="audit-col-headers">
       <div class="audit-col-hdr event">Event</div>
-      <div class="audit-col-hdr worker">Worker</div>
+      <div class="audit-col-hdr worker">Description</div>
       <div class="audit-col-hdr time">Time</div>
       <div class="audit-col-hdr lineshift">Line · Shift</div>
     </div>
@@ -1417,7 +1417,7 @@
 
       // Time column: split "05/14 4:09 PM" → date + time
       const dtParts  = e.datetime.split(' ');
-      const dateStr  = dtParts[0];                          // "05/14"
+      const dateStr  = dtParts[0] + '/2026';                 // "05/14/2026"
       const timeStr  = dtParts.slice(1).join(' ');          // "4:09 PM"
 
       row.innerHTML =
