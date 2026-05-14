@@ -136,7 +136,6 @@
     .search-filter-bar {
       display: flex; align-items: center; gap: 10px;
       padding: 10px 16px; background: var(--surface); border-bottom: 1px solid #e8ecef; flex-shrink: 0;
-      flex-wrap: wrap;
     }
     .search-input {
       flex: 1; height: 48px; border: 2px solid var(--gray-border); border-radius: 10px;
@@ -158,13 +157,20 @@
 
     /* ── Active filter chips (inline in search bar) ── */
     .filter-chips-inline {
-      display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+      display: flex; align-items: center; gap: 6px; flex: 1; min-width: 0; overflow: hidden;
     }
     .active-filter-chip {
       display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px;
       background: var(--blue-light); color: var(--blue); border-radius: 999px;
-      font-size: 13px; font-weight: 600; white-space: nowrap;
+      font-size: 13px; font-weight: 600; white-space: nowrap; flex-shrink: 0;
     }
+    .overflow-chip {
+      display: inline-flex; align-items: center; justify-content: center; padding: 4px 10px;
+      background: var(--gray-bg); color: var(--gray-text); border-radius: 999px;
+      font-size: 13px; font-weight: 600; white-space: nowrap; flex-shrink: 0;
+      border: none; cursor: pointer; -webkit-tap-highlight-color: transparent;
+    }
+    .overflow-chip:active { background: #d0d4d8; }
     .clear-all-chip {
       display: inline-flex; align-items: center; justify-content: center;
       width: 26px; height: 26px; border-radius: 999px;
@@ -541,11 +547,11 @@
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--gray-text)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         <input class="search-input" id="mw-search" type="text" placeholder="Search by name or worker ID…" oninput="renderMWScreen()" />
       </div>
+      <div class="filter-chips-inline" id="mw-active-filters"></div>
       <button class="filter-modal-btn" id="mw-filter-btn" onclick="openMWFilterModal()">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
         Filters
       </button>
-      <div class="filter-chips-inline" id="mw-active-filters"></div>
     </div>
 
     <div class="list-body" id="mw-list-body"></div>
@@ -712,11 +718,11 @@
 
     <!-- Search + Filters bar (chips inline) -->
     <div class="search-filter-bar">
+      <div class="filter-chips-inline" id="al-active-filters"></div>
       <button class="filter-modal-btn" id="al-filter-btn" onclick="openALFilterModal()">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
         Filters
       </button>
-      <div class="filter-chips-inline" id="al-active-filters"></div>
     </div>
 
     <div class="list-body" id="audit-list-body"></div>
@@ -1061,6 +1067,21 @@
     renderMWScreen();
   }
 
+  const CHIP_MAX = 2;
+  function renderChips(chips, barId, clearFn, openModalFn) {
+    const bar = document.getElementById(barId);
+    if (!bar) return;
+    if (chips.length === 0) { bar.innerHTML = ''; return; }
+    const visible = chips.slice(0, CHIP_MAX);
+    const overflow = chips.length - CHIP_MAX;
+    let html = visible.map(c => '<span class="active-filter-chip">' + c + '</span>').join('');
+    if (overflow > 0) {
+      html += '<button class="overflow-chip" onclick="' + openModalFn + '">+' + overflow + ' more</button>';
+    }
+    html += '<button class="clear-all-chip" onclick="' + clearFn + '" title="Clear filters">✕</button>';
+    bar.innerHTML = html;
+  }
+
   function renderMWScreen() {
     const body = document.getElementById('mw-list-body');
     if (!body) return;
@@ -1080,7 +1101,6 @@
     document.getElementById('mw-header-title').textContent = 'Manage Workers (' + filtered.length + ')';
 
     // Active filter chips
-    const chipsBar = document.getElementById('mw-active-filters');
     const chips = [];
     const def = MW_DEFAULT();
     const linesChanged = JSON.stringify(mwFilters.lines.slice().sort()) !== JSON.stringify(def.lines.slice().sort());
@@ -1094,12 +1114,7 @@
     }
     const hasFilters = chips.length > 0;
     document.getElementById('mw-filter-btn').classList.toggle('has-filters', hasFilters);
-    if (hasFilters) {
-      chipsBar.innerHTML = chips.map(c => '<span class="active-filter-chip">' + c + '</span>').join('') +
-        '<button class="clear-all-chip" onclick="resetApplyMW()" title="Clear filters">✕</button>';
-    } else {
-      chipsBar.innerHTML = '';
-    }
+    renderChips(chips, 'mw-active-filters', 'resetApplyMW()', 'openMWFilterModal()');
 
     body.innerHTML = '';
     const current = filtered.filter(w => !w.past);
@@ -1331,7 +1346,6 @@
     });
 
     // Active filter chips
-    const chipsBar = document.getElementById('al-active-filters');
     const def = AL_DEFAULT();
     const chips = [];
     const linesChanged = JSON.stringify(alFilters.lines.slice().sort()) !== JSON.stringify(def.lines.slice().sort());
@@ -1342,12 +1356,7 @@
     if (alFilters.agency !== def.agency) chips.push(alFilters.agency.toUpperCase());
     const hasFilters = chips.length > 0;
     document.getElementById('al-filter-btn').classList.toggle('has-filters', hasFilters);
-    if (chipsBar) {
-      chipsBar.innerHTML = hasFilters
-        ? chips.map(c => '<span class="active-filter-chip">' + c + '</span>').join('') +
-          '<button class="clear-all-chip" onclick="resetApplyAL()" title="Clear filters">✕</button>'
-        : '';
-    }
+    renderChips(chips, 'al-active-filters', 'resetApplyAL()', 'openALFilterModal()');
 
     body.innerHTML = '';
     if (filtered.length === 0) {
