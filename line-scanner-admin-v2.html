@@ -523,10 +523,14 @@
     <div class="header">
       <button class="header-btn" onclick="navigate('screen-admin')" aria-label="Back">←</button>
       <span class="header-title" id="mw-header-title">Manage Workers</span>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;flex-shrink:0;padding-right:4px;">
+        <span style="font-size:14px;font-weight:600;color:#fff;">LINE-5 · May 14, 2026</span>
+        <span style="font-size:12px;color:rgba(255,255,255,0.75);font-weight:400;">12:30 PM · Shift 2</span>
+      </div>
     </div>
 
-    <div class="alert-banner blue" style="padding-top:12px;padding-bottom:12px;">
-      <div class="alert-text">You are currently on LINE-5 · May 14, 2026 · Shift 2 — Edit check-in and check-out times. Use filters to view workers from other shifts or lines.</div>
+    <div class="alert-banner blue" style="padding-top:10px;padding-bottom:10px;">
+      <div class="alert-text">Edit check-in and check-out times. Use filters to view workers from other shifts or lines.</div>
     </div>
 
     <!-- Search + Filters bar -->
@@ -865,16 +869,17 @@
     { id:'cr',  initials:'CR', name:'Carlos Rivera',  agencyId:'SAA-6613', inTime:'11:15 AM', outTime:'',        shift:2, line:5,  date:'May 14', past:false },
     { id:'an',  initials:'AN', name:'Anh Nguyen',     agencyId:'SAA-7724', inTime:'12:30 PM', outTime:'',        shift:2, line:5,  date:'May 14', past:false },
     { id:'dm',  initials:'DM', name:'David Mitchell', agencyId:'SAA-8899', inTime:'9:58 AM',  outTime:'',        shift:2, line:5,  date:'May 14', past:false },
-    { id:'sg',  initials:'SG', name:'Sergey Gorbach', agencyId:'SAA-2034', inTime:'6:00 AM',  outTime:'2:00 PM', shift:1, line:5,  date:'May 14', past:true  },
-    { id:'ck',  initials:'CK', name:'Chulwoo Kim',    agencyId:'SAA-5591', inTime:'6:15 AM',  outTime:'1:45 PM', shift:1, line:5,  date:'May 14', past:true  },
-    { id:'at',  initials:'AT', name:'Alexander Taylor',agencyId:'SAA-9895',inTime:'6:00 AM',  outTime:'2:00 PM', shift:1, line:5,  date:'May 14', past:true  },
+    { id:'sg',  initials:'SG', name:'Sergey Gorbach', agencyId:'SAA-2034', inTime:'6:00 AM',  outTime:'2:00 PM', shift:1, line:5,  date:'May 13', past:true  },
+    { id:'ck',  initials:'CK', name:'Chulwoo Kim',    agencyId:'SAA-5591', inTime:'6:15 AM',  outTime:'1:45 PM', shift:1, line:5,  date:'May 13', past:true  },
+    { id:'at',  initials:'AT', name:'Alexander Taylor',agencyId:'SAA-9895',inTime:'6:00 AM',  outTime:'2:00 PM', shift:1, line:5,  date:'May 13', past:true  },
     { id:'mp',  initials:'MP', name:'Maria Perez',    agencyId:'MBT-3312', inTime:'12:00 PM', outTime:'8:00 PM', shift:2, line:14, date:'May 13', past:true  },
     { id:'tw',  initials:'TW', name:'Tyler Wong',     agencyId:'MBT-4481', inTime:'12:30 PM', outTime:'8:30 PM', shift:2, line:14, date:'May 13', past:true  },
   ];
 
   // ── Filter state (applied on modal close) ──
-  let mwFilters = { lines: [], shift: 'all', date: 'today', customStart: null, customEnd: null };
-  let mwPending = { lines: [], shift: 'all', date: 'today', customStart: null, customEnd: null };
+  const MW_DEFAULT = () => ({ lines: [5], shift: '2', date: 'today', customStart: null, customEnd: null });
+  let mwFilters = MW_DEFAULT();
+  let mwPending = MW_DEFAULT();
 
   function openMWFilterModal() {
     // Sync pending from applied
@@ -1016,7 +1021,7 @@
   }
 
   function resetMWFilters() {
-    mwPending = { lines: [], shift: 'all', date: 'today', customStart: null, customEnd: null };
+    mwPending = MW_DEFAULT();
     calRangeStart = null; calRangeEnd = null;
     document.getElementById('mw-cal-wrap').classList.remove('open');
     document.getElementById('mw-cal-chevron').style.transform = '';
@@ -1039,8 +1044,9 @@
     const filtered = mwWorkers.filter(w => {
       if (mwFilters.lines.length > 0 && !mwFilters.lines.includes(w.line)) return false;
       if (mwFilters.shift !== 'all' && w.shift !== parseInt(mwFilters.shift)) return false;
-      // date filter: for mockup, 'today' hides May 13 workers, others show all
-      if (mwFilters.date === 'today' && w.date !== 'May 14') return false;
+      // date filter
+      if (mwFilters.date === 'today'     && w.date !== 'May 14') return false;
+      if (mwFilters.date === 'yesterday' && w.date !== 'May 13') return false;
       if (searchQ && !w.name.toLowerCase().includes(searchQ) && !w.agencyId.toLowerCase().includes(searchQ)) return false;
       return true;
     });
@@ -1050,12 +1056,14 @@
     // Active filter chips
     const chipsBar = document.getElementById('mw-active-filters');
     const chips = [];
-    if (mwFilters.lines.length > 0) chips.push('Line ' + mwFilters.lines.join(', '));
-    if (mwFilters.shift !== 'all')  chips.push('Shift ' + mwFilters.shift);
+    const def = MW_DEFAULT();
+    const linesChanged = JSON.stringify(mwFilters.lines.slice().sort()) !== JSON.stringify(def.lines.slice().sort());
+    if (linesChanged) chips.push('LINE-' + mwFilters.lines.join(', '));
+    if (mwFilters.shift !== def.shift) chips.push('Shift ' + mwFilters.shift);
     if (mwFilters.date === 'custom') {
       const s = mwFilters.customStart, e = mwFilters.customEnd;
       chips.push(s ? (e ? fmtDay(s) + ' → ' + fmtDay(e) : fmtDay(s)) : 'Custom range');
-    } else if (mwFilters.date !== 'today') {
+    } else if (mwFilters.date !== def.date) {
       chips.push({ yesterday:'Yesterday', week:'Past 7 Days', month:'Past 30 Days' }[mwFilters.date]);
     }
     const hasFilters = chips.length > 0;
@@ -1111,7 +1119,7 @@
   }
 
   function resetApplyMW() {
-    mwFilters = { lines: [], shift: 'all', date: 'today' };
+    mwFilters = MW_DEFAULT();
     renderMWScreen();
   }
 
