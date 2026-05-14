@@ -706,16 +706,27 @@
       font-style: italic;
     }
 
+    /* ── Check-In Times header band ── */
+    .checkin-header-band {
+      background: #1a6fa3;
+      padding: 10px 20px;
+      font-size: 13px;
+      color: rgba(255,255,255,0.88);
+      line-height: 1.5;
+      flex-shrink: 0;
+    }
+
     /* ── Check-In Times row layout ── */
     .checkin-row-buttons {
       display: flex;
-      flex-direction: column;
+      flex-direction: row;
       gap: 8px;
       flex-shrink: 0;
+      align-items: center;
     }
     .checkin-action-btn {
       min-height: 56px;
-      min-width: 120px;
+      min-width: 110px;
       border-radius: 8px;
       font-size: 14px;
       font-weight: 600;
@@ -730,31 +741,20 @@
     }
     .checkin-action-btn:active { opacity: 0.8; }
     .checkin-action-btn.btn-edit {
-      background: transparent;
-      border: 1.5px solid var(--gray-border);
-      color: var(--blue);
+      background: var(--blue);
+      border: none;
+      color: #fff;
     }
     .checkin-action-btn.btn-checkout {
       background: transparent;
-      border: 1.5px solid var(--gray-border);
+      border: 2px solid var(--red-text);
       color: var(--red-text);
     }
-    .checkin-times-stack {
-      margin-top: 5px;
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
-    .checkin-time-line {
-      font-size: 13px;
-      color: var(--text-sub);
-      display: flex;
-      align-items: center;
-      gap: 5px;
-    }
-    .checkin-time-line .time-val {
-      font-weight: 600;
+    .checkin-time-label {
+      font-size: 15px;
+      font-weight: 700;
       color: var(--text);
+      margin-top: 4px;
     }
 
     /* ── Screen explainer text ── */
@@ -1032,6 +1032,7 @@
       <button class="header-btn" onclick="navigate('screen-admin')" aria-label="Back">←</button>
       <span class="header-title">Check-In Times (8)</span>
     </div>
+    <div class="checkin-header-band">You are currently on LINE-14 · May 13, 2026 · 12:30 PM — Use this screen to manage check-in and check-out times for workers on this line.</div>
 
     <div class="list-body" id="checkin-list-body">
       <!-- Rows rendered by JS — see renderCheckinScreen() -->
@@ -1636,44 +1637,27 @@
       // Left: avatar
       const avatar = '<div class="avatar">' + w.initials + '</div>';
 
-      // Middle: name+time headline, role below, stacked times if both present
-      let timeHtml;
-      if (hasOut) {
-        timeHtml =
-          '<div class="checkin-times-stack">' +
-            '<div class="checkin-time-line"><span style="color:var(--green-text);font-size:11px;font-weight:700;">↓ In</span> <span class="time-val">' + w.inTime + '</span></div>' +
-            '<div class="checkin-time-line"><span style="color:var(--red-text);font-size:11px;font-weight:700;">↑ Out</span> <span class="time-val">' + w.outTime + '</span></div>' +
-          '</div>';
-      } else {
-        timeHtml = '';
-      }
-
-      const headline = hasOut
-        ? '<div style="font-size:18px;font-weight:700;color:var(--text);">' + w.name + '</div>'
-        : '<div style="font-size:18px;font-weight:700;color:var(--text);">' + w.name + ' · ' + w.inTime + '</div>';
+      // Middle: name (bold), role (gray), then explicit timestamp lines
+      const inLine  = '<div class="checkin-time-label">Check-In: ' + w.inTime + '</div>';
+      const outLine = hasOut ? '<div class="checkin-time-label">Check-Out: ' + w.outTime + '</div>' : '';
 
       const info =
         '<div class="worker-badge-info">' +
-          headline +
+          '<div style="font-size:18px;font-weight:700;color:var(--text);">' + w.name + '</div>' +
           '<div style="font-size:13px;color:var(--text-sub);margin-top:1px;">' + w.role + '</div>' +
-          timeHtml +
+          inLine +
+          outLine +
         '</div>';
 
-      // Right: buttons
-      let buttons;
-      if (hasOut) {
-        buttons =
-          '<div class="checkin-row-buttons">' +
-            '<button class="checkin-action-btn btn-edit" onclick="event.stopPropagation();openCheckinModal(' + idx + ')">' + PENCIL_SVG + ' Edit Check-In</button>' +
-            '<button class="checkin-action-btn btn-checkout" onclick="event.stopPropagation();openCheckoutModal(' + idx + ')">' + PENCIL_SVG + ' Edit Check-Out</button>' +
-          '</div>';
-      } else {
-        buttons =
-          '<div class="checkin-row-buttons">' +
-            '<button class="checkin-action-btn btn-edit" onclick="event.stopPropagation();openCheckinModal(' + idx + ')">' + PENCIL_SVG + ' Edit</button>' +
-            '<button class="checkin-action-btn btn-checkout" onclick="event.stopPropagation();openCheckoutModal(' + idx + ')">Check Out</button>' +
-          '</div>';
-      }
+      // Right: two buttons side by side
+      const editLabel   = hasOut ? PENCIL_SVG + ' Edit Check-In'  : PENCIL_SVG + ' Edit Check-In';
+      const checkoutLabel = hasOut ? PENCIL_SVG + ' Edit Check-Out' : 'Check Out';
+
+      const buttons =
+        '<div class="checkin-row-buttons">' +
+          '<button class="checkin-action-btn btn-edit" onclick="event.stopPropagation();openCheckinModal(' + idx + ')">' + editLabel + '</button>' +
+          '<button class="checkin-action-btn btn-checkout" onclick="event.stopPropagation();openCheckoutModal(' + idx + ')">' + checkoutLabel + '</button>' +
+        '</div>';
 
       row.innerHTML = avatar + info + buttons;
       row.addEventListener('click', () => openCheckinModal(idx));
