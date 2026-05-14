@@ -157,7 +157,7 @@
 
     /* ── Active filter chips (inline in search bar) ── */
     .filter-chips-inline {
-      display: flex; align-items: center; gap: 6px; flex: 1; min-width: 0; overflow: hidden;
+      display: flex; align-items: center; gap: 6px; flex-shrink: 0; overflow: hidden;
     }
     .active-filter-chip {
       display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px;
@@ -719,6 +719,7 @@
     <!-- Search + Filters bar (chips inline) -->
     <div class="search-filter-bar">
       <div class="filter-chips-inline" id="al-active-filters"></div>
+      <div style="flex:1;"></div>
       <button class="filter-modal-btn" id="al-filter-btn" onclick="openALFilterModal()">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
         Filters
