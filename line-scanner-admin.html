@@ -968,7 +968,7 @@
         <div class="row-chevron">›</div>
       </div>
 
-      <!-- Clock Events -->
+      <!-- Clock History -->
       <div class="list-row" onclick="navigate('screen-clock-events')">
         <div class="menu-icon-tile">
           <!-- clock face -->
@@ -978,7 +978,7 @@
           </svg>
         </div>
         <div class="row-text">
-          <div class="row-label">Clock Events <span style="font-weight:400;color:var(--gray-text)">(All Lines)</span></div>
+          <div class="row-label">Clock History <span style="font-weight:400;color:var(--gray-text)">(All Lines)</span></div>
           <div class="row-sub">View clock history and manual adjustments</div>
         </div>
         <div class="row-chevron">›</div>
@@ -1091,12 +1091,12 @@
 
 
   <!-- ══════════════════════════════════════════
-       SCREEN 4 — Clock Events
+       SCREEN 4 — Clock History
   ══════════════════════════════════════════ -->
   <div id="screen-clock-events" class="screen">
     <div class="header">
       <button class="header-btn" onclick="navigate('screen-admin')" aria-label="Back">←</button>
-      <span class="header-title">Clock Events</span>
+      <span class="header-title">Clock History</span>
     </div>
 
     <div class="filter-bar">
@@ -2017,7 +2017,7 @@
     showToast('Training types saved');
   }
 
-  // ─── Clock Events expand/collapse ────────────────────────────────
+  // ─── Clock History expand/collapse ────────────────────────────────
   function toggleExpand(workerId) {
     const events  = document.getElementById('events-' + workerId);
     const chevron = document.getElementById('chevron-' + workerId);
@@ -2026,7 +2026,7 @@
     chevron.classList.toggle('open', !isOpen);
   }
 
-  // ─── Line filter (Clock Events screen) ───────────────────────────
+  // ─── Line filter (Clock History screen) ───────────────────────────
   function setLineFilter(mode) {
     document.getElementById('filter-this-line').classList.toggle('active', mode === 'this');
     document.getElementById('filter-all-lines').classList.toggle('active', mode === 'all');
