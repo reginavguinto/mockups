@@ -144,13 +144,16 @@
     }
     .search-input:focus { border-color: var(--blue); background: var(--surface); }
     .search-input::placeholder { color: var(--text-sub); }
-    .search-icon-wrap { position: relative; flex: 1; max-width: 560px; }
+    .search-icon-wrap { position: relative; flex: 1; min-width: 320px; max-width: 560px; }
     .search-icon-wrap svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); pointer-events: none; }
+    .filter-right-group {
+      display: flex; align-items: center; gap: 8px; margin-left: auto; flex-shrink: 0;
+    }
     .filter-modal-btn {
       display: flex; align-items: center; gap: 8px; height: 48px; padding: 0 20px;
       border-radius: 10px; border: 2px solid var(--blue); background: transparent;
       color: var(--blue); font-size: 15px; font-weight: 600; cursor: pointer; white-space: nowrap;
-      flex-shrink: 0; margin-left: auto; -webkit-tap-highlight-color: transparent; transition: background 0.12s, color 0.12s;
+      flex-shrink: 0; -webkit-tap-highlight-color: transparent; transition: background 0.12s, color 0.12s;
     }
     .filter-modal-btn.has-filters { background: var(--blue); color: #fff; }
     .filter-modal-btn:active { opacity: 0.8; }
@@ -547,11 +550,13 @@
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--gray-text)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         <input class="search-input" id="mw-search" type="text" placeholder="Search by name or worker ID…" oninput="renderMWScreen()" />
       </div>
-      <div class="filter-chips-inline" id="mw-active-filters"></div>
-      <button class="filter-modal-btn" id="mw-filter-btn" onclick="openMWFilterModal()">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
-        Filters
-      </button>
+      <div class="filter-right-group">
+        <div class="filter-chips-inline" id="mw-active-filters"></div>
+        <button class="filter-modal-btn" id="mw-filter-btn" onclick="openMWFilterModal()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
+          Filters
+        </button>
+      </div>
     </div>
 
     <div class="list-body" id="mw-list-body"></div>
@@ -718,11 +723,13 @@
 
     <!-- Search + Filters bar (chips inline) -->
     <div class="search-filter-bar">
-      <div class="filter-chips-inline" id="al-active-filters"></div>
-      <button class="filter-modal-btn" id="al-filter-btn" onclick="openALFilterModal()">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
-        Filters
-      </button>
+      <div class="filter-right-group">
+        <div class="filter-chips-inline" id="al-active-filters"></div>
+        <button class="filter-modal-btn" id="al-filter-btn" onclick="openALFilterModal()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
+          Filters
+        </button>
+      </div>
     </div>
 
     <div class="list-body" id="audit-list-body"></div>
