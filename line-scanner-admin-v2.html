@@ -325,17 +325,17 @@
 
     /* ── Audit log rows ── */
     .audit-row {
-      display: flex; align-items: flex-start; padding: 14px 20px; gap: 14px;
+      display: flex; align-items: flex-start; padding: 14px 20px; gap: 0;
       border-bottom: 1px solid #e8ecef; background: var(--surface);
     }
-    .audit-badge-col { flex-shrink: 0; padding-top: 2px; }
+    .audit-badge-col { flex-shrink: 0; width: 130px; padding-top: 3px; }
     .audit-body { flex: 1; min-width: 0; }
     .audit-worker-name { font-size: 16px; font-weight: 700; color: var(--text); }
     .audit-uuid { font-size: 12px; color: var(--text-sub); font-family: monospace; margin-top: 2px; }
     .audit-meta { font-size: 13px; color: var(--text-sub); margin-top: 3px; display: flex; align-items: center; gap: 10px; }
     .audit-note { font-size: 13px; color: var(--orange-text); font-style: italic; margin-top: 3px; }
     .audit-note.error { color: var(--red-text); }
-    .audit-timestamp { font-size: 13px; color: var(--text-sub); white-space: nowrap; flex-shrink: 0; padding-top: 2px; }
+    .audit-timestamp { font-size: 13px; color: var(--text-sub); white-space: nowrap; flex-shrink: 0; padding-top: 3px; }
 
     /* ── Modal ── */
     .modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 100; align-items: center; justify-content: center; padding: 24px; }
@@ -552,6 +552,67 @@
     <div class="ec-footer">EC</div>
   </div>
 
+  <!-- ── Audit Log Filter Modal ── -->
+  <div class="filter-modal-overlay" id="al-filter-modal">
+    <div class="filter-modal-panel">
+      <div class="filter-modal-header">
+        <span class="filter-modal-title">Filters</span>
+        <button class="filter-modal-close" onclick="closeALFilterModal()">✕</button>
+      </div>
+      <div class="filter-modal-body">
+        <!-- Line -->
+        <div>
+          <div class="filter-section-label">Line</div>
+          <div class="line-grid" id="al-line-grid"></div>
+        </div>
+        <!-- Shift -->
+        <div>
+          <div class="filter-section-label">Shift</div>
+          <div class="shift-pills">
+            <button class="shift-pill" id="al-fp-shift-all" onclick="setALFPShift('all')">All Shifts</button>
+            <button class="shift-pill" id="al-fp-shift-1"   onclick="setALFPShift('1')">Shift 1</button>
+            <button class="shift-pill" id="al-fp-shift-2"   onclick="setALFPShift('2')">Shift 2</button>
+            <button class="shift-pill" id="al-fp-shift-3"   onclick="setALFPShift('3')">Shift 3</button>
+          </div>
+        </div>
+        <!-- Date -->
+        <div>
+          <div class="filter-section-label">Date</div>
+          <div class="date-pills">
+            <button class="date-pill" id="al-fp-date-today"     onclick="setALFPDate('today')">Today</button>
+            <button class="date-pill" id="al-fp-date-yesterday" onclick="setALFPDate('yesterday')">Yesterday</button>
+            <button class="date-pill" id="al-fp-date-week"      onclick="setALFPDate('week')">Past 7 Days</button>
+            <button class="date-pill" id="al-fp-date-month"     onclick="setALFPDate('month')">Past 30 Days</button>
+          </div>
+        </div>
+        <!-- Event Type -->
+        <div>
+          <div class="filter-section-label">Event Type</div>
+          <div class="shift-pills" style="flex-wrap:wrap;">
+            <button class="shift-pill" id="al-fp-type-all"       onclick="setALFPType('all')">All Events</button>
+            <button class="shift-pill" id="al-fp-type-checkin"   onclick="setALFPType('checkin')">Check-In</button>
+            <button class="shift-pill" id="al-fp-type-checkout"  onclick="setALFPType('checkout')">Check-Out</button>
+            <button class="shift-pill" id="al-fp-type-abandoned" onclick="setALFPType('abandoned')">Abandoned</button>
+            <button class="shift-pill" id="al-fp-type-error"     onclick="setALFPType('error')">Errors</button>
+          </div>
+        </div>
+        <!-- Agency -->
+        <div>
+          <div class="filter-section-label">Agency</div>
+          <div class="shift-pills">
+            <button class="shift-pill" id="al-fp-agency-all" onclick="setALFPAgency('all')">All Agencies</button>
+            <button class="shift-pill" id="al-fp-agency-saa" onclick="setALFPAgency('saa')">SAA</button>
+            <button class="shift-pill" id="al-fp-agency-mbt" onclick="setALFPAgency('mbt')">MBT</button>
+          </div>
+        </div>
+      </div>
+      <div class="filter-modal-footer">
+        <button class="btn-filter-reset" onclick="resetALFilters()">Reset</button>
+        <button class="btn-filter-apply" onclick="applyALFilters()">Apply Filters</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ── Manage Workers Filter Modal ── -->
   <div class="filter-modal-overlay" id="mw-filter-modal">
     <div class="filter-modal-panel">
@@ -649,50 +710,13 @@
       <div class="alert-text">Read-only record of all badge scans and clock events on this line. Use filters to search across lines, shifts, agencies, and date ranges.</div>
     </div>
 
-    <!-- Filters -->
-    <div class="filter-area">
-      <div class="filter-group">
-        <div class="filter-group-label">Line</div>
-        <div class="filter-group-pills">
-          <button class="filter-pill active" id="al-line-5"   onclick="setALFilter('line','5')">Line 5</button>
-          <button class="filter-pill"        id="al-line-all" onclick="setALFilter('line','all')">All Lines</button>
-        </div>
-      </div>
-      <div class="filter-group">
-        <div class="filter-group-label">Event Type</div>
-        <div class="filter-group-pills">
-          <button class="filter-pill active" id="al-type-all"       onclick="setALFilter('type','all')">All Events</button>
-          <button class="filter-pill"        id="al-type-checkin"   onclick="setALFilter('type','checkin')">Check-In</button>
-          <button class="filter-pill"        id="al-type-checkout"  onclick="setALFilter('type','checkout')">Check-Out</button>
-          <button class="filter-pill"        id="al-type-abandoned" onclick="setALFilter('type','abandoned')">Abandoned</button>
-          <button class="filter-pill"        id="al-type-error"     onclick="setALFilter('type','error')">Errors</button>
-        </div>
-      </div>
-      <div class="filter-group">
-        <div class="filter-group-label">Shift</div>
-        <div class="filter-group-pills">
-          <button class="filter-pill active" id="al-shift-all" onclick="setALFilter('shift','all')">All Shifts</button>
-          <button class="filter-pill"        id="al-shift-1"   onclick="setALFilter('shift','1')">Shift 1</button>
-          <button class="filter-pill"        id="al-shift-2"   onclick="setALFilter('shift','2')">Shift 2</button>
-          <button class="filter-pill"        id="al-shift-3"   onclick="setALFilter('shift','3')">Shift 3</button>
-        </div>
-      </div>
-      <div class="filter-group">
-        <div class="filter-group-label">Date</div>
-        <div class="filter-group-pills">
-          <button class="filter-pill active" id="al-date-today"     onclick="setALFilter('date','today')">Today</button>
-          <button class="filter-pill"        id="al-date-yesterday" onclick="setALFilter('date','yesterday')">Yesterday</button>
-          <button class="filter-pill"        id="al-date-week"      onclick="setALFilter('date','week')">Past 7 Days</button>
-        </div>
-      </div>
-      <div class="filter-group">
-        <div class="filter-group-label">Agency</div>
-        <div class="filter-group-pills">
-          <button class="filter-pill active" id="al-agency-all" onclick="setALFilter('agency','all')">All Agencies</button>
-          <button class="filter-pill"        id="al-agency-saa" onclick="setALFilter('agency','saa')">SAA</button>
-          <button class="filter-pill"        id="al-agency-mbt" onclick="setALFilter('agency','mbt')">MBT</button>
-        </div>
-      </div>
+    <!-- Search + Filters bar (chips inline) -->
+    <div class="search-filter-bar">
+      <button class="filter-modal-btn" id="al-filter-btn" onclick="openALFilterModal()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
+        Filters
+      </button>
+      <div class="filter-chips-inline" id="al-active-filters"></div>
     </div>
 
     <div class="list-body" id="audit-list-body"></div>
@@ -1200,6 +1224,72 @@
     openModal('modal-checkout-edit');
   }
 
+  // ─── Audit Log filter state ──────────────────────────────────────
+  const AL_DEFAULT = () => ({ lines: [5], shift: 'all', date: 'today', type: 'all', agency: 'all' });
+  let alFilters = AL_DEFAULT();
+  let alPending = AL_DEFAULT();
+
+  function openALFilterModal() {
+    alPending = { lines: alFilters.lines.slice(), shift: alFilters.shift, date: alFilters.date, type: alFilters.type, agency: alFilters.agency };
+    document.getElementById('al-filter-modal').classList.add('open');
+    renderALLineGrid(); syncALFPShift(); syncALFPDate(); syncALFPType(); syncALFPAgency();
+  }
+  function closeALFilterModal() { document.getElementById('al-filter-modal').classList.remove('open'); }
+
+  function renderALLineGrid() {
+    const grid = document.getElementById('al-line-grid');
+    if (!grid) return;
+    grid.innerHTML = '';
+    const allBtn = document.createElement('button');
+    allBtn.className = 'line-pill' + (alPending.lines.length === 0 ? ' active' : '');
+    allBtn.textContent = 'All Lines';
+    allBtn.onclick = () => { alPending.lines = []; renderALLineGrid(); };
+    grid.appendChild(allBtn);
+    for (let i = 1; i <= 18; i++) {
+      const btn = document.createElement('button');
+      btn.className = 'line-pill' + (alPending.lines.includes(i) ? ' active' : '');
+      btn.textContent = i;
+      btn.onclick = () => {
+        const idx = alPending.lines.indexOf(i);
+        idx === -1 ? alPending.lines.push(i) : alPending.lines.splice(idx, 1);
+        renderALLineGrid();
+      };
+      grid.appendChild(btn);
+    }
+  }
+
+  function setALFPShift(val)  { alPending.shift  = val; syncALFPShift(); }
+  function setALFPDate(val)   { alPending.date   = val; syncALFPDate(); }
+  function setALFPType(val)   { alPending.type   = val; syncALFPType(); }
+  function setALFPAgency(val) { alPending.agency = val; syncALFPAgency(); }
+
+  function syncALFPShift() {
+    ['all','1','2','3'].forEach(v => { const el = document.getElementById('al-fp-shift-'+v); if (el) el.classList.toggle('active', alPending.shift === v); });
+  }
+  function syncALFPDate() {
+    ['today','yesterday','week','month'].forEach(v => { const el = document.getElementById('al-fp-date-'+v); if (el) el.classList.toggle('active', alPending.date === v); });
+  }
+  function syncALFPType() {
+    ['all','checkin','checkout','abandoned','error'].forEach(v => { const el = document.getElementById('al-fp-type-'+v); if (el) el.classList.toggle('active', alPending.type === v); });
+  }
+  function syncALFPAgency() {
+    ['all','saa','mbt'].forEach(v => { const el = document.getElementById('al-fp-agency-'+v); if (el) el.classList.toggle('active', alPending.agency === v); });
+  }
+
+  function resetALFilters() {
+    alPending = AL_DEFAULT();
+    renderALLineGrid(); syncALFPShift(); syncALFPDate(); syncALFPType(); syncALFPAgency();
+  }
+  function applyALFilters() {
+    alFilters = { lines: alPending.lines.slice(), shift: alPending.shift, date: alPending.date, type: alPending.type, agency: alPending.agency };
+    closeALFilterModal();
+    renderAuditLog();
+  }
+  function resetApplyAL() {
+    alFilters = AL_DEFAULT();
+    renderAuditLog();
+  }
+
   // ─── Audit Log data ───────────────────────────────────────────────
   const auditEvents = [
     { type:'checkin',   name:'Adam Kim',          agencyId:'SAA-0831', uuid:null,                                     line:5,  shift:2, agency:'SAA', datetime:'05/14 4:09 PM' },
@@ -1231,19 +1321,33 @@
     const body = document.getElementById('audit-list-body');
     if (!body) return;
 
-    const activeLine   = document.querySelector('#al-line-5.active') ? '5' : 'all';
-    const activeType   = ['checkin','checkout','abandoned','error'].find(t => document.getElementById('al-type-'+t) && document.getElementById('al-type-'+t).classList.contains('active')) || 'all';
-    const activeShift  = ['1','2','3'].find(s => document.getElementById('al-shift-'+s) && document.getElementById('al-shift-'+s).classList.contains('active')) || 'all';
-    const activeAgency = document.querySelector('#al-agency-saa.active') ? 'saa' : document.querySelector('#al-agency-mbt.active') ? 'mbt' : 'all';
-
     const filtered = auditEvents.filter(e => {
-      if (activeLine  !== 'all' && e.line  !== parseInt(activeLine))  return false;
-      if (activeType  !== 'all' && e.type  !== activeType)            return false;
-      if (activeShift !== 'all' && e.shift !== parseInt(activeShift)) return false;
-      if (activeAgency === 'saa' && e.agency !== 'SAA') return false;
-      if (activeAgency === 'mbt' && e.agency !== 'MBT') return false;
+      if (alFilters.lines.length > 0 && !alFilters.lines.includes(e.line)) return false;
+      if (alFilters.type  !== 'all' && e.type  !== alFilters.type)          return false;
+      if (alFilters.shift !== 'all' && e.shift !== parseInt(alFilters.shift)) return false;
+      if (alFilters.agency === 'saa' && e.agency !== 'SAA') return false;
+      if (alFilters.agency === 'mbt' && e.agency !== 'MBT') return false;
       return true;
     });
+
+    // Active filter chips
+    const chipsBar = document.getElementById('al-active-filters');
+    const def = AL_DEFAULT();
+    const chips = [];
+    const linesChanged = JSON.stringify(alFilters.lines.slice().sort()) !== JSON.stringify(def.lines.slice().sort());
+    if (linesChanged) chips.push(alFilters.lines.length === 0 ? 'All Lines' : 'Line ' + alFilters.lines.join(', '));
+    if (alFilters.shift  !== def.shift)  chips.push('Shift ' + alFilters.shift);
+    if (alFilters.date   !== def.date)   chips.push({ yesterday:'Yesterday', week:'Past 7 Days', month:'Past 30 Days' }[alFilters.date] || alFilters.date);
+    if (alFilters.type   !== def.type)   chips.push({ checkin:'Check-In', checkout:'Check-Out', abandoned:'Abandoned', error:'Errors' }[alFilters.type] || alFilters.type);
+    if (alFilters.agency !== def.agency) chips.push(alFilters.agency.toUpperCase());
+    const hasFilters = chips.length > 0;
+    document.getElementById('al-filter-btn').classList.toggle('has-filters', hasFilters);
+    if (chipsBar) {
+      chipsBar.innerHTML = hasFilters
+        ? chips.map(c => '<span class="active-filter-chip">' + c + '</span>').join('') +
+          '<button class="clear-all-chip" onclick="resetApplyAL()" title="Clear filters">✕</button>'
+        : '';
+    }
 
     body.innerHTML = '';
     if (filtered.length === 0) {
@@ -1262,33 +1366,16 @@
         ? '<div class="audit-worker-name">' + e.name + (e.agencyId ? ' <span style="font-size:13px;font-weight:400;color:var(--text-sub);">· ' + e.agencyId + '</span>' : '') + '</div>'
         : '';
       const uuidHtml = e.uuid ? '<div class="audit-uuid">' + e.uuid + '</div>' : '';
-      const metaHtml = '<div class="audit-meta">'
-        + '<span>Line ' + e.line + '</span>'
-        + '<span>·</span>'
-        + '<span>Shift ' + e.shift + '</span>'
-        + '</div>';
+      const metaHtml = '<div class="audit-meta"><span>Line ' + e.line + '</span><span>·</span><span>Shift ' + e.shift + '</span></div>';
       const noteHtml = e.note ? '<div class="audit-note' + (e.type === 'error' ? ' error' : '') + '">' + e.note + '</div>' : '';
 
       row.innerHTML =
         '<div class="audit-badge-col"><span class="badge ' + BADGE_CLASSES[e.type] + '">' + BADGE_SVGS[e.type] + ' ' + BADGE_LABELS[e.type] + '</span></div>' +
         '<div class="audit-body">' + nameHtml + uuidHtml + metaHtml + noteHtml + '</div>' +
-        '<div class="audit-timestamp">' + e.datetime + ' · Line ' + e.line + ' · Shift ' + e.shift + '</div>';
+        '<div class="audit-timestamp">' + e.datetime + '</div>';
 
       body.appendChild(row);
     });
-  }
-
-  function setALFilter(group, val) {
-    const maps = {
-      line:   { '5':'al-line-5', 'all':'al-line-all' },
-      type:   { 'all':'al-type-all','checkin':'al-type-checkin','checkout':'al-type-checkout','abandoned':'al-type-abandoned','error':'al-type-error' },
-      shift:  { 'all':'al-shift-all','1':'al-shift-1','2':'al-shift-2','3':'al-shift-3' },
-      date:   { 'today':'al-date-today','yesterday':'al-date-yesterday','week':'al-date-week' },
-      agency: { 'all':'al-agency-all','saa':'al-agency-saa','mbt':'al-agency-mbt' },
-    };
-    Object.values(maps[group]).forEach(id => { const el = document.getElementById(id); if (el) el.classList.remove('active'); });
-    const tid = maps[group][val]; if (tid) { const el = document.getElementById(tid); if (el) el.classList.add('active'); }
-    renderAuditLog();
   }
 
   // ─── Training Types ───────────────────────────────────────────────
