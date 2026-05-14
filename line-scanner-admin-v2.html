@@ -1,0 +1,1183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EC Line Scanner — Admin v2</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --blue:        #2980b9;
+      --blue-dark:   #1f6391;
+      --blue-light:  #d6eaf8;
+      --teal:        #1abc9c;
+      --green-text:  #27ae60;
+      --green-bg:    #d5f5e3;
+      --red-text:    #c0392b;
+      --red-bg:      #fdecea;
+      --orange-text: #e67e22;
+      --orange-bg:   #fef3e2;
+      --gray-text:   #7f8c8d;
+      --gray-bg:     #ecf0f1;
+      --gray-border: #bdc3c7;
+      --text:        #2c3e50;
+      --text-sub:    #7f8c8d;
+      --surface:     #ffffff;
+      --page-bg:     #f4f6f8;
+      --header-h:    72px;
+      --row-min:     72px;
+      --touch-min:   56px;
+    }
+
+    html, body {
+      height: 100%;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--page-bg);
+      color: var(--text);
+      font-size: 16px;
+      line-height: 1.4;
+      overflow-x: hidden;
+    }
+
+    #app {
+      max-width: 1024px;
+      min-height: 100vh;
+      margin: 0 auto;
+      background: var(--surface);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .screen {
+      display: none;
+      flex-direction: column;
+      min-height: 100vh;
+      background: var(--surface);
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      animation: slideIn 0.18s ease;
+    }
+    .screen.active { display: flex; position: relative; }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(18px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+
+    /* ── Header ── */
+    .header {
+      display: flex;
+      align-items: center;
+      background: var(--blue);
+      color: #fff;
+      height: var(--header-h);
+      padding: 0 16px;
+      flex-shrink: 0;
+      gap: 12px;
+    }
+    .header-title { flex: 1; font-size: 20px; font-weight: 600; letter-spacing: 0.01em; }
+    .header-btn {
+      background: none; border: none; color: #fff; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      min-width: var(--header-h); height: var(--header-h);
+      font-size: 26px; border-radius: 6px; transition: background 0.12s;
+      -webkit-tap-highlight-color: transparent; flex-shrink: 0;
+    }
+    .header-btn:active { background: rgba(255,255,255,0.15); }
+    .header-logout-btn { min-width: unset; width: auto; padding: 0 16px; gap: 8px; font-size: 15px; font-weight: 600; }
+
+    /* ── Menu icon tile ── */
+    .menu-icon-tile {
+      width: 40px; height: 40px; border-radius: 9px; background: #e8f4fc;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .menu-icon-tile svg { width: 22px; height: 22px; stroke: #2980b9; fill: none; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
+
+    /* ── List rows ── */
+    .list-row {
+      display: flex; align-items: center; min-height: var(--row-min);
+      padding: 14px 20px; background: var(--surface); border-bottom: 1px solid #e8ecef;
+      cursor: pointer; gap: 16px; -webkit-tap-highlight-color: transparent; transition: background 0.1s;
+    }
+    .list-row:active { background: #f0f4f8; }
+    .row-text { flex: 1; min-width: 0; }
+    .row-label { font-size: 17px; font-weight: 600; color: var(--text); }
+    .row-sub { font-size: 13px; color: var(--text-sub); margin-top: 2px; }
+    .row-chevron { color: var(--gray-text); font-size: 18px; flex-shrink: 0; }
+
+    /* ── Avatar ── */
+    .avatar {
+      width: 46px; height: 46px; border-radius: 50%; background: var(--blue-light);
+      color: var(--blue); display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 16px; flex-shrink: 0;
+    }
+
+    /* ── Badges ── */
+    .badge {
+      display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px;
+      border-radius: 6px; font-size: 12px; font-weight: 700; white-space: nowrap; letter-spacing: 0.04em;
+    }
+    .badge-green  { background: var(--green-bg);  color: var(--green-text); }
+    .badge-red    { background: var(--red-bg);    color: var(--red-text);   }
+    .badge-orange { background: var(--orange-bg); color: var(--orange-text);}
+    .badge-gray   { background: var(--gray-bg);   color: var(--gray-text);  }
+    .badge-blue   { background: var(--blue-light); color: var(--blue);      }
+
+    /* ── Alert banner ── */
+    .alert-banner { display: flex; align-items: center; padding: 12px 20px; gap: 12px; flex-shrink: 0; }
+    .alert-banner.blue { background: #e8f4fc; border-bottom: 2px solid #aed6f1; }
+    .alert-banner.amber { background: #fef3e2; border-bottom: 2px solid #f39c12; }
+    .alert-text { flex: 1; font-size: 15px; font-weight: 500; }
+    .alert-banner.blue  .alert-text { color: #1a4a6b; }
+    .alert-banner.amber .alert-text { color: #7d4e00; }
+
+    /* ── Search bar ── */
+    .search-bar {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 16px; background: var(--surface); border-bottom: 1px solid #e8ecef; flex-shrink: 0;
+    }
+    .search-input {
+      flex: 1; height: 44px; border: 2px solid var(--gray-border); border-radius: 10px;
+      padding: 0 14px; font-size: 15px; font-family: inherit; color: var(--text);
+      background: #f8fafc; outline: none;
+    }
+    .search-input:focus { border-color: var(--blue); background: var(--surface); }
+    .search-input::placeholder { color: var(--text-sub); }
+
+    /* ── Filter area ── */
+    .filter-area {
+      display: flex; flex-direction: row; gap: 20px; padding: 12px 20px;
+      background: var(--surface); border-bottom: 1px solid #e8ecef; flex-shrink: 0; align-items: flex-start;
+      flex-wrap: wrap;
+    }
+    .filter-group { display: flex; flex-direction: column; gap: 6px; }
+    .filter-group-label { font-size: 11px; font-weight: 700; color: var(--gray-text); text-transform: uppercase; letter-spacing: 0.07em; }
+    .filter-group-pills { display: flex; gap: 8px; flex-wrap: wrap; }
+    .filter-pill {
+      padding: 8px 14px; border-radius: 999px; border: 2px solid var(--blue);
+      background: transparent; color: var(--blue); font-size: 14px; font-weight: 600;
+      cursor: pointer; min-height: var(--touch-min); -webkit-tap-highlight-color: transparent;
+      transition: background 0.12s, color 0.12s; white-space: nowrap;
+    }
+    .filter-pill.active { background: var(--blue); color: #fff; }
+    .filter-pill:active { opacity: 0.8; }
+
+    /* ── Scrollable list ── */
+    .list-body { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+
+    /* ── EC footer ── */
+    .ec-footer { text-align: center; padding: 20px; font-size: 24px; font-weight: 900; color: var(--teal); letter-spacing: 2px; flex-shrink: 0; }
+
+    /* ── Mockup switcher ── */
+    .mockup-switcher {
+      display: flex; gap: 0; padding: 10px 16px; background: #f0f0f0;
+      border-bottom: 1px solid #d8d8d8; flex-shrink: 0; align-items: center;
+    }
+    .mockup-switcher-label { font-size: 11px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 0.08em; margin-right: 10px; white-space: nowrap; }
+    .mockup-switch-btn { padding: 7px 18px; font-size: 13px; font-weight: 600; border: 1.5px solid #aaa; background: transparent; color: #555; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+    .mockup-switch-btn:first-of-type { border-radius: 6px 0 0 6px; }
+    .mockup-switch-btn:last-of-type  { border-radius: 0 6px 6px 0; border-left: none; }
+    .mockup-switch-btn.active { background: #444; border-color: #444; color: #fff; }
+
+    /* ── Manage Workers row ── */
+    .mw-grid-row {
+      display: flex; flex-direction: row; align-items: center;
+      min-height: var(--row-min); padding: 14px 20px; background: var(--surface);
+      border-bottom: 1px solid #e8ecef; cursor: pointer;
+      -webkit-tap-highlight-color: transparent; transition: background 0.1s;
+    }
+    .mw-grid-row:active { background: #f0f4f8; }
+    .mw-grid-row.past { background: #fafbfc; }
+    .mw-left-group { display: flex; flex-direction: row; align-items: center; gap: 14px; flex-shrink: 0; }
+    .mw-worker-meta { display: flex; flex-direction: column; gap: 2px; width: 190px; flex-shrink: 0; }
+    .mw-worker-name { font-size: 17px; font-weight: 700; color: var(--text); }
+    .mw-worker-id   { font-size: 13px; color: var(--text-sub); }
+    .mw-timestamps  { display: flex; flex-direction: row; }
+    .mw-time-col    { display: flex; flex-direction: column; gap: 2px; width: 110px; flex-shrink: 0; }
+    .mw-time-type   { font-size: 11px; font-weight: 700; letter-spacing: 0.06em; }
+    .mw-time-type.in  { color: var(--green-text); }
+    .mw-time-type.out { color: var(--red-text); }
+    .mw-time-val    { font-size: 20px; font-weight: 700; color: var(--text); white-space: nowrap; }
+    .mw-time-val.past { color: var(--text-sub); font-size: 18px; }
+    .mw-buttons {
+      display: flex; flex-direction: row; gap: 8px; align-items: center;
+      margin-left: auto; flex-shrink: 0;
+    }
+    .mw-action-btn {
+      min-height: 56px; min-width: 110px; border-radius: 8px; font-size: 14px; font-weight: 600;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      gap: 6px; padding: 0 16px; -webkit-tap-highlight-color: transparent; white-space: nowrap;
+    }
+    .mw-action-btn:active { opacity: 0.8; }
+    .mw-action-btn.btn-edit    { background: var(--blue); border: none; color: #fff; }
+    .mw-action-btn.btn-checkout { background: transparent; border: 2px solid var(--red-text); color: var(--red-text); }
+    .mw-past-tag {
+      font-size: 11px; font-weight: 700; color: var(--gray-text); background: var(--gray-bg);
+      border-radius: 4px; padding: 2px 7px; white-space: nowrap; align-self: center;
+    }
+
+    /* ── Audit log rows ── */
+    .audit-row {
+      display: flex; align-items: flex-start; padding: 14px 20px; gap: 14px;
+      border-bottom: 1px solid #e8ecef; background: var(--surface);
+    }
+    .audit-badge-col { flex-shrink: 0; padding-top: 2px; }
+    .audit-body { flex: 1; min-width: 0; }
+    .audit-worker-name { font-size: 16px; font-weight: 700; color: var(--text); }
+    .audit-uuid { font-size: 12px; color: var(--text-sub); font-family: monospace; margin-top: 2px; }
+    .audit-meta { font-size: 13px; color: var(--text-sub); margin-top: 3px; display: flex; align-items: center; gap: 10px; }
+    .audit-note { font-size: 13px; color: var(--orange-text); font-style: italic; margin-top: 3px; }
+    .audit-note.error { color: var(--red-text); }
+    .audit-timestamp { font-size: 13px; color: var(--text-sub); white-space: nowrap; flex-shrink: 0; padding-top: 2px; }
+
+    /* ── Modal ── */
+    .modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 100; align-items: center; justify-content: center; padding: 24px; }
+    .modal-backdrop.open { display: flex; }
+    .modal { background: var(--surface); border-radius: 16px; padding: 28px 24px 20px; width: 100%; max-width: 520px; box-shadow: 0 20px 60px rgba(0,0,0,0.25); max-height: 90vh; overflow-y: auto; }
+    .modal-title { font-size: 20px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+    .modal-subtitle { font-size: 15px; color: var(--text-sub); margin-bottom: 20px; }
+    .modal-ref-line { font-size: 13px; color: var(--text-sub); margin-bottom: 20px; line-height: 1.5; }
+    .modal-ref-time { color: var(--text); font-weight: 600; }
+    .modal-ref-link { background: none; border: none; color: var(--blue); font-size: 13px; font-weight: 600; cursor: pointer; padding: 0; text-decoration: underline; -webkit-tap-highlight-color: transparent; }
+    .modal-ref-link:active { opacity: 0.7; }
+    .modal-icon-row { text-align: center; margin-bottom: 12px; }
+    .modal-title-center { text-align: center; font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+    .modal-body-center { text-align: center; font-size: 15px; color: var(--text-sub); margin-bottom: 24px; }
+    .modal-actions { display: flex; flex-direction: column; gap: 10px; margin-top: 8px; }
+    .btn-full { width: 100%; min-height: 64px; border-radius: 10px; font-size: 17px; font-weight: 600; cursor: pointer; border: none; -webkit-tap-highlight-color: transparent; transition: opacity 0.12s; }
+    .btn-full:active { opacity: 0.8; }
+    .btn-primary  { background: var(--blue); color: #fff; }
+    .btn-secondary { background: transparent; border: 2px solid var(--gray-border); color: var(--gray-text); }
+    .btn-danger   { background: #c0392b; color: #fff; }
+
+    /* ── Numeric keypad ── */
+    .modal-time-entry { max-width: 440px; }
+    .time-input-group { display: grid; grid-template-columns: 1fr 20px 1fr 1fr; align-items: center; gap: 8px; margin-bottom: 20px; }
+    .time-input { width: 100%; height: 72px; font-size: 32px; font-weight: 700; text-align: center; border: 2px solid var(--gray-border); border-radius: 10px; background: var(--surface); color: var(--text); outline: none; -webkit-appearance: none; appearance: none; box-sizing: border-box; }
+    .time-input:focus { border-color: var(--blue); }
+    .time-input.time-input-active { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(41,128,185,0.18); }
+    .time-colon { font-size: 32px; font-weight: 700; color: var(--text); text-align: center; }
+    .ampm-group { display: flex; gap: 6px; height: 72px; }
+    .ampm-btn { flex: 1; height: 100%; border: 2px solid var(--gray-border); border-radius: 10px; background: transparent; color: var(--text-sub); font-size: 16px; font-weight: 700; cursor: pointer; -webkit-tap-highlight-color: transparent; transition: background 0.12s, color 0.12s, border-color 0.12s; }
+    .ampm-btn.active { background: var(--blue); border-color: var(--blue); color: #fff; }
+    .numpad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 16px; }
+    .numpad-key { background: #f0f2f5; border: none; border-radius: 10px; font-size: 22px; font-weight: 500; color: var(--text); min-height: 64px; cursor: pointer; display: flex; align-items: center; justify-content: center; -webkit-tap-highlight-color: transparent; transition: background 0.08s; user-select: none; }
+    .numpad-key:active { background: #d6dce4; }
+    .numpad-key:disabled { background: transparent; cursor: default; }
+    .numpad-back { color: var(--text-sub); }
+
+    /* ── Training Types ── */
+    .tt-worker-card { padding: 16px 20px 20px; border-bottom: 1px solid #e8ecef; background: var(--surface); }
+    .tt-worker-card.hidden { display: none; }
+    .tt-worker-header { display: flex; align-items: center; gap: 14px; margin-bottom: 12px; }
+    .tt-worker-meta { flex: 1; min-width: 0; }
+    .tt-worker-name { font-size: 17px; font-weight: 700; color: var(--text); }
+    .tt-worker-role { font-size: 13px; color: var(--text-sub); margin-top: 2px; }
+    .tt-no-types { font-size: 13px; color: var(--red-text); margin-top: 4px; font-weight: 500; }
+    .tt-chip-area { margin-left: 60px; }
+    .tt-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+    .tt-chip { padding: 10px 16px; border-radius: 999px; border: 2px solid var(--gray-border); background: transparent; color: var(--text); font-size: 14px; font-weight: 500; cursor: pointer; min-height: 44px; -webkit-tap-highlight-color: transparent; transition: background 0.12s, color 0.12s, border-color 0.12s; user-select: none; }
+    .tt-chip.selected { background: var(--blue); border-color: var(--blue); color: #fff; }
+    .tt-chip.chip-na { color: var(--gray-text); }
+    .tt-chip.chip-na.selected { background: var(--gray-text); border-color: var(--gray-text); color: #fff; }
+    .tt-other-note { display: none; margin-top: 10px; align-items: center; gap: 8px; }
+    .tt-other-note.open { display: flex; }
+    .tt-other-input { flex: 1; border: 2px solid var(--blue); border-radius: 8px; padding: 10px 14px; font-size: 15px; outline: none; min-height: 44px; font-family: inherit; }
+    .tt-other-save { background: var(--blue); color: #fff; border: none; border-radius: 8px; padding: 10px 18px; font-size: 14px; font-weight: 600; cursor: pointer; min-height: 44px; white-space: nowrap; -webkit-tap-highlight-color: transparent; }
+    .tt-other-preview { margin-top: 8px; font-size: 13px; color: var(--text-sub); font-style: italic; }
+    .alert-btn { color: #fff; border: none; border-radius: 8px; padding: 10px 18px; font-size: 14px; font-weight: 600; cursor: pointer; min-height: var(--touch-min); background: var(--blue); -webkit-tap-highlight-color: transparent; }
+    .alert-btn:active { background: var(--blue-dark); }
+
+    /* ── Coming soon ── */
+    .coming-soon { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-sub); gap: 14px; padding: 40px; }
+    .coming-soon-title { font-size: 22px; font-weight: 700; color: var(--text); }
+    .coming-soon-sub { font-size: 15px; text-align: center; }
+
+    /* ── Toast ── */
+    .toast { position: fixed; bottom: 36px; left: 50%; transform: translateX(-50%) translateY(20px); background: #1e7e3e; color: #fff; font-size: 15px; font-weight: 600; padding: 14px 24px; border-radius: 12px; box-shadow: 0 6px 24px rgba(0,0,0,0.22); display: flex; align-items: center; gap: 10px; opacity: 0; pointer-events: none; transition: opacity 0.2s ease, transform 0.2s ease; z-index: 200; white-space: nowrap; }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    .list-row.hidden { display: none; }
+  </style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ══════════════════════════════════════════
+       SCREEN 1 — Admin Menu
+  ══════════════════════════════════════════ -->
+  <div id="screen-admin" class="screen active">
+    <div class="header">
+      <button class="header-btn" aria-label="Back">←</button>
+      <div style="flex:1;display:flex;flex-direction:column;justify-content:center;">
+        <span class="header-title" style="line-height:1.2;font-size:15px;">Admin Menu</span>
+        <span style="font-size:13px;color:rgba(255,255,255,0.75);font-weight:400;margin-top:2px;">Regina Guinto · Administrator</span>
+      </div>
+      <button class="header-btn header-logout-btn" id="logout-btn" aria-label="Log Out">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+          <polyline points="16 17 21 12 16 7"/>
+          <line x1="21" y1="12" x2="9" y2="12"/>
+        </svg>
+        <span>Log Out</span>
+      </button>
+    </div>
+
+    <div class="list-body">
+      <!-- Manage Workers -->
+      <div class="list-row" onclick="navigate('screen-manage-workers')">
+        <div class="menu-icon-tile">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="9" cy="7" r="3"/>
+            <path d="M2 21c0-4 3.1-7 7-7"/>
+            <circle cx="18" cy="17" r="4"/>
+            <path d="M18 15v2.5l1.5 1.5"/>
+          </svg>
+        </div>
+        <div class="row-text">
+          <div class="row-label">Manage Workers <span style="font-weight:400;color:var(--gray-text)">(Line 5)</span></div>
+          <div class="row-sub">Edit check-in and check-out times across shifts and lines</div>
+        </div>
+        <div class="row-chevron">›</div>
+      </div>
+
+      <!-- Training Types -->
+      <div class="list-row" onclick="navigate('screen-training')">
+        <div class="menu-icon-tile">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M22 10l-10-6L2 10l10 6 10-6z"/>
+            <path d="M6 12.5v4.5c0 1.5 2.7 3 6 3s6-1.5 6-3v-4.5"/>
+            <line x1="22" y1="10" x2="22" y2="16"/>
+          </svg>
+        </div>
+        <div class="row-text">
+          <div class="row-label">Add Training Types <span style="font-weight:400;color:var(--gray-text)">(Line 5)</span></div>
+          <div class="row-sub">Assign training types to workers on this line</div>
+        </div>
+        <div class="row-chevron">›</div>
+      </div>
+
+      <!-- Audit Log (unified History + Badge Scans) -->
+      <div class="list-row" onclick="navigate('screen-audit')">
+        <div class="menu-icon-tile">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="16" y1="13" x2="8" y2="13"/>
+            <line x1="16" y1="17" x2="8" y2="17"/>
+            <polyline points="10 9 9 9 8 9"/>
+          </svg>
+        </div>
+        <div class="row-text">
+          <div class="row-label">Audit Log <span style="font-weight:400;color:var(--gray-text)">(All Lines)</span></div>
+          <div class="row-sub">View badge scans, check-in and check-out history</div>
+        </div>
+        <div class="row-chevron">›</div>
+      </div>
+
+      <!-- System Settings -->
+      <div class="list-row" onclick="navigate('screen-coming-soon', 'System Settings')">
+        <div class="menu-icon-tile">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+          </svg>
+        </div>
+        <div class="row-text">
+          <div class="row-label">System Settings</div>
+          <div class="row-sub">Scanner configuration and preferences</div>
+        </div>
+        <div class="row-chevron">›</div>
+      </div>
+
+      <!-- Check Out All Workers -->
+      <div class="list-row" onclick="openModal('modal-checkout-all')" style="border-top:1px solid #f0c0c0;">
+        <div class="menu-icon-tile" style="background:#fdecea;">
+          <svg viewBox="0 0 24 24" aria-hidden="true" style="stroke:#c0392b;">
+            <circle cx="11" cy="12" r="8"/>
+            <path d="M11 8v4l2.5 2"/>
+            <path d="M17 17l4 0M19 15l2 2-2 2"/>
+          </svg>
+        </div>
+        <div class="row-text">
+          <div class="row-label" style="color:var(--red-text);">Check Out All Workers</div>
+          <div class="row-sub">Check out all current workers on this line</div>
+        </div>
+        <div class="row-chevron" style="color:var(--red-text);">›</div>
+      </div>
+    </div>
+
+    <div class="ec-footer">EC</div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════
+       SCREEN 2 — Manage Workers
+  ══════════════════════════════════════════ -->
+  <div id="screen-manage-workers" class="screen">
+    <div class="header">
+      <button class="header-btn" onclick="navigate('screen-admin')" aria-label="Back">←</button>
+      <span class="header-title" id="mw-header-title">Manage Workers</span>
+    </div>
+
+    <div class="alert-banner blue" style="padding-top:12px;padding-bottom:12px;">
+      <div class="alert-text" id="mw-banner-text">You are currently on LINE-5 · May 14, 2026 · Shift 2 — Edit check-in and check-out times. Use filters to view workers from other shifts or lines.</div>
+    </div>
+
+    <!-- Search -->
+    <div class="search-bar">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--gray-text)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input class="search-input" id="mw-search" type="text" placeholder="Search by name or worker ID…" oninput="filterMWRows()" />
+    </div>
+
+    <!-- Filters -->
+    <div class="filter-area">
+      <div class="filter-group">
+        <div class="filter-group-label">Line</div>
+        <div class="filter-group-pills">
+          <button class="filter-pill active" id="mw-line-5"   onclick="setMWFilter('line','5')">Line 5</button>
+          <button class="filter-pill"        id="mw-line-all" onclick="setMWFilter('line','all')">All Lines</button>
+        </div>
+      </div>
+      <div class="filter-group">
+        <div class="filter-group-label">Shift</div>
+        <div class="filter-group-pills">
+          <button class="filter-pill active" id="mw-shift-2"   onclick="setMWFilter('shift','2')">Shift 2</button>
+          <button class="filter-pill"        id="mw-shift-1"   onclick="setMWFilter('shift','1')">Shift 1</button>
+          <button class="filter-pill"        id="mw-shift-3"   onclick="setMWFilter('shift','3')">Shift 3</button>
+          <button class="filter-pill"        id="mw-shift-all" onclick="setMWFilter('shift','all')">All Shifts</button>
+        </div>
+      </div>
+      <div class="filter-group">
+        <div class="filter-group-label">Date</div>
+        <div class="filter-group-pills">
+          <button class="filter-pill active" id="mw-date-today"     onclick="setMWFilter('date','today')">Today</button>
+          <button class="filter-pill"        id="mw-date-yesterday" onclick="setMWFilter('date','yesterday')">Yesterday</button>
+          <button class="filter-pill"        id="mw-date-week"      onclick="setMWFilter('date','week')">Past 7 Days</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="list-body" id="mw-list-body"></div>
+    <div class="ec-footer">EC</div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════
+       SCREEN 3 — Add Training Types
+  ══════════════════════════════════════════ -->
+  <div id="screen-training" class="screen">
+    <div class="header">
+      <button class="header-btn" onclick="navigate('screen-admin')" aria-label="Back">←</button>
+      <span class="header-title">Add Training Types (8)</span>
+    </div>
+
+    <div class="mockup-switcher">
+      <span class="mockup-switcher-label">Mockup state:</span>
+      <button class="mockup-switch-btn active" id="tt-state-empty"      onclick="setTTState('empty')">Empty State</button>
+      <button class="mockup-switch-btn"        id="tt-state-inprogress" onclick="setTTState('inprogress')">In Progress</button>
+    </div>
+
+    <div class="alert-banner blue" id="tt-alert-banner">
+      <div class="alert-text" id="tt-alert-text">Select the type of work each worker performed during this shift. Tap a chip to assign — you can select more than one. Tap Save all when finished.</div>
+      <button class="alert-btn" id="tt-filter-btn" onclick="toggleMissingFilter()" style="display:none">Show missing only</button>
+    </div>
+
+    <div class="list-body" id="tt-list-body" style="padding-bottom:80px"></div>
+
+    <div style="position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:1024px;padding:12px 20px;background:var(--surface);border-top:1px solid #e8ecef;z-index:10;">
+      <button class="btn-full btn-primary" onclick="saveAllTT()">Save all</button>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════
+       SCREEN 4 — Audit Log
+  ══════════════════════════════════════════ -->
+  <div id="screen-audit" class="screen">
+    <div class="header">
+      <button class="header-btn" onclick="navigate('screen-admin')" aria-label="Back">←</button>
+      <span class="header-title">Audit Log</span>
+    </div>
+
+    <div class="alert-banner blue" style="padding-top:12px;padding-bottom:12px;">
+      <div class="alert-text">Read-only record of all badge scans and clock events on this line. Use filters to search across lines, shifts, agencies, and date ranges.</div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filter-area">
+      <div class="filter-group">
+        <div class="filter-group-label">Line</div>
+        <div class="filter-group-pills">
+          <button class="filter-pill active" id="al-line-5"   onclick="setALFilter('line','5')">Line 5</button>
+          <button class="filter-pill"        id="al-line-all" onclick="setALFilter('line','all')">All Lines</button>
+        </div>
+      </div>
+      <div class="filter-group">
+        <div class="filter-group-label">Event Type</div>
+        <div class="filter-group-pills">
+          <button class="filter-pill active" id="al-type-all"       onclick="setALFilter('type','all')">All Events</button>
+          <button class="filter-pill"        id="al-type-checkin"   onclick="setALFilter('type','checkin')">Check-In</button>
+          <button class="filter-pill"        id="al-type-checkout"  onclick="setALFilter('type','checkout')">Check-Out</button>
+          <button class="filter-pill"        id="al-type-abandoned" onclick="setALFilter('type','abandoned')">Abandoned</button>
+          <button class="filter-pill"        id="al-type-error"     onclick="setALFilter('type','error')">Errors</button>
+        </div>
+      </div>
+      <div class="filter-group">
+        <div class="filter-group-label">Shift</div>
+        <div class="filter-group-pills">
+          <button class="filter-pill active" id="al-shift-all" onclick="setALFilter('shift','all')">All Shifts</button>
+          <button class="filter-pill"        id="al-shift-1"   onclick="setALFilter('shift','1')">Shift 1</button>
+          <button class="filter-pill"        id="al-shift-2"   onclick="setALFilter('shift','2')">Shift 2</button>
+          <button class="filter-pill"        id="al-shift-3"   onclick="setALFilter('shift','3')">Shift 3</button>
+        </div>
+      </div>
+      <div class="filter-group">
+        <div class="filter-group-label">Date</div>
+        <div class="filter-group-pills">
+          <button class="filter-pill active" id="al-date-today"     onclick="setALFilter('date','today')">Today</button>
+          <button class="filter-pill"        id="al-date-yesterday" onclick="setALFilter('date','yesterday')">Yesterday</button>
+          <button class="filter-pill"        id="al-date-week"      onclick="setALFilter('date','week')">Past 7 Days</button>
+        </div>
+      </div>
+      <div class="filter-group">
+        <div class="filter-group-label">Agency</div>
+        <div class="filter-group-pills">
+          <button class="filter-pill active" id="al-agency-all" onclick="setALFilter('agency','all')">All Agencies</button>
+          <button class="filter-pill"        id="al-agency-saa" onclick="setALFilter('agency','saa')">SAA</button>
+          <button class="filter-pill"        id="al-agency-mbt" onclick="setALFilter('agency','mbt')">MBT</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="list-body" id="audit-list-body"></div>
+    <div class="ec-footer">EC</div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════
+       SCREEN 5 — Coming Soon
+  ══════════════════════════════════════════ -->
+  <div id="screen-coming-soon" class="screen">
+    <div class="header">
+      <button class="header-btn" onclick="navigate('screen-admin')" aria-label="Back">←</button>
+      <span class="header-title" id="coming-soon-title">Coming Soon</span>
+    </div>
+    <div class="coming-soon">
+      <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#bdc3c7" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <div class="coming-soon-title">Coming Soon</div>
+      <div class="coming-soon-sub">This feature is not yet available.<br>Check back in a future update.</div>
+    </div>
+    <div class="ec-footer">EC</div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════
+       MODAL — Logout
+  ══════════════════════════════════════════ -->
+  <div class="modal-backdrop" id="modal-logout">
+    <div class="modal">
+      <div class="modal-icon-row">
+        <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#c0392b" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      </div>
+      <div class="modal-title-center">Log Out?</div>
+      <div class="modal-body-center">You will be returned to the login screen. Any unsaved changes will be lost.</div>
+      <div class="modal-actions">
+        <button class="btn-full btn-danger"     onclick="closeModal('modal-logout')">Log Out</button>
+        <button class="btn-full btn-secondary"  onclick="closeModal('modal-logout')">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       MODAL — Check Out All
+  ══════════════════════════════════════════ -->
+  <div class="modal-backdrop" id="modal-checkout-all">
+    <div class="modal">
+      <div class="modal-icon-row">
+        <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#c0392b" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="12" r="8"/><path d="M11 8v4l2.5 2"/><path d="M17 17l4 0M19 15l2 2-2 2"/></svg>
+      </div>
+      <div class="modal-title-center">Check Out All Workers?</div>
+      <div class="modal-body-center">This will check out all 8 workers currently on LINE-5. This cannot be undone.</div>
+      <div class="modal-actions">
+        <button class="btn-full btn-danger"    onclick="closeModal('modal-checkout-all')">Check Out All</button>
+        <button class="btn-full btn-secondary" onclick="closeModal('modal-checkout-all')">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       MODAL — Edit Check-In Time
+  ══════════════════════════════════════════ -->
+  <div class="modal-backdrop" id="modal-checkin-edit">
+    <div class="modal modal-time-entry">
+      <div class="modal-title">Edit Check-In Time</div>
+      <div class="modal-subtitle" id="mw-checkin-worker-name">Worker Name</div>
+      <div class="modal-ref-line">Currently recorded: <span id="mw-checkin-current" class="modal-ref-time">—</span></div>
+      <div class="time-input-group">
+        <input class="time-input" id="mw-ci-hh" type="text" inputmode="none" placeholder="HH" maxlength="2" readonly onfocus="setActiveField('mwci','hh')" onclick="setActiveField('mwci','hh')" />
+        <div class="time-colon">:</div>
+        <input class="time-input" id="mw-ci-mm" type="text" inputmode="none" placeholder="MM" maxlength="2" readonly onfocus="setActiveField('mwci','mm')" onclick="setActiveField('mwci','mm')" />
+        <div class="ampm-group">
+          <button class="ampm-btn active" id="mw-ci-am" onclick="selectAMPM('mwci','AM')">AM</button>
+          <button class="ampm-btn"        id="mw-ci-pm" onclick="selectAMPM('mwci','PM')">PM</button>
+        </div>
+      </div>
+      <div class="numpad">
+        <button class="numpad-key" onclick="numpadPress('mwci','1')">1</button>
+        <button class="numpad-key" onclick="numpadPress('mwci','2')">2</button>
+        <button class="numpad-key" onclick="numpadPress('mwci','3')">3</button>
+        <button class="numpad-key" onclick="numpadPress('mwci','4')">4</button>
+        <button class="numpad-key" onclick="numpadPress('mwci','5')">5</button>
+        <button class="numpad-key" onclick="numpadPress('mwci','6')">6</button>
+        <button class="numpad-key" onclick="numpadPress('mwci','7')">7</button>
+        <button class="numpad-key" onclick="numpadPress('mwci','8')">8</button>
+        <button class="numpad-key" onclick="numpadPress('mwci','9')">9</button>
+        <button class="numpad-key numpad-back" onclick="numpadBack('mwci')">⌫</button>
+        <button class="numpad-key" onclick="numpadPress('mwci','0')">0</button>
+        <button class="numpad-key" disabled></button>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-full btn-primary"   onclick="closeModal('modal-checkin-edit');showToast('Check-in time updated')">Save</button>
+        <button class="btn-full btn-secondary" onclick="closeModal('modal-checkin-edit')">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       MODAL — Edit Check-Out Time
+  ══════════════════════════════════════════ -->
+  <div class="modal-backdrop" id="modal-checkout-edit">
+    <div class="modal modal-time-entry">
+      <div class="modal-title">Edit Check-Out Time</div>
+      <div class="modal-subtitle" id="mw-checkout-worker-name">Worker Name</div>
+      <div class="modal-ref-line">Currently recorded: <span id="mw-checkout-current" class="modal-ref-time">—</span></div>
+      <div class="time-input-group">
+        <input class="time-input" id="mw-co-hh" type="text" inputmode="none" placeholder="HH" maxlength="2" readonly onfocus="setActiveField('mwco','hh')" onclick="setActiveField('mwco','hh')" />
+        <div class="time-colon">:</div>
+        <input class="time-input" id="mw-co-mm" type="text" inputmode="none" placeholder="MM" maxlength="2" readonly onfocus="setActiveField('mwco','mm')" onclick="setActiveField('mwco','mm')" />
+        <div class="ampm-group">
+          <button class="ampm-btn active" id="mw-co-am" onclick="selectAMPM('mwco','AM')">AM</button>
+          <button class="ampm-btn"        id="mw-co-pm" onclick="selectAMPM('mwco','PM')">PM</button>
+        </div>
+      </div>
+      <div class="numpad">
+        <button class="numpad-key" onclick="numpadPress('mwco','1')">1</button>
+        <button class="numpad-key" onclick="numpadPress('mwco','2')">2</button>
+        <button class="numpad-key" onclick="numpadPress('mwco','3')">3</button>
+        <button class="numpad-key" onclick="numpadPress('mwco','4')">4</button>
+        <button class="numpad-key" onclick="numpadPress('mwco','5')">5</button>
+        <button class="numpad-key" onclick="numpadPress('mwco','6')">6</button>
+        <button class="numpad-key" onclick="numpadPress('mwco','7')">7</button>
+        <button class="numpad-key" onclick="numpadPress('mwco','8')">8</button>
+        <button class="numpad-key" onclick="numpadPress('mwco','9')">9</button>
+        <button class="numpad-key numpad-back" onclick="numpadBack('mwco')">⌫</button>
+        <button class="numpad-key" onclick="numpadPress('mwco','0')">0</button>
+        <button class="numpad-key" disabled></button>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-full btn-primary"   onclick="closeModal('modal-checkout-edit');showToast('Check-out time updated')">Save</button>
+        <button class="btn-full btn-secondary" onclick="closeModal('modal-checkout-edit')">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite">✓ <span id="toast-msg"></span></div>
+
+</div><!-- /#app -->
+
+<script>
+  // ─── Navigation ───────────────────────────────────────────────────
+  function navigate(screenId, label) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    const target = document.getElementById(screenId);
+    if (target) target.classList.add('active');
+    if (screenId === 'screen-coming-soon' && label) {
+      document.getElementById('coming-soon-title').textContent = label;
+    }
+    if (screenId === 'screen-manage-workers') renderMWScreen();
+    if (screenId === 'screen-audit')          renderAuditLog();
+    if (screenId === 'screen-training')       initTTScreen();
+  }
+
+  function openModal(id) { document.getElementById(id).classList.add('open'); }
+  function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+  document.getElementById('logout-btn').addEventListener('click', () => openModal('modal-logout'));
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    document.getElementById('toast-msg').textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2800);
+  }
+
+  // ─── Manage Workers data ──────────────────────────────────────────
+  const PENCIL = '<svg width="13" height="13" viewBox="0 0 14 14" fill="currentColor" aria-hidden="true"><path d="M9.95 1.05a1.5 1.5 0 0 1 2.12 0l.88.88a1.5 1.5 0 0 1 0 2.12L4.5 12.5 1 13l.5-3.5 8.45-8.45z"/><path d="M1 13l.5-3.5 3 3L1 13z"/></svg>';
+
+  const mwWorkers = [
+    // Current shift (Shift 2, Line 5, today)
+    { id:'jl',  initials:'JL', name:'Jessica Le',    agencyId:'SAA-1042', inTime:'12:30 PM', outTime:'2:45 PM', shift:2, line:5, past:false },
+    { id:'em',  initials:'EM', name:'Emma Moore',    agencyId:'SAA-2187', inTime:'12:30 PM', outTime:'',        shift:2, line:5, past:false },
+    { id:'jl2', initials:'JL', name:'James Lee',     agencyId:'SAA-3391', inTime:'10:44 AM', outTime:'',        shift:2, line:5, past:false },
+    { id:'fl',  initials:'FL', name:'Frank Lim',     agencyId:'SAA-4056', inTime:'12:30 PM', outTime:'',        shift:2, line:5, past:false },
+    { id:'lb',  initials:'LB', name:'Lily Baker',    agencyId:'SAA-5278', inTime:'12:30 PM', outTime:'',        shift:2, line:5, past:false },
+    { id:'cr',  initials:'CR', name:'Carlos Rivera', agencyId:'SAA-6613', inTime:'11:15 AM', outTime:'',        shift:2, line:5, past:false },
+    { id:'an',  initials:'AN', name:'Anh Nguyen',    agencyId:'SAA-7724', inTime:'12:30 PM', outTime:'',        shift:2, line:5, past:false },
+    { id:'dm',  initials:'DM', name:'David Mitchell',agencyId:'SAA-8899', inTime:'9:58 AM',  outTime:'',        shift:2, line:5, past:false },
+    // Past workers (Shift 1, Line 5, today)
+    { id:'sg',  initials:'SG', name:'Sergey Gorbach',  agencyId:'SAA-2034', inTime:'6:00 AM',  outTime:'2:00 PM', shift:1, line:5, past:true },
+    { id:'ck',  initials:'CK', name:'Chulwoo Kim',     agencyId:'SAA-5591', inTime:'6:15 AM',  outTime:'1:45 PM', shift:1, line:5, past:true },
+    { id:'at',  initials:'AT', name:'Alexander Taylor', agencyId:'SAA-9895', inTime:'6:00 AM', outTime:'2:00 PM', shift:1, line:5, past:true },
+    // Past workers (Shift 2, Line 14, today)
+    { id:'mp',  initials:'MP', name:'Maria Perez',     agencyId:'MBT-3312', inTime:'12:00 PM', outTime:'',       shift:2, line:14, past:true },
+    { id:'tw',  initials:'TW', name:'Tyler Wong',      agencyId:'MBT-4481', inTime:'12:30 PM', outTime:'',       shift:2, line:14, past:true },
+  ];
+
+  let mwSearchQ = '';
+
+  function setMWFilter(group, val) {
+    // Update pill active states
+    const maps = {
+      line:  { '5':'mw-line-5',   'all':'mw-line-all' },
+      shift: { '1':'mw-shift-1','2':'mw-shift-2','3':'mw-shift-3','all':'mw-shift-all' },
+      date:  { 'today':'mw-date-today','yesterday':'mw-date-yesterday','week':'mw-date-week' },
+    };
+    Object.values(maps[group]).forEach(id => document.getElementById(id) && document.getElementById(id).classList.remove('active'));
+    const targetId = maps[group][val];
+    if (targetId) document.getElementById(targetId).classList.add('active');
+    renderMWScreen();
+  }
+
+  function filterMWRows() {
+    mwSearchQ = document.getElementById('mw-search').value.toLowerCase();
+    renderMWScreen();
+  }
+
+  function renderMWScreen() {
+    const body = document.getElementById('mw-list-body');
+    if (!body) return;
+
+    const activeLine  = document.querySelector('#mw-line-5.active') ? '5' : 'all';
+    const activeShift = ['mw-shift-1','mw-shift-2','mw-shift-3'].find(id => document.getElementById(id) && document.getElementById(id).classList.contains('active'));
+    const shiftNum    = activeShift ? parseInt(activeShift.replace('mw-shift-','')) : null;
+
+    const filtered = mwWorkers.filter(w => {
+      if (activeLine !== 'all' && w.line !== parseInt(activeLine)) return false;
+      if (shiftNum   !== null  && w.shift !== shiftNum)            return false;
+      if (mwSearchQ) {
+        const q = mwSearchQ;
+        if (!w.name.toLowerCase().includes(q) && !w.agencyId.toLowerCase().includes(q)) return false;
+      }
+      return true;
+    });
+
+    const total = filtered.filter(w => !w.past).length;
+    document.getElementById('mw-header-title').textContent = 'Manage Workers (' + filtered.length + ')';
+
+    body.innerHTML = '';
+
+    // Section: current
+    const current = filtered.filter(w => !w.past);
+    const past     = filtered.filter(w =>  w.past);
+
+    if (current.length > 0) {
+      const hdr = document.createElement('div');
+      hdr.style.cssText = 'padding:8px 20px;font-size:11px;font-weight:700;color:var(--gray-text);text-transform:uppercase;letter-spacing:0.07em;background:var(--page-bg);border-bottom:1px solid #e8ecef;';
+      hdr.textContent = 'Current Shift — Line 5';
+      body.appendChild(hdr);
+      current.forEach((w, i) => body.appendChild(buildMWRow(w, mwWorkers.indexOf(w))));
+    }
+
+    if (past.length > 0) {
+      const hdr = document.createElement('div');
+      hdr.style.cssText = 'padding:8px 20px;font-size:11px;font-weight:700;color:var(--gray-text);text-transform:uppercase;letter-spacing:0.07em;background:var(--page-bg);border-bottom:1px solid #e8ecef;margin-top:8px;';
+      hdr.textContent = 'Past Workers';
+      body.appendChild(hdr);
+      past.forEach((w, i) => body.appendChild(buildMWRow(w, mwWorkers.indexOf(w))));
+    }
+
+    if (filtered.length === 0) {
+      const empty = document.createElement('div');
+      empty.style.cssText = 'padding:48px 20px;text-align:center;color:var(--text-sub);font-size:15px;';
+      empty.textContent = 'No workers match the current filters.';
+      body.appendChild(empty);
+    }
+  }
+
+  function buildMWRow(w, idx) {
+    const hasOut = !!w.outTime;
+    const row = document.createElement('div');
+    row.className = 'mw-grid-row' + (w.past ? ' past' : '');
+
+    const checkOutCol = hasOut
+      ? '<div class="mw-time-col"><div class="mw-time-type out">CHECK-OUT</div><div class="mw-time-val' + (w.past ? ' past' : '') + '">' + w.outTime + '</div></div>'
+      : '<div class="mw-time-col"></div>';
+
+    const lineTag = w.past ? '<span class="mw-past-tag">Line ' + w.line + ' · Shift ' + w.shift + '</span>' : '';
+
+    const buttons = hasOut
+      ? '<div class="mw-buttons">' +
+          lineTag +
+          '<button class="mw-action-btn btn-edit"     onclick="event.stopPropagation();openCheckinEditModal(' + idx + ')">' + PENCIL + ' Edit Check-In</button>' +
+          '<button class="mw-action-btn btn-checkout" onclick="event.stopPropagation();openCheckoutEditModal(' + idx + ')">' + PENCIL + ' Edit Check-Out</button>' +
+        '</div>'
+      : '<div class="mw-buttons">' +
+          lineTag +
+          '<button class="mw-action-btn btn-edit"     onclick="event.stopPropagation();openCheckinEditModal(' + idx + ')">' + PENCIL + ' Edit Check-In</button>' +
+          '<button class="mw-action-btn btn-checkout" onclick="event.stopPropagation();openCheckoutEditModal(' + idx + ')">Check Out</button>' +
+        '</div>';
+
+    row.innerHTML =
+      '<div class="mw-left-group">' +
+        '<div class="avatar">' + w.initials + '</div>' +
+        '<div class="mw-worker-meta">' +
+          '<div class="mw-worker-name">' + w.name + '</div>' +
+          '<div class="mw-worker-id">' + w.agencyId + '</div>' +
+        '</div>' +
+        '<div class="mw-timestamps">' +
+          '<div class="mw-time-col">' +
+            '<div class="mw-time-type in">CHECK-IN</div>' +
+            '<div class="mw-time-val' + (w.past ? ' past' : '') + '">' + w.inTime + '</div>' +
+          '</div>' +
+          checkOutCol +
+        '</div>' +
+      '</div>' +
+      buttons;
+
+    row.addEventListener('click', () => openCheckinEditModal(idx));
+    return row;
+  }
+
+  function openCheckinEditModal(idx) {
+    const w = mwWorkers[idx];
+    document.getElementById('mw-checkin-worker-name').textContent = w.name + ' · ' + w.agencyId;
+    document.getElementById('mw-checkin-current').textContent = w.inTime;
+    const [tp, ap] = w.inTime.split(' ');
+    const [hh, mm] = tp.split(':');
+    document.getElementById('mw-ci-hh').value = hh;
+    document.getElementById('mw-ci-mm').value = mm || '00';
+    selectAMPM('mwci', ap || 'AM');
+    setActiveField('mwci', 'hh');
+    openModal('modal-checkin-edit');
+  }
+
+  function openCheckoutEditModal(idx) {
+    const w = mwWorkers[idx];
+    document.getElementById('mw-checkout-worker-name').textContent = w.name + ' · ' + w.agencyId;
+    document.getElementById('mw-checkout-current').textContent = w.outTime || 'Not yet checked out';
+    if (w.outTime) {
+      const [tp, ap] = w.outTime.split(' ');
+      const [hh, mm] = tp.split(':');
+      document.getElementById('mw-co-hh').value = hh;
+      document.getElementById('mw-co-mm').value = mm || '00';
+      selectAMPM('mwco', ap || 'PM');
+    } else {
+      document.getElementById('mw-co-hh').value = '';
+      document.getElementById('mw-co-mm').value = '';
+      selectAMPM('mwco', 'PM');
+    }
+    setActiveField('mwco', 'hh');
+    openModal('modal-checkout-edit');
+  }
+
+  // ─── Audit Log data ───────────────────────────────────────────────
+  const auditEvents = [
+    { type:'checkin',   name:'Adam Kim',          agencyId:'SAA-0831', uuid:null,                                     line:5,  shift:2, agency:'SAA', datetime:'05/14 4:09 PM' },
+    { type:'error',     name:null,                agencyId:null,       uuid:'0f85c6d5',                               line:5,  shift:2, agency:null,  datetime:'05/14 4:09 PM', note:'Invalid badge' },
+    { type:'checkin',   name:'Jiae Kim',          agencyId:'MBT-4102', uuid:null,                                     line:5,  shift:2, agency:'MBT', datetime:'05/14 4:08 PM' },
+    { type:'abandoned', name:'Charlotte Rodriguez',agencyId:'SAA-7743',uuid:null,                                     line:5,  shift:2, agency:'SAA', datetime:'05/14 3:41 PM', note:'Abandoned after 6s' },
+    { type:'abandoned', name:null,                agencyId:null,       uuid:'40f561b5-c2b8-4d3a-8451-bb92cc733364',   line:5,  shift:2, agency:null,  datetime:'05/14 3:41 PM', note:'Abandoned after 3s' },
+    { type:'checkout',  name:'Emma Moore',        agencyId:'SAA-2187', uuid:null,                                     line:5,  shift:2, agency:'SAA', datetime:'05/13 8:10 PM' },
+    { type:'abandoned', name:'Emma Moore',        agencyId:'SAA-2187', uuid:null,                                     line:14, shift:2, agency:'SAA', datetime:'05/13 8:10 PM', note:'Abandoned after 9s' },
+    { type:'checkout',  name:'Lily Baker',        agencyId:'SAA-5278', uuid:null,                                     line:14, shift:2, agency:'SAA', datetime:'05/13 8:10 PM' },
+    { type:'checkout',  name:'Jessica Le',        agencyId:'SAA-1042', uuid:null,                                     line:14, shift:2, agency:'SAA', datetime:'05/13 8:10 PM' },
+    { type:'checkin',   name:'Frank Lim',         agencyId:'SAA-4056', uuid:null,                                     line:14, shift:2, agency:'SAA', datetime:'05/13 8:10 PM' },
+    { type:'checkin',   name:'Sergey Gorbach',    agencyId:'SAA-2034', uuid:null,                                     line:5,  shift:1, agency:'SAA', datetime:'05/13 6:00 AM' },
+    { type:'checkin',   name:'Chulwoo Kim',       agencyId:'SAA-5591', uuid:null,                                     line:5,  shift:1, agency:'SAA', datetime:'05/13 6:15 AM' },
+    { type:'error',     name:null,                agencyId:null,       uuid:'1a2b3c4d',                               line:5,  shift:1, agency:null,  datetime:'05/13 6:02 AM', note:'Badge read timeout' },
+  ];
+
+  const BADGE_SVGS = {
+    checkin:   '<svg width="10" height="10" viewBox="0 0 10 10" fill="#27ae60"><circle cx="5" cy="5" r="5"/></svg>',
+    checkout:  '<svg width="10" height="10" viewBox="0 0 10 10" fill="#c0392b"><circle cx="5" cy="5" r="5"/></svg>',
+    abandoned: '<svg width="10" height="10" viewBox="0 0 10 10" fill="#e67e22"><circle cx="5" cy="5" r="5"/></svg>',
+    error:     '<svg width="10" height="10" viewBox="0 0 10 10" fill="#c0392b"><circle cx="5" cy="5" r="5"/></svg>',
+  };
+
+  const BADGE_LABELS = { checkin:'CHECK-IN', checkout:'CHECK-OUT', abandoned:'ABANDONED', error:'ERROR' };
+  const BADGE_CLASSES = { checkin:'badge-green', checkout:'badge-red', abandoned:'badge-orange', error:'badge-red' };
+
+  function renderAuditLog() {
+    const body = document.getElementById('audit-list-body');
+    if (!body) return;
+
+    const activeLine   = document.querySelector('#al-line-5.active') ? '5' : 'all';
+    const activeType   = ['checkin','checkout','abandoned','error'].find(t => document.getElementById('al-type-'+t) && document.getElementById('al-type-'+t).classList.contains('active')) || 'all';
+    const activeShift  = ['1','2','3'].find(s => document.getElementById('al-shift-'+s) && document.getElementById('al-shift-'+s).classList.contains('active')) || 'all';
+    const activeAgency = document.querySelector('#al-agency-saa.active') ? 'saa' : document.querySelector('#al-agency-mbt.active') ? 'mbt' : 'all';
+
+    const filtered = auditEvents.filter(e => {
+      if (activeLine  !== 'all' && e.line  !== parseInt(activeLine))  return false;
+      if (activeType  !== 'all' && e.type  !== activeType)            return false;
+      if (activeShift !== 'all' && e.shift !== parseInt(activeShift)) return false;
+      if (activeAgency === 'saa' && e.agency !== 'SAA') return false;
+      if (activeAgency === 'mbt' && e.agency !== 'MBT') return false;
+      return true;
+    });
+
+    body.innerHTML = '';
+    if (filtered.length === 0) {
+      const empty = document.createElement('div');
+      empty.style.cssText = 'padding:48px 20px;text-align:center;color:var(--text-sub);font-size:15px;';
+      empty.textContent = 'No events match the current filters.';
+      body.appendChild(empty);
+      return;
+    }
+
+    filtered.forEach(e => {
+      const row = document.createElement('div');
+      row.className = 'audit-row';
+
+      const nameHtml = e.name
+        ? '<div class="audit-worker-name">' + e.name + (e.agencyId ? ' <span style="font-size:13px;font-weight:400;color:var(--text-sub);">· ' + e.agencyId + '</span>' : '') + '</div>'
+        : '';
+      const uuidHtml = e.uuid ? '<div class="audit-uuid">' + e.uuid + '</div>' : '';
+      const metaHtml = '<div class="audit-meta">'
+        + '<span>LINE-' + e.line + '</span>'
+        + '<span>·</span>'
+        + '<span>Shift ' + e.shift + '</span>'
+        + '</div>';
+      const noteHtml = e.note ? '<div class="audit-note' + (e.type === 'error' ? ' error' : '') + '">' + e.note + '</div>' : '';
+
+      row.innerHTML =
+        '<div class="audit-badge-col"><span class="badge ' + BADGE_CLASSES[e.type] + '">' + BADGE_SVGS[e.type] + ' ' + BADGE_LABELS[e.type] + '</span></div>' +
+        '<div class="audit-body">' + nameHtml + uuidHtml + metaHtml + noteHtml + '</div>' +
+        '<div class="audit-timestamp">' + e.datetime + '</div>';
+
+      body.appendChild(row);
+    });
+  }
+
+  function setALFilter(group, val) {
+    const maps = {
+      line:   { '5':'al-line-5', 'all':'al-line-all' },
+      type:   { 'all':'al-type-all','checkin':'al-type-checkin','checkout':'al-type-checkout','abandoned':'al-type-abandoned','error':'al-type-error' },
+      shift:  { 'all':'al-shift-all','1':'al-shift-1','2':'al-shift-2','3':'al-shift-3' },
+      date:   { 'today':'al-date-today','yesterday':'al-date-yesterday','week':'al-date-week' },
+      agency: { 'all':'al-agency-all','saa':'al-agency-saa','mbt':'al-agency-mbt' },
+    };
+    Object.values(maps[group]).forEach(id => { const el = document.getElementById(id); if (el) el.classList.remove('active'); });
+    const tid = maps[group][val]; if (tid) { const el = document.getElementById(tid); if (el) el.classList.add('active'); }
+    renderAuditLog();
+  }
+
+  // ─── Training Types ───────────────────────────────────────────────
+  const TT_TYPES = ['Stocking','Packing','Folding','Receiving','Labeling','Other'];
+
+  const ttWorkersEmpty = [
+    { id:'jl',  initials:'JL', name:'Jessica Le',    agencyId:'SAA-1042', selected:[], na:false, otherNote:'' },
+    { id:'em',  initials:'EM', name:'Emma Moore',     agencyId:'SAA-2187', selected:[], na:false, otherNote:'' },
+    { id:'jl2', initials:'JL', name:'James Lee',      agencyId:'SAA-3391', selected:[], na:false, otherNote:'' },
+    { id:'fl',  initials:'FL', name:'Frank Lim',      agencyId:'SAA-4056', selected:[], na:false, otherNote:'' },
+    { id:'lb',  initials:'LB', name:'Lily Baker',     agencyId:'SAA-5278', selected:[], na:false, otherNote:'' },
+    { id:'cr',  initials:'CR', name:'Carlos Rivera',  agencyId:'SAA-6613', selected:[], na:false, otherNote:'' },
+    { id:'an',  initials:'AN', name:'Anh Nguyen',     agencyId:'SAA-7724', selected:[], na:false, otherNote:'' },
+    { id:'dm',  initials:'DM', name:'David Mitchell', agencyId:'SAA-8899', selected:[], na:false, otherNote:'' },
+  ];
+  const ttWorkersInProgress = [
+    { id:'jl',  initials:'JL', name:'Jessica Le',    agencyId:'SAA-1042', selected:['Stocking'], na:false, otherNote:'' },
+    { id:'em',  initials:'EM', name:'Emma Moore',     agencyId:'SAA-2187', selected:['Stocking'], na:false, otherNote:'' },
+    { id:'jl2', initials:'JL', name:'James Lee',      agencyId:'SAA-3391', selected:['Packing'],  na:false, otherNote:'' },
+    { id:'fl',  initials:'FL', name:'Frank Lim',      agencyId:'SAA-4056', selected:['Stocking'], na:false, otherNote:'' },
+    { id:'lb',  initials:'LB', name:'Lily Baker',     agencyId:'SAA-5278', selected:[],           na:false, otherNote:'' },
+    { id:'cr',  initials:'CR', name:'Carlos Rivera',  agencyId:'SAA-6613', selected:[],           na:false, otherNote:'' },
+    { id:'an',  initials:'AN', name:'Anh Nguyen',     agencyId:'SAA-7724', selected:['Folding'],  na:false, otherNote:'' },
+    { id:'dm',  initials:'DM', name:'David Mitchell', agencyId:'SAA-8899', selected:[],           na:true,  otherNote:'' },
+  ];
+
+  function cloneTT(src) { return src.map(w => Object.assign({}, w, { selected: w.selected.slice() })); }
+  let ttState = 'empty';
+  let ttWorkers = cloneTT(ttWorkersEmpty);
+  let ttMissingFilter = false;
+
+  function setTTState(state) {
+    ttState = state;
+    ttWorkers = cloneTT(state === 'empty' ? ttWorkersEmpty : ttWorkersInProgress);
+    ttMissingFilter = (state === 'inprogress');
+    document.getElementById('tt-state-empty').classList.toggle('active', state === 'empty');
+    document.getElementById('tt-state-inprogress').classList.toggle('active', state === 'inprogress');
+    initTTScreen();
+  }
+
+  function workerAssigned(w) { return w.na || w.selected.length > 0; }
+
+  function initTTScreen() {
+    const banner    = document.getElementById('tt-alert-banner');
+    const alertText = document.getElementById('tt-alert-text');
+    const filterBtn = document.getElementById('tt-filter-btn');
+    const body      = document.getElementById('tt-list-body');
+    if (!body) return;
+
+    const missing = ttWorkers.filter(w => !workerAssigned(w)).length;
+
+    if (ttState === 'empty') {
+      banner.className = 'alert-banner blue';
+      alertText.textContent = 'Select the type of work each worker performed during this shift. Tap a chip to assign — you can select more than one. Tap Save all when finished.';
+      filterBtn.style.display = 'none';
+      ttMissingFilter = false;
+    } else {
+      banner.className = 'alert-banner amber';
+      alertText.textContent = '⚠ Action required: ' + missing + ' worker(s) are missing assigned training types.';
+      filterBtn.style.display = '';
+      filterBtn.textContent = ttMissingFilter ? 'Show all workers' : 'Show missing only';
+    }
+
+    body.innerHTML = '';
+    ttWorkers.forEach((w, idx) => {
+      const card = document.createElement('div');
+      card.className = 'tt-worker-card' + (ttMissingFilter && workerAssigned(w) ? ' hidden' : '');
+      card.id = 'tt-card-' + w.id;
+
+      const noTypesHtml = !workerAssigned(w) ? '<div class="tt-no-types">⚠ No types assigned</div>' : '';
+      const previewHtml = w.otherNote
+        ? '<div class="tt-other-preview" id="tt-op-' + w.id + '">Other: “' + w.otherNote + '”</div>'
+        : '<div class="tt-other-preview" id="tt-op-' + w.id + '" style="display:none"></div>';
+
+      card.innerHTML =
+        '<div class="tt-worker-header">' +
+          '<div class="avatar">' + w.initials + '</div>' +
+          '<div class="tt-worker-meta">' +
+            '<div class="tt-worker-name">' + w.name + '</div>' +
+            '<div class="tt-worker-role">' + w.agencyId + '</div>' +
+            noTypesHtml +
+          '</div>' +
+        '</div>' +
+        '<div class="tt-chip-area">' +
+          '<div class="tt-grid" id="tt-grid-' + w.id + '"></div>' +
+          '<div class="tt-other-note" id="tt-on-' + w.id + '">' +
+            '<input class="tt-other-input" id="tt-oi-' + w.id + '" type="text" placeholder="Describe other training type…" value="' + w.otherNote + '" />' +
+            '<button class="tt-other-save" onclick="saveTTNote(\'' + w.id + '\',' + idx + ')">Save</button>' +
+          '</div>' +
+          previewHtml +
+        '</div>';
+
+      body.appendChild(card);
+      renderTTChips(w, idx);
+    });
+  }
+
+  function renderTTChips(w, idx) {
+    const grid = document.getElementById('tt-grid-' + w.id);
+    if (!grid) return;
+    grid.innerHTML = '';
+    TT_TYPES.forEach(type => {
+      const btn = document.createElement('button');
+      btn.className = 'tt-chip' + (type === 'N/A' || type === 'Other' ? ' chip-na' : '') + (w.selected.includes(type) || (type === 'N/A' && w.na) ? ' selected' : '');
+      btn.textContent = type;
+      btn.addEventListener('click', () => toggleTTChip(w, idx, type));
+      grid.appendChild(btn);
+    });
+    const naBtn = document.createElement('button');
+    naBtn.className = 'tt-chip chip-na' + (w.na ? ' selected' : '');
+    naBtn.textContent = 'N/A';
+    naBtn.addEventListener('click', () => toggleTTChip(w, idx, 'N/A'));
+    grid.appendChild(naBtn);
+  }
+
+  function toggleTTChip(w, idx, type) {
+    if (type === 'N/A') {
+      w.na = !w.na;
+      if (w.na) w.selected = [];
+    } else if (type === 'Other') {
+      const noteEl = document.getElementById('tt-on-' + w.id);
+      if (noteEl) noteEl.classList.toggle('open');
+    } else {
+      w.na = false;
+      const i = w.selected.indexOf(type);
+      i === -1 ? w.selected.push(type) : w.selected.splice(i, 1);
+    }
+    renderTTChips(w, idx);
+    const noEl = document.querySelector('#tt-card-' + w.id + ' .tt-no-types');
+    if (noEl) noEl.style.display = workerAssigned(w) ? 'none' : '';
+    refreshTTMissingCount();
+  }
+
+  function saveTTNote(wid, idx) {
+    const w = ttWorkers[idx];
+    w.otherNote = document.getElementById('tt-oi-' + wid).value;
+    const prev = document.getElementById('tt-op-' + wid);
+    if (prev) { prev.style.display = w.otherNote ? '' : 'none'; prev.textContent = 'Other: “' + w.otherNote + '”'; }
+    showToast('Note saved');
+  }
+
+  function refreshTTMissingCount() {
+    const missing = ttWorkers.filter(w => !workerAssigned(w)).length;
+    if (ttState === 'inprogress') {
+      document.getElementById('tt-alert-text').textContent = missing === 0
+        ? '✓ All workers have been assigned training types.'
+        : '⚠ Action required: ' + missing + ' worker(s) are missing assigned training types.';
+      document.getElementById('tt-alert-banner').className = missing === 0 ? 'alert-banner blue' : 'alert-banner amber';
+      if (missing === 0) showToast('All training types assigned!');
+    }
+  }
+
+  function toggleMissingFilter() {
+    ttMissingFilter = !ttMissingFilter;
+    document.getElementById('tt-filter-btn').textContent = ttMissingFilter ? 'Show all workers' : 'Show missing only';
+    ttWorkers.forEach(w => {
+      const card = document.getElementById('tt-card-' + w.id);
+      if (card) card.classList.toggle('hidden', ttMissingFilter && workerAssigned(w));
+    });
+  }
+
+  function saveAllTT() { showToast('Training types saved'); }
+
+  // ─── Numpad / time input ──────────────────────────────────────────
+  let activePrefix = null;
+  let activeField  = null;
+
+  function setActiveField(prefix, field) {
+    activePrefix = prefix;
+    activeField  = field;
+    const hhId = prefix === 'mwci' ? 'mw-ci-hh' : 'mw-co-hh';
+    const mmId = prefix === 'mwci' ? 'mw-ci-mm' : 'mw-co-mm';
+    document.getElementById(hhId).classList.toggle('time-input-active', field === 'hh');
+    document.getElementById(mmId).classList.toggle('time-input-active', field === 'mm');
+  }
+
+  function selectAMPM(prefix, val) {
+    const amId = prefix === 'mwci' ? 'mw-ci-am' : 'mw-co-am';
+    const pmId = prefix === 'mwci' ? 'mw-ci-pm' : 'mw-co-pm';
+    document.getElementById(amId).classList.toggle('active', val === 'AM');
+    document.getElementById(pmId).classList.toggle('active', val === 'PM');
+  }
+
+  function numpadPress(prefix, digit) {
+    if (!activePrefix || activePrefix !== prefix) return;
+    const hhId = prefix === 'mwci' ? 'mw-ci-hh' : 'mw-co-hh';
+    const mmId = prefix === 'mwci' ? 'mw-ci-mm' : 'mw-co-mm';
+    const el = document.getElementById(activeField === 'hh' ? hhId : mmId);
+    let val = el.value.replace(/\D/g,'');
+    if (val.length >= 2) val = '';
+    val += digit;
+    el.value = val;
+    if (val.length === 2 && activeField === 'hh') setActiveField(prefix, 'mm');
+  }
+
+  function numpadBack(prefix) {
+    if (!activePrefix || activePrefix !== prefix) return;
+    const hhId = prefix === 'mwci' ? 'mw-ci-hh' : 'mw-co-hh';
+    const mmId = prefix === 'mwci' ? 'mw-ci-mm' : 'mw-co-mm';
+    const el = document.getElementById(activeField === 'hh' ? hhId : mmId);
+    el.value = el.value.slice(0,-1);
+  }
+
+  // ─── Init ─────────────────────────────────────────────────────────
+  renderMWScreen();
+  renderAuditLog();
+  initTTScreen();
+</script>
+</body>
+</html>
