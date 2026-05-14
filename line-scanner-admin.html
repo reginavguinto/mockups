@@ -1111,7 +1111,9 @@
       <span class="header-title">Clock History</span>
     </div>
 
-    <div class="screen-explainer">Use this screen to view and correct historical check-in and check-out events. Edits are logged and attributed to your admin session.</div>
+    <div class="alert-banner blue" style="padding-top:12px;padding-bottom:12px;">
+      <div class="alert-text">Use this screen to view and correct historical check-in and check-out events. Edits are logged and attributed to your admin session.</div>
+    </div>
 
     <div class="filter-area">
       <div class="filter-group">
@@ -1147,8 +1149,7 @@
           <div class="avatar">SG</div>
           <div class="worker-badge-info">
             <div class="row-label">Sergey Gorbach</div>
-            <div class="worker-badge-id">ECS 8</div>
-            <div class="worker-badge-dept">SDE</div>
+            <div class="worker-badge-id">SAA-2034</div>
           </div>
           <div class="event-count-badge">4</div>
           <div class="expand-chevron open" id="chevron-worker-1">▼</div>
@@ -1208,8 +1209,7 @@
           <div class="avatar">CK</div>
           <div class="worker-badge-info">
             <div class="row-label">Chulwoo Kim</div>
-            <div class="worker-badge-id">ECS 3.0</div>
-            <div class="worker-badge-dept">SDE</div>
+            <div class="worker-badge-id">SAA-5591</div>
           </div>
           <div class="event-count-badge">3</div>
           <div class="expand-chevron" id="chevron-worker-2">▼</div>
@@ -1256,7 +1256,7 @@
           <div class="avatar">AT</div>
           <div class="worker-badge-info">
             <div class="row-label">Alexander Taylor</div>
-            <div class="worker-badge-id">SAA 9895</div>
+            <div class="worker-badge-id">SAA-9895</div>
           </div>
           <div class="event-count-badge">3</div>
           <div class="expand-chevron" id="chevron-worker-3">▼</div>
@@ -1634,14 +1634,14 @@
 
   // ─── Check-In Times screen data ───────────────────────────────────
   const ciWorkers = [
-    { id:'jl',  initials:'JL', name:'Jessica Le',    role:'Line Worker', inTime:'12:30 PM', outTime:'' },
-    { id:'em',  initials:'EM', name:'Emma Moore',     role:'Line Worker', inTime:'12:30 PM', outTime:'' },
-    { id:'jl2', initials:'JL', name:'James Lee',      role:'Line Worker', inTime:'10:44 AM', outTime:'' },
-    { id:'fl',  initials:'FL', name:'Frank Lim',      role:'Line Worker', inTime:'12:30 PM', outTime:'' },
-    { id:'lb',  initials:'LB', name:'Lily Baker',     role:'Line Worker', inTime:'12:30 PM', outTime:'' },
-    { id:'cr',  initials:'CR', name:'Carlos Rivera',  role:'Line Worker', inTime:'11:15 AM', outTime:'' },
-    { id:'an',  initials:'AN', name:'Anh Nguyen',     role:'Line Worker', inTime:'12:30 PM', outTime:'' },
-    { id:'dm',  initials:'DM', name:'David Mitchell', role:'Line Worker', inTime:'9:58 AM',  outTime:'' },
+    { id:'jl',  initials:'JL', name:'Jessica Le',    agencyId:'SAA-1042', inTime:'12:30 PM', outTime:'' },
+    { id:'em',  initials:'EM', name:'Emma Moore',     agencyId:'SAA-2187', inTime:'12:30 PM', outTime:'' },
+    { id:'jl2', initials:'JL', name:'James Lee',      agencyId:'SAA-3391', inTime:'10:44 AM', outTime:'' },
+    { id:'fl',  initials:'FL', name:'Frank Lim',      agencyId:'SAA-4056', inTime:'12:30 PM', outTime:'' },
+    { id:'lb',  initials:'LB', name:'Lily Baker',     agencyId:'SAA-5278', inTime:'12:30 PM', outTime:'' },
+    { id:'cr',  initials:'CR', name:'Carlos Rivera',  agencyId:'SAA-6613', inTime:'11:15 AM', outTime:'' },
+    { id:'an',  initials:'AN', name:'Anh Nguyen',     agencyId:'SAA-7724', inTime:'12:30 PM', outTime:'' },
+    { id:'dm',  initials:'DM', name:'David Mitchell', agencyId:'SAA-8899', inTime:'9:58 AM',  outTime:'' },
   ];
 
   const PENCIL_SVG = '<svg width="13" height="13" viewBox="0 0 14 14" fill="currentColor" aria-hidden="true"><path d="M9.95 1.05a1.5 1.5 0 0 1 2.12 0l.88.88a1.5 1.5 0 0 1 0 2.12L4.5 12.5 1 13l.5-3.5 8.45-8.45z"/><path d="M1 13l.5-3.5 3 3L1 13z"/></svg>';
@@ -1660,13 +1660,13 @@
       const avatar = '<div class="avatar">' + w.initials + '</div>';
 
       // Middle: layout differs based on whether check-out exists
-      const lineStyle  = 'font-size:18px;font-weight:700;color:var(--text);';
-      const labelStyle = 'font-weight:400;';
-      const roleStyle  = 'font-size:13px;color:var(--text-sub);margin-top:2px;';
+      const lineStyle    = 'font-size:18px;font-weight:700;color:var(--text);';
+      const labelStyle   = 'font-weight:400;';
+      const agencyStyle  = 'font-size:13px;color:var(--text-sub);margin-top:2px;';
 
       let info;
       if (hasOut) {
-        // Three lines: name / "Check-In: X · Check-Out: Y" / role
+        // Three lines: name / "Check-In: X · Check-Out: Y" / agency ID
         info =
           '<div class="worker-badge-info">' +
             '<div style="' + lineStyle + '">' + w.name + '</div>' +
@@ -1674,17 +1674,17 @@
               '<span style="' + labelStyle + '">Check-In:</span> ' + w.inTime +
               ' <span style="' + labelStyle + '">· Check-Out:</span> ' + w.outTime +
             '</div>' +
-            '<div style="' + roleStyle + '">' + w.role + '</div>' +
+            '<div style="' + agencyStyle + '">' + w.agencyId + '</div>' +
           '</div>';
       } else {
-        // Two lines: "Name · Check-In: X" / role
+        // Two lines: "Name · Check-In: X" / agency ID
         info =
           '<div class="worker-badge-info">' +
             '<div style="' + lineStyle + '">' +
               w.name +
               ' <span style="' + labelStyle + '">· Check-In:</span> ' + w.inTime +
             '</div>' +
-            '<div style="' + roleStyle + '">' + w.role + '</div>' +
+            '<div style="' + agencyStyle + '">' + w.agencyId + '</div>' +
           '</div>';
       }
 
@@ -1781,26 +1781,26 @@
 
   // Empty state: no assignments
   const ttWorkersEmpty = [
-    { id:'jl', initials:'JL', name:'Jessica Le',    role:'Line Worker', selected:[], na:false, otherNote:'' },
-    { id:'em', initials:'EM', name:'Emma Moore',     role:'Line Worker', selected:[], na:false, otherNote:'' },
-    { id:'jl2',initials:'JL', name:'James Lee',      role:'Line Worker', selected:[], na:false, otherNote:'' },
-    { id:'fl', initials:'FL', name:'Frank Lim',      role:'Line Worker', selected:[], na:false, otherNote:'' },
-    { id:'lb', initials:'LB', name:'Lily Baker',     role:'Line Worker', selected:[], na:false, otherNote:'' },
-    { id:'cr', initials:'CR', name:'Carlos Rivera',  role:'Line Worker', selected:[], na:false, otherNote:'' },
-    { id:'an', initials:'AN', name:'Anh Nguyen',     role:'Line Worker', selected:[], na:false, otherNote:'' },
-    { id:'dm', initials:'DM', name:'David Mitchell', role:'Line Worker', selected:[], na:false, otherNote:'' },
+    { id:'jl', initials:'JL', name:'Jessica Le',    agencyId:'SAA-1042', selected:[], na:false, otherNote:'' },
+    { id:'em', initials:'EM', name:'Emma Moore',     agencyId:'SAA-2187', selected:[], na:false, otherNote:'' },
+    { id:'jl2',initials:'JL', name:'James Lee',      agencyId:'SAA-3391', selected:[], na:false, otherNote:'' },
+    { id:'fl', initials:'FL', name:'Frank Lim',      agencyId:'SAA-4056', selected:[], na:false, otherNote:'' },
+    { id:'lb', initials:'LB', name:'Lily Baker',     agencyId:'SAA-5278', selected:[], na:false, otherNote:'' },
+    { id:'cr', initials:'CR', name:'Carlos Rivera',  agencyId:'SAA-6613', selected:[], na:false, otherNote:'' },
+    { id:'an', initials:'AN', name:'Anh Nguyen',     agencyId:'SAA-7724', selected:[], na:false, otherNote:'' },
+    { id:'dm', initials:'DM', name:'David Mitchell', agencyId:'SAA-8899', selected:[], na:false, otherNote:'' },
   ];
 
   // In-progress state: 6 assigned, 2 missing (Lily Baker, Carlos Rivera)
   const ttWorkersInProgress = [
-    { id:'jl', initials:'JL', name:'Jessica Le',    role:'Line Worker', selected:['Stocking'], na:false, otherNote:'' },
-    { id:'em', initials:'EM', name:'Emma Moore',     role:'Line Worker', selected:['Stocking'], na:false, otherNote:'' },
-    { id:'jl2',initials:'JL', name:'James Lee',      role:'Line Worker', selected:['Packing'],  na:false, otherNote:'' },
-    { id:'fl', initials:'FL', name:'Frank Lim',      role:'Line Worker', selected:['Stocking'], na:false, otherNote:'' },
-    { id:'lb', initials:'LB', name:'Lily Baker',     role:'Line Worker', selected:[],           na:false, otherNote:'' },
-    { id:'cr', initials:'CR', name:'Carlos Rivera',  role:'Line Worker', selected:[],           na:false, otherNote:'' },
-    { id:'an', initials:'AN', name:'Anh Nguyen',     role:'Line Worker', selected:['Folding'],  na:false, otherNote:'' },
-    { id:'dm', initials:'DM', name:'David Mitchell', role:'Line Worker', selected:[],           na:true,  otherNote:'' },
+    { id:'jl', initials:'JL', name:'Jessica Le',    agencyId:'SAA-1042', selected:['Stocking'], na:false, otherNote:'' },
+    { id:'em', initials:'EM', name:'Emma Moore',     agencyId:'SAA-2187', selected:['Stocking'], na:false, otherNote:'' },
+    { id:'jl2',initials:'JL', name:'James Lee',      agencyId:'SAA-3391', selected:['Packing'],  na:false, otherNote:'' },
+    { id:'fl', initials:'FL', name:'Frank Lim',      agencyId:'SAA-4056', selected:['Stocking'], na:false, otherNote:'' },
+    { id:'lb', initials:'LB', name:'Lily Baker',     agencyId:'SAA-5278', selected:[],           na:false, otherNote:'' },
+    { id:'cr', initials:'CR', name:'Carlos Rivera',  agencyId:'SAA-6613', selected:[],           na:false, otherNote:'' },
+    { id:'an', initials:'AN', name:'Anh Nguyen',     agencyId:'SAA-7724', selected:['Folding'],  na:false, otherNote:'' },
+    { id:'dm', initials:'DM', name:'David Mitchell', agencyId:'SAA-8899', selected:[],           na:true,  otherNote:'' },
   ];
 
   // Deep-clone a workers array so mutations don't bleed between states
@@ -1865,7 +1865,7 @@
           '<div class="avatar">' + w.initials + '</div>' +
           '<div class="tt-worker-meta">' +
             '<div class="tt-worker-name">' + w.name + '</div>' +
-            '<div class="tt-worker-role">' + w.role + '</div>' +
+            '<div class="tt-worker-role">' + w.agencyId + '</div>' +
             noTypesHtml +
           '</div>' +
         '</div>' +
