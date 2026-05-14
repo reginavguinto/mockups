@@ -838,21 +838,6 @@
       margin-bottom: 24px;
     }
 
-    /* ── Supervisor auth modal extra styles ── */
-    .scan-badge-btn {
-      width: 100%;
-      min-height: 64px;
-      border-radius: 10px;
-      font-size: 17px;
-      font-weight: 600;
-      cursor: pointer;
-      background: var(--blue);
-      color: #fff;
-      border: none;
-      margin-bottom: 10px;
-      -webkit-tap-highlight-color: transparent;
-    }
-    .scan-badge-btn:active { opacity: 0.85; }
 
     /* hidden workers in filter */
     .list-row.hidden { display: none; }
@@ -1474,26 +1459,6 @@
   </div>
 
 
-  <!-- ══════════════════════════════════════════
-       MODAL — Supervisor Auth Required
-  ══════════════════════════════════════════ -->
-  <div class="modal-backdrop" id="modal-supervisor-auth">
-    <div class="modal">
-      <div class="modal-icon-row">
-        <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#2980b9" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-          <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-        </svg>
-      </div>
-      <div class="modal-title-center">Supervisor Auth Required</div>
-      <div class="modal-body-center">
-        Editing events on other lines requires supervisor authorization.<br>
-        Please scan a supervisor badge to continue.
-      </div>
-      <button class="scan-badge-btn" onclick="simulateSupervisorScan()">Scan Badge</button>
-      <button class="btn-full btn-secondary" onclick="closeModal('modal-supervisor-auth')">Cancel</button>
-    </div>
-  </div>
 
 </div><!-- end #app -->
 
@@ -1505,8 +1470,6 @@
 <script>
   // ─── State ───────────────────────────────────────────────────────
   const CURRENT_LINE = 'LINE-14';
-  let pendingEditWorker = '';
-  let pendingEditTime   = '';
   let missingFilterActive = false;
 
   // ─── Navigation ──────────────────────────────────────────────────
@@ -2009,26 +1972,9 @@
   }
 
   // ─── Edit event button ────────────────────────────────────────────
-  let pendingEditLine     = '';
-  let pendingEditDatetime = '';
-
   function handleEditEvent(e, eventLine, workerName, eventTime, eventDatetime) {
     e.stopPropagation();
-    pendingEditWorker   = workerName;
-    pendingEditTime     = eventTime;
-    pendingEditLine     = eventLine;
-    pendingEditDatetime = eventDatetime || eventTime;
-
-    if (eventLine === CURRENT_LINE) {
-      openClockEditModal(workerName, eventTime, eventLine, pendingEditDatetime);
-    } else {
-      openModal('modal-supervisor-auth');
-    }
-  }
-
-  function simulateSupervisorScan() {
-    closeModal('modal-supervisor-auth');
-    setTimeout(() => openClockEditModal(pendingEditWorker, pendingEditTime, pendingEditLine, pendingEditDatetime), 150);
+    openClockEditModal(workerName, eventTime, eventLine, eventDatetime || eventTime);
   }
 
   function openClockEditModal(workerName, eventTime, eventLine, eventDatetime) {
