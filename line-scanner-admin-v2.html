@@ -332,19 +332,36 @@
       border-radius: 4px; padding: 2px 7px; white-space: nowrap; align-self: center;
     }
 
+    /* ── Audit log column headers ── */
+    .audit-col-headers {
+      display: flex; align-items: center; padding: 6px 20px;
+      background: #f0f3f6; border-bottom: 1px solid #e8ecef; flex-shrink: 0;
+    }
+    .audit-col-hdr {
+      font-size: 11px; font-weight: 700; color: var(--gray-text);
+      text-transform: uppercase; letter-spacing: 0.07em; white-space: nowrap;
+    }
+    .audit-col-hdr.event  { width: 136px; flex-shrink: 0; }
+    .audit-col-hdr.worker { width: 260px; flex-shrink: 0; }
+    .audit-col-hdr.time   { width: 160px; flex-shrink: 0; }
+    .audit-col-hdr.lineshift { flex: 1; }
+
     /* ── Audit log rows ── */
     .audit-row {
-      display: flex; align-items: flex-start; padding: 14px 20px; gap: 0;
-      border-bottom: 1px solid #e8ecef; background: var(--surface);
+      display: flex; align-items: center; padding: 12px 20px;
+      border-bottom: 1px solid #e8ecef; background: var(--surface); min-height: var(--row-min);
     }
-    .audit-badge-col { flex-shrink: 0; width: 130px; padding-top: 3px; }
-    .audit-body { flex: 1; min-width: 0; }
-    .audit-worker-name { font-size: 16px; font-weight: 700; color: var(--text); }
-    .audit-uuid { font-size: 12px; color: var(--text-sub); font-family: monospace; margin-top: 2px; }
-    .audit-meta { font-size: 13px; color: var(--text-sub); margin-top: 3px; display: flex; align-items: center; gap: 10px; }
-    .audit-note { font-size: 13px; color: var(--orange-text); font-style: italic; margin-top: 3px; }
-    .audit-note.error { color: var(--red-text); }
-    .audit-timestamp { font-size: 13px; color: var(--text-sub); white-space: nowrap; flex-shrink: 0; padding-top: 3px; }
+    .audit-col-event  { width: 136px; flex-shrink: 0; }
+    .audit-col-worker { width: 260px; flex-shrink: 0; padding-left: 0; }
+    .audit-col-time   { width: 160px; flex-shrink: 0; }
+    .audit-col-ls     { flex: 1; min-width: 0; }
+    .audit-worker-name { font-size: 15px; font-weight: 700; color: var(--text); }
+    .audit-worker-id   { font-size: 12px; color: var(--text-sub); margin-top: 2px; font-family: monospace; }
+    .audit-note { font-size: 12px; color: var(--red-text); font-style: italic; margin-top: 2px; }
+    .audit-time-val  { font-size: 19px; font-weight: 700; color: var(--text); white-space: nowrap; }
+    .audit-date-val  { font-size: 12px; color: var(--text-sub); margin-top: 2px; }
+    .audit-line-val  { font-size: 15px; font-weight: 700; color: var(--text); }
+    .audit-shift-val { font-size: 12px; color: var(--text-sub); margin-top: 2px; }
 
     /* ── Modal ── */
     .modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 100; align-items: center; justify-content: center; padding: 24px; }
@@ -734,6 +751,14 @@
           Filters
         </button>
       </div>
+    </div>
+
+    <!-- Column headers -->
+    <div class="audit-col-headers">
+      <div class="audit-col-hdr event">Event</div>
+      <div class="audit-col-hdr worker">Worker</div>
+      <div class="audit-col-hdr time">Time</div>
+      <div class="audit-col-hdr lineshift">Line · Shift</div>
     </div>
 
     <div class="list-body" id="audit-list-body"></div>
@@ -1385,17 +1410,31 @@
       const row = document.createElement('div');
       row.className = 'audit-row';
 
-      const nameHtml = e.name
-        ? '<div class="audit-worker-name">' + e.name + (e.agencyId ? ' <span style="font-size:13px;font-weight:400;color:var(--text-sub);">· ' + e.agencyId + '</span>' : '') + '</div>'
-        : '';
-      const uuidHtml = e.uuid ? '<div class="audit-uuid">' + e.uuid + '</div>' : '';
-      const metaHtml = '<div class="audit-meta"><span>Line ' + e.line + '</span><span>·</span><span>Shift ' + e.shift + '</span></div>';
-      const noteHtml = e.note ? '<div class="audit-note' + (e.type === 'error' ? ' error' : '') + '">' + e.note + '</div>' : '';
+      // Worker column: named worker vs unknown badge
+      const workerName = e.name || (e.uuid ? e.uuid : '—');
+      const workerId   = e.agencyId || (e.uuid ? 'Unknown badge' : '—');
+      const noteHtml   = e.note ? '<div class="audit-note">' + e.note + '</div>' : '';
+
+      // Time column: split "05/14 4:09 PM" → date + time
+      const dtParts  = e.datetime.split(' ');
+      const dateStr  = dtParts[0];                          // "05/14"
+      const timeStr  = dtParts.slice(1).join(' ');          // "4:09 PM"
 
       row.innerHTML =
-        '<div class="audit-badge-col"><span class="badge ' + BADGE_CLASSES[e.type] + '">' + BADGE_SVGS[e.type] + ' ' + BADGE_LABELS[e.type] + '</span></div>' +
-        '<div class="audit-body">' + nameHtml + uuidHtml + metaHtml + noteHtml + '</div>' +
-        '<div class="audit-timestamp">' + e.datetime + '</div>';
+        '<div class="audit-col-event"><span class="badge ' + BADGE_CLASSES[e.type] + '">' + BADGE_SVGS[e.type] + ' ' + BADGE_LABELS[e.type] + '</span></div>' +
+        '<div class="audit-col-worker">' +
+          '<div class="audit-worker-name">' + workerName + '</div>' +
+          '<div class="audit-worker-id">' + workerId + '</div>' +
+          noteHtml +
+        '</div>' +
+        '<div class="audit-col-time">' +
+          '<div class="audit-time-val">' + timeStr + '</div>' +
+          '<div class="audit-date-val">' + dateStr + '</div>' +
+        '</div>' +
+        '<div class="audit-col-ls">' +
+          '<div class="audit-line-val">Line ' + e.line + '</div>' +
+          '<div class="audit-shift-val">Shift ' + e.shift + '</div>' +
+        '</div>';
 
       body.appendChild(row);
     });
