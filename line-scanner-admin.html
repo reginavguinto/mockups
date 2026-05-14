@@ -1636,17 +1636,28 @@
       // Left: avatar
       const avatar = '<div class="avatar">' + w.initials + '</div>';
 
-      // Middle: name (bold), role (gray), then explicit timestamp lines
-      const inLine  = '<div class="checkin-time-label">Check-In: ' + w.inTime + '</div>';
-      const outLine = hasOut ? '<div class="checkin-time-label">Check-Out: ' + w.outTime + '</div>' : '';
+      // Middle: layout differs based on whether check-out exists
+      const nameStyle  = 'font-size:18px;font-weight:700;color:var(--text);';
+      const timeStyle  = 'font-size:18px;font-weight:700;color:var(--text);margin-top:2px;';
+      const roleStyle  = 'font-size:13px;color:var(--text-sub);margin-top:2px;';
 
-      const info =
-        '<div class="worker-badge-info">' +
-          '<div style="font-size:18px;font-weight:700;color:var(--text);">' + w.name + '</div>' +
-          '<div style="font-size:13px;color:var(--text-sub);margin-top:1px;">' + w.role + '</div>' +
-          inLine +
-          outLine +
-        '</div>';
+      let info;
+      if (hasOut) {
+        // Three lines: name / both timestamps / role
+        info =
+          '<div class="worker-badge-info">' +
+            '<div style="' + nameStyle + '">' + w.name + '</div>' +
+            '<div style="' + timeStyle + '">Check-In: ' + w.inTime + ' · Check-Out: ' + w.outTime + '</div>' +
+            '<div style="' + roleStyle + '">' + w.role + '</div>' +
+          '</div>';
+      } else {
+        // Two lines: name + check-in on one line / role
+        info =
+          '<div class="worker-badge-info">' +
+            '<div style="' + nameStyle + '">' + w.name + ' · Check-In: ' + w.inTime + '</div>' +
+            '<div style="' + roleStyle + '">' + w.role + '</div>' +
+          '</div>';
+      }
 
       // Right: two buttons side by side
       const editLabel   = hasOut ? PENCIL_SVG + ' Edit Check-In'  : PENCIL_SVG + ' Edit Check-In';
