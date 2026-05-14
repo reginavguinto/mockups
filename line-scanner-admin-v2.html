@@ -1151,8 +1151,10 @@
     document.getElementById('mw-filter-btn').classList.toggle('has-filters', hasFilters);
     renderChips(chips, 'mw-active-filters', 'resetApplyMW()', 'openMWFilterModal()');
 
+    const parseTime = t => { if (!t) return 0; const [time, ampm] = t.split(' '); let [h,m] = time.split(':'); h=parseInt(h); if (ampm==='PM'&&h!==12) h+=12; if (ampm==='AM'&&h===12) h=0; return h*60+parseInt(m); };
+
     body.innerHTML = '';
-    const current = filtered.filter(w => !w.past);
+    const current = filtered.filter(w => !w.past).sort((a,b) => parseTime(b.inTime) - parseTime(a.inTime));
     const past     = filtered.filter(w =>  w.past);
 
     if (current.length > 0) {
@@ -1173,6 +1175,7 @@
         const label = g.date + ' · Line ' + g.line + ' · Shift ' + g.shift;
         body.appendChild(sectionHeader(label));
         past.filter(w => w.date === g.date && w.line === g.line && w.shift === g.shift)
+            .sort((a,b) => parseTime(b.inTime) - parseTime(a.inTime))
             .forEach(w => body.appendChild(buildMWRow(w, mwWorkers.indexOf(w))));
       });
     }
