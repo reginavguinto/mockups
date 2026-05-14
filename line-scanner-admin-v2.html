@@ -144,7 +144,7 @@
     }
     .search-input:focus { border-color: var(--blue); background: var(--surface); }
     .search-input::placeholder { color: var(--text-sub); }
-    .search-icon-wrap { position: relative; flex: 1; }
+    .search-icon-wrap { position: relative; flex: 1; max-width: 480px; }
     .search-icon-wrap svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); pointer-events: none; }
     .filter-modal-btn {
       display: flex; align-items: center; gap: 8px; height: 48px; padding: 0 20px;
@@ -173,9 +173,9 @@
     .overflow-chip:active { background: #d0d4d8; }
     .clear-all-chip {
       display: inline-flex; align-items: center; justify-content: center;
-      width: 26px; height: 26px; border-radius: 999px;
+      width: 44px; height: 44px; border-radius: 999px;
       background: #dce9f7; color: var(--blue);
-      border: none; cursor: pointer; font-size: 14px; font-weight: 700; line-height: 1;
+      border: none; cursor: pointer; font-size: 16px; font-weight: 700; line-height: 1;
       -webkit-tap-highlight-color: transparent; flex-shrink: 0;
     }
     .clear-all-chip:active { background: var(--blue); color: #fff; }
