@@ -397,15 +397,20 @@
     }
     .event-edit-btn {
       background: none;
-      border: 1px solid var(--gray-border);
+      border: 1.5px solid var(--gray-border);
       border-radius: 8px;
-      padding: 8px 14px;
-      font-size: 13px;
+      padding: 0 18px;
+      font-size: 14px;
       font-weight: 600;
       color: var(--blue);
       cursor: pointer;
-      min-height: 44px;
+      min-height: 56px;
+      min-width: 100px;
       flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
       -webkit-tap-highlight-color: transparent;
     }
     .event-edit-btn:active { background: var(--blue-light); }
@@ -701,6 +706,104 @@
       font-style: italic;
     }
 
+    /* ── Check-In Times row layout ── */
+    .checkin-row-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+    .checkin-action-btn {
+      min-height: 56px;
+      min-width: 120px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 0 16px;
+      -webkit-tap-highlight-color: transparent;
+      white-space: nowrap;
+    }
+    .checkin-action-btn:active { opacity: 0.8; }
+    .checkin-action-btn.btn-edit {
+      background: transparent;
+      border: 1.5px solid var(--gray-border);
+      color: var(--blue);
+    }
+    .checkin-action-btn.btn-checkout {
+      background: transparent;
+      border: 1.5px solid var(--gray-border);
+      color: var(--red-text);
+    }
+    .checkin-times-stack {
+      margin-top: 5px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .checkin-time-line {
+      font-size: 13px;
+      color: var(--text-sub);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .checkin-time-line .time-val {
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    /* ── Screen explainer text ── */
+    .screen-explainer {
+      padding: 12px 20px;
+      font-size: 13px;
+      color: var(--text-sub);
+      border-bottom: 1px solid #e8ecef;
+      line-height: 1.5;
+    }
+
+    /* ── Clock event row redesign ── */
+    .event-datetime-primary {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .event-type-label {
+      font-size: 12px;
+      font-weight: 700;
+      margin-top: 2px;
+    }
+    .event-type-label.in  { color: var(--green-text); }
+    .event-type-label.out { color: var(--red-text); }
+    .event-transfer-line {
+      font-size: 12px;
+      color: var(--text-sub);
+      margin-top: 1px;
+    }
+    .event-sys-badge {
+      display: inline-flex;
+      align-items: center;
+      background: var(--gray-bg);
+      color: var(--gray-text);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 999px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .event-row-right {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
     /* ── Coming soon placeholder ── */
     .coming-soon {
       flex: 1;
@@ -930,86 +1033,8 @@
       <span class="header-title">Check-In Times (8)</span>
     </div>
 
-    <div class="list-body">
-      <div class="list-row" onclick="openCheckinModal('Jessica Le', '12:30 PM')">
-        <div class="avatar">JL</div>
-        <div class="worker-badge-info">
-          <div class="row-label">Jessica Le</div>
-          <div class="worker-badge-dept">Line Worker</div>
-          <div class="worker-badge-dept" style="margin-top:3px;color:var(--text)">Checked in: <strong>12:30 PM</strong></div>
-        </div>
-        <button class="event-edit-btn" onclick="event.stopPropagation(); openCheckinModal('Jessica Le', '12:30 PM')"><svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="flex-shrink:0"><path d="M9.95 1.05a1.5 1.5 0 0 1 2.12 0l.88.88a1.5 1.5 0 0 1 0 2.12L4.5 12.5 1 13l.5-3.5 8.45-8.45z"/><path d="M1 13l.5-3.5 3 3L1 13z"/></svg> Edit</button>
-      </div>
-
-      <div class="list-row" onclick="openCheckinModal('Emma Moore', '12:30 PM')">
-        <div class="avatar">EM</div>
-        <div class="worker-badge-info">
-          <div class="row-label">Emma Moore</div>
-          <div class="worker-badge-dept">Line Worker</div>
-          <div class="worker-badge-dept" style="margin-top:3px;color:var(--text)">Checked in: <strong>12:30 PM</strong></div>
-        </div>
-        <button class="event-edit-btn" onclick="event.stopPropagation(); openCheckinModal('Emma Moore', '12:30 PM')"><svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="flex-shrink:0"><path d="M9.95 1.05a1.5 1.5 0 0 1 2.12 0l.88.88a1.5 1.5 0 0 1 0 2.12L4.5 12.5 1 13l.5-3.5 8.45-8.45z"/><path d="M1 13l.5-3.5 3 3L1 13z"/></svg> Edit</button>
-      </div>
-
-      <div class="list-row" onclick="openCheckinModal('James Lee', '10:44 AM')">
-        <div class="avatar">JL</div>
-        <div class="worker-badge-info">
-          <div class="row-label">James Lee</div>
-          <div class="worker-badge-dept">Line Worker</div>
-          <div class="worker-badge-dept" style="margin-top:3px;color:var(--text)">Checked in: <strong>10:44 AM</strong></div>
-        </div>
-        <button class="event-edit-btn" onclick="event.stopPropagation(); openCheckinModal('James Lee', '10:44 AM')"><svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="flex-shrink:0"><path d="M9.95 1.05a1.5 1.5 0 0 1 2.12 0l.88.88a1.5 1.5 0 0 1 0 2.12L4.5 12.5 1 13l.5-3.5 8.45-8.45z"/><path d="M1 13l.5-3.5 3 3L1 13z"/></svg> Edit</button>
-      </div>
-
-      <div class="list-row" onclick="openCheckinModal('Frank Lim', '12:30 PM')">
-        <div class="avatar">FL</div>
-        <div class="worker-badge-info">
-          <div class="row-label">Frank Lim</div>
-          <div class="worker-badge-dept">Line Worker</div>
-          <div class="worker-badge-dept" style="margin-top:3px;color:var(--text)">Checked in: <strong>12:30 PM</strong></div>
-        </div>
-        <button class="event-edit-btn" onclick="event.stopPropagation(); openCheckinModal('Frank Lim', '12:30 PM')"><svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="flex-shrink:0"><path d="M9.95 1.05a1.5 1.5 0 0 1 2.12 0l.88.88a1.5 1.5 0 0 1 0 2.12L4.5 12.5 1 13l.5-3.5 8.45-8.45z"/><path d="M1 13l.5-3.5 3 3L1 13z"/></svg> Edit</button>
-      </div>
-
-      <div class="list-row" onclick="openCheckinModal('Lily Baker', '12:30 PM')">
-        <div class="avatar">LB</div>
-        <div class="worker-badge-info">
-          <div class="row-label">Lily Baker</div>
-          <div class="worker-badge-dept">Line Worker</div>
-          <div class="worker-badge-dept" style="margin-top:3px;color:var(--text)">Checked in: <strong>12:30 PM</strong></div>
-        </div>
-        <button class="event-edit-btn" onclick="event.stopPropagation(); openCheckinModal('Lily Baker', '12:30 PM')"><svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="flex-shrink:0"><path d="M9.95 1.05a1.5 1.5 0 0 1 2.12 0l.88.88a1.5 1.5 0 0 1 0 2.12L4.5 12.5 1 13l.5-3.5 8.45-8.45z"/><path d="M1 13l.5-3.5 3 3L1 13z"/></svg> Edit</button>
-      </div>
-
-      <div class="list-row" onclick="openCheckinModal('Carlos Rivera', '11:15 AM')">
-        <div class="avatar">CR</div>
-        <div class="worker-badge-info">
-          <div class="row-label">Carlos Rivera</div>
-          <div class="worker-badge-dept">Line Worker</div>
-          <div class="worker-badge-dept" style="margin-top:3px;color:var(--text)">Checked in: <strong>11:15 AM</strong></div>
-        </div>
-        <button class="event-edit-btn" onclick="event.stopPropagation(); openCheckinModal('Carlos Rivera', '11:15 AM')"><svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="flex-shrink:0"><path d="M9.95 1.05a1.5 1.5 0 0 1 2.12 0l.88.88a1.5 1.5 0 0 1 0 2.12L4.5 12.5 1 13l.5-3.5 8.45-8.45z"/><path d="M1 13l.5-3.5 3 3L1 13z"/></svg> Edit</button>
-      </div>
-
-      <div class="list-row" onclick="openCheckinModal('Anh Nguyen', '12:30 PM')">
-        <div class="avatar">AN</div>
-        <div class="worker-badge-info">
-          <div class="row-label">Anh Nguyen</div>
-          <div class="worker-badge-dept">Line Worker</div>
-          <div class="worker-badge-dept" style="margin-top:3px;color:var(--text)">Checked in: <strong>12:30 PM</strong></div>
-        </div>
-        <button class="event-edit-btn" onclick="event.stopPropagation(); openCheckinModal('Anh Nguyen', '12:30 PM')"><svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="flex-shrink:0"><path d="M9.95 1.05a1.5 1.5 0 0 1 2.12 0l.88.88a1.5 1.5 0 0 1 0 2.12L4.5 12.5 1 13l.5-3.5 8.45-8.45z"/><path d="M1 13l.5-3.5 3 3L1 13z"/></svg> Edit</button>
-      </div>
-
-      <div class="list-row" onclick="openCheckinModal('David Mitchell', '9:58 AM')">
-        <div class="avatar">DM</div>
-        <div class="worker-badge-info">
-          <div class="row-label">David Mitchell</div>
-          <div class="worker-badge-dept">Line Worker</div>
-          <div class="worker-badge-dept" style="margin-top:3px;color:var(--text)">Checked in: <strong>9:58 AM</strong></div>
-        </div>
-        <button class="event-edit-btn" onclick="event.stopPropagation(); openCheckinModal('David Mitchell', '9:58 AM')"><svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="flex-shrink:0"><path d="M9.95 1.05a1.5 1.5 0 0 1 2.12 0l.88.88a1.5 1.5 0 0 1 0 2.12L4.5 12.5 1 13l.5-3.5 8.45-8.45z"/><path d="M1 13l.5-3.5 3 3L1 13z"/></svg> Edit</button>
-      </div>
+    <div class="list-body" id="checkin-list-body">
+      <!-- Rows rendered by JS — see renderCheckinScreen() -->
     </div>
 
     <div class="ec-footer">EC</div>
@@ -1025,9 +1050,11 @@
       <span class="header-title">Training Types (8)</span>
     </div>
 
+    <div class="screen-explainer">Select the type of work each worker performed during this shift. Tap a chip to assign. Tap Save all when done.</div>
+
     <!-- Alert banner -->
     <div class="alert-banner" id="tt-alert-banner">
-      <div class="alert-text">⚠ Missing Training Types: 3 workers have no types assigned.</div>
+      <div class="alert-text" id="tt-alert-text">⚠ Missing Training Types: 3 workers have no types assigned.</div>
       <button class="alert-btn" id="tt-filter-btn" onclick="toggleMissingFilter()">Show missing only</button>
     </div>
 
@@ -1060,6 +1087,8 @@
       <button class="filter-pill" id="filter-clock-out" onclick="setEventFilter('out')">Clock-Out</button>
     </div>
 
+    <div class="screen-explainer">Use this screen to view and correct historical clock-in and clock-out events. Edits are logged and attributed to your admin session.</div>
+
     <div class="list-body">
 
       <!-- Worker 1: Sergey Gorbach (expanded by default) -->
@@ -1076,45 +1105,53 @@
         </div>
 
         <div class="events-list open" id="events-worker-1">
-          <!-- Event 1 — LINE-14 (same line, no auth) -->
+          <!-- Event 1 — CLOCK-IN, LINE-14 (same line), line transfer -->
           <div class="event-row" style="cursor:pointer" onclick="handleEditEvent(event, 'LINE-14', 'Sergey Gorbach', '9:01 PM', '05/12 9:01 PM · From LINE-03 → LINE-14')">
             <div class="event-icon"><svg viewBox="0 0 10 10" fill="#27ae60" xmlns="http://www.w3.org/2000/svg"><circle cx="5" cy="5" r="5"/></svg></div>
             <div class="event-info">
-              <div class="event-type in">CLOCK-IN</div>
-              <div class="event-datetime">05/12 9:01 PM</div>
-              <div class="event-line">From LINE-03 → LINE-14</div>
+              <div class="event-datetime-primary">05/12 9:01 PM · LINE-14</div>
+              <div class="event-type-label in">CLOCK-IN</div>
+              <div class="event-transfer-line">From LINE-03 → LINE-14</div>
             </div>
-            <button class="event-edit-btn" onclick="event.stopPropagation(); handleEditEvent(event, 'LINE-14', 'Sergey Gorbach', '9:01 PM', '05/12 9:01 PM · From LINE-03 → LINE-14')"><svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="flex-shrink:0"><path d="M9.95 1.05a1.5 1.5 0 0 1 2.12 0l.88.88a1.5 1.5 0 0 1 0 2.12L4.5 12.5 1 13l.5-3.5 8.45-8.45z"/><path d="M1 13l.5-3.5 3 3L1 13z"/></svg> Edit</button>
+            <div class="event-row-right">
+              <button class="event-edit-btn" onclick="event.stopPropagation(); handleEditEvent(event, 'LINE-14', 'Sergey Gorbach', '9:01 PM', '05/12 9:01 PM · From LINE-03 → LINE-14')"><svg width="13" height="13" viewBox="0 0 14 14" fill="currentColor" aria-hidden="true"><path d="M9.95 1.05a1.5 1.5 0 0 1 2.12 0l.88.88a1.5 1.5 0 0 1 0 2.12L4.5 12.5 1 13l.5-3.5 8.45-8.45z"/><path d="M1 13l.5-3.5 3 3L1 13z"/></svg> Edit</button>
+            </div>
           </div>
-          <!-- Event 2 — LINE-03 (other line, requires auth) -->
+          <!-- Event 2 — CLOCK-OUT, LINE-03, system-generated (auto clock-out on transfer) -->
           <div class="event-row" style="cursor:pointer" onclick="handleEditEvent(event, 'LINE-03', 'Sergey Gorbach', '1:07 PM', '05/12 1:07 PM · From LINE-17 → LINE-03')">
-            <div class="event-icon"><svg viewBox="0 0 10 10" fill="#27ae60" xmlns="http://www.w3.org/2000/svg"><circle cx="5" cy="5" r="5"/></svg></div>
+            <div class="event-icon"><svg viewBox="0 0 10 10" fill="#c0392b" xmlns="http://www.w3.org/2000/svg"><circle cx="5" cy="5" r="5"/></svg></div>
             <div class="event-info">
-              <div class="event-type in">CLOCK-IN</div>
-              <div class="event-datetime">05/12 1:07 PM</div>
-              <div class="event-line">From LINE-17 → LINE-03</div>
+              <div class="event-datetime-primary">05/12 1:07 PM · LINE-03</div>
+              <div class="event-type-label out">CLOCK-OUT</div>
+              <div class="event-transfer-line">From LINE-17 → LINE-03</div>
             </div>
-            <button class="event-edit-btn" onclick="event.stopPropagation(); handleEditEvent(event, 'LINE-03', 'Sergey Gorbach', '1:07 PM', '05/12 1:07 PM · From LINE-17 → LINE-03')"><svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="flex-shrink:0"><path d="M9.95 1.05a1.5 1.5 0 0 1 2.12 0l.88.88a1.5 1.5 0 0 1 0 2.12L4.5 12.5 1 13l.5-3.5 8.45-8.45z"/><path d="M1 13l.5-3.5 3 3L1 13z"/></svg> Edit</button>
+            <div class="event-row-right">
+              <span class="event-sys-badge">System Generated</span>
+              <button class="event-edit-btn" onclick="event.stopPropagation(); handleEditEvent(event, 'LINE-03', 'Sergey Gorbach', '1:07 PM', '05/12 1:07 PM · From LINE-17 → LINE-03')"><svg width="13" height="13" viewBox="0 0 14 14" fill="currentColor" aria-hidden="true"><path d="M9.95 1.05a1.5 1.5 0 0 1 2.12 0l.88.88a1.5 1.5 0 0 1 0 2.12L4.5 12.5 1 13l.5-3.5 8.45-8.45z"/><path d="M1 13l.5-3.5 3 3L1 13z"/></svg> Edit</button>
+            </div>
           </div>
-          <!-- Event 3 — LINE-17 (other line, requires auth) -->
+          <!-- Event 3 — CLOCK-IN, LINE-17, line transfer -->
           <div class="event-row" style="cursor:pointer" onclick="handleEditEvent(event, 'LINE-17', 'Sergey Gorbach', '8:20 PM', '05/11 8:20 PM · From LINE-03 → LINE-17')">
             <div class="event-icon"><svg viewBox="0 0 10 10" fill="#27ae60" xmlns="http://www.w3.org/2000/svg"><circle cx="5" cy="5" r="5"/></svg></div>
             <div class="event-info">
-              <div class="event-type in">CLOCK-IN</div>
-              <div class="event-datetime">05/11 8:20 PM</div>
-              <div class="event-line">From LINE-03 → LINE-17</div>
+              <div class="event-datetime-primary">05/11 8:20 PM · LINE-17</div>
+              <div class="event-type-label in">CLOCK-IN</div>
+              <div class="event-transfer-line">From LINE-03 → LINE-17</div>
             </div>
-            <button class="event-edit-btn" onclick="event.stopPropagation(); handleEditEvent(event, 'LINE-17', 'Sergey Gorbach', '8:20 PM', '05/11 8:20 PM · From LINE-03 → LINE-17')"><svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="flex-shrink:0"><path d="M9.95 1.05a1.5 1.5 0 0 1 2.12 0l.88.88a1.5 1.5 0 0 1 0 2.12L4.5 12.5 1 13l.5-3.5 8.45-8.45z"/><path d="M1 13l.5-3.5 3 3L1 13z"/></svg> Edit</button>
+            <div class="event-row-right">
+              <button class="event-edit-btn" onclick="event.stopPropagation(); handleEditEvent(event, 'LINE-17', 'Sergey Gorbach', '8:20 PM', '05/11 8:20 PM · From LINE-03 → LINE-17')"><svg width="13" height="13" viewBox="0 0 14 14" fill="currentColor" aria-hidden="true"><path d="M9.95 1.05a1.5 1.5 0 0 1 2.12 0l.88.88a1.5 1.5 0 0 1 0 2.12L4.5 12.5 1 13l.5-3.5 8.45-8.45z"/><path d="M1 13l.5-3.5 3 3L1 13z"/></svg> Edit</button>
+            </div>
           </div>
-          <!-- Event 4 — LINE-03 (other line) -->
+          <!-- Event 4 — CLOCK-IN, LINE-03 -->
           <div class="event-row" style="cursor:pointer" onclick="handleEditEvent(event, 'LINE-03', 'Sergey Gorbach', '2:47 PM', '05/11 2:47 PM · LINE-03')">
             <div class="event-icon"><svg viewBox="0 0 10 10" fill="#27ae60" xmlns="http://www.w3.org/2000/svg"><circle cx="5" cy="5" r="5"/></svg></div>
             <div class="event-info">
-              <div class="event-type in">CLOCK-IN</div>
-              <div class="event-datetime">05/11 2:47 PM</div>
-              <div class="event-line">LINE-03</div>
+              <div class="event-datetime-primary">05/11 2:47 PM · LINE-03</div>
+              <div class="event-type-label in">CLOCK-IN</div>
             </div>
-            <button class="event-edit-btn" onclick="event.stopPropagation(); handleEditEvent(event, 'LINE-03', 'Sergey Gorbach', '2:47 PM', '05/11 2:47 PM · LINE-03')"><svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="flex-shrink:0"><path d="M9.95 1.05a1.5 1.5 0 0 1 2.12 0l.88.88a1.5 1.5 0 0 1 0 2.12L4.5 12.5 1 13l.5-3.5 8.45-8.45z"/><path d="M1 13l.5-3.5 3 3L1 13z"/></svg> Edit</button>
+            <div class="event-row-right">
+              <button class="event-edit-btn" onclick="event.stopPropagation(); handleEditEvent(event, 'LINE-03', 'Sergey Gorbach', '2:47 PM', '05/11 2:47 PM · LINE-03')"><svg width="13" height="13" viewBox="0 0 14 14" fill="currentColor" aria-hidden="true"><path d="M9.95 1.05a1.5 1.5 0 0 1 2.12 0l.88.88a1.5 1.5 0 0 1 0 2.12L4.5 12.5 1 13l.5-3.5 8.45-8.45z"/><path d="M1 13l.5-3.5 3 3L1 13z"/></svg> Edit</button>
+            </div>
           </div>
         </div>
       </div>
@@ -1136,29 +1173,34 @@
           <div class="event-row" style="cursor:pointer" onclick="handleEditEvent(event, 'LINE-14', 'Chulwoo Kim', '8:45 AM', '05/12 8:45 AM · LINE-14')">
             <div class="event-icon"><svg viewBox="0 0 10 10" fill="#27ae60" xmlns="http://www.w3.org/2000/svg"><circle cx="5" cy="5" r="5"/></svg></div>
             <div class="event-info">
-              <div class="event-type in">CLOCK-IN</div>
-              <div class="event-datetime">05/12 8:45 AM</div>
-              <div class="event-line">LINE-14</div>
+              <div class="event-datetime-primary">05/12 8:45 AM · LINE-14</div>
+              <div class="event-type-label in">CLOCK-IN</div>
             </div>
-            <button class="event-edit-btn" onclick="event.stopPropagation(); handleEditEvent(event, 'LINE-14', 'Chulwoo Kim', '8:45 AM', '05/12 8:45 AM · LINE-14')"><svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="flex-shrink:0"><path d="M9.95 1.05a1.5 1.5 0 0 1 2.12 0l.88.88a1.5 1.5 0 0 1 0 2.12L4.5 12.5 1 13l.5-3.5 8.45-8.45z"/><path d="M1 13l.5-3.5 3 3L1 13z"/></svg> Edit</button>
+            <div class="event-row-right">
+              <button class="event-edit-btn" onclick="event.stopPropagation(); handleEditEvent(event, 'LINE-14', 'Chulwoo Kim', '8:45 AM', '05/12 8:45 AM · LINE-14')"><svg width="13" height="13" viewBox="0 0 14 14" fill="currentColor" aria-hidden="true"><path d="M9.95 1.05a1.5 1.5 0 0 1 2.12 0l.88.88a1.5 1.5 0 0 1 0 2.12L4.5 12.5 1 13l.5-3.5 8.45-8.45z"/><path d="M1 13l.5-3.5 3 3L1 13z"/></svg> Edit</button>
+            </div>
           </div>
+          <!-- System-generated auto clock-out at lunch -->
           <div class="event-row" style="cursor:pointer" onclick="handleEditEvent(event, 'LINE-14', 'Chulwoo Kim', '12:00 PM', '05/12 12:00 PM · LINE-14')">
             <div class="event-icon"><svg viewBox="0 0 10 10" fill="#c0392b" xmlns="http://www.w3.org/2000/svg"><circle cx="5" cy="5" r="5"/></svg></div>
             <div class="event-info">
-              <div class="event-type out">CLOCK-OUT</div>
-              <div class="event-datetime">05/12 12:00 PM</div>
-              <div class="event-line">LINE-14</div>
+              <div class="event-datetime-primary">05/12 12:00 PM · LINE-14</div>
+              <div class="event-type-label out">CLOCK-OUT</div>
             </div>
-            <button class="event-edit-btn" onclick="event.stopPropagation(); handleEditEvent(event, 'LINE-14', 'Chulwoo Kim', '12:00 PM', '05/12 12:00 PM · LINE-14')"><svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="flex-shrink:0"><path d="M9.95 1.05a1.5 1.5 0 0 1 2.12 0l.88.88a1.5 1.5 0 0 1 0 2.12L4.5 12.5 1 13l.5-3.5 8.45-8.45z"/><path d="M1 13l.5-3.5 3 3L1 13z"/></svg> Edit</button>
+            <div class="event-row-right">
+              <span class="event-sys-badge">System Generated</span>
+              <button class="event-edit-btn" onclick="event.stopPropagation(); handleEditEvent(event, 'LINE-14', 'Chulwoo Kim', '12:00 PM', '05/12 12:00 PM · LINE-14')"><svg width="13" height="13" viewBox="0 0 14 14" fill="currentColor" aria-hidden="true"><path d="M9.95 1.05a1.5 1.5 0 0 1 2.12 0l.88.88a1.5 1.5 0 0 1 0 2.12L4.5 12.5 1 13l.5-3.5 8.45-8.45z"/><path d="M1 13l.5-3.5 3 3L1 13z"/></svg> Edit</button>
+            </div>
           </div>
           <div class="event-row" style="cursor:pointer" onclick="handleEditEvent(event, 'LINE-14', 'Chulwoo Kim', '1:00 PM', '05/12 1:00 PM · LINE-14')">
             <div class="event-icon"><svg viewBox="0 0 10 10" fill="#27ae60" xmlns="http://www.w3.org/2000/svg"><circle cx="5" cy="5" r="5"/></svg></div>
             <div class="event-info">
-              <div class="event-type in">CLOCK-IN</div>
-              <div class="event-datetime">05/12 1:00 PM</div>
-              <div class="event-line">LINE-14</div>
+              <div class="event-datetime-primary">05/12 1:00 PM · LINE-14</div>
+              <div class="event-type-label in">CLOCK-IN</div>
             </div>
-            <button class="event-edit-btn" onclick="event.stopPropagation(); handleEditEvent(event, 'LINE-14', 'Chulwoo Kim', '1:00 PM', '05/12 1:00 PM · LINE-14')"><svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="flex-shrink:0"><path d="M9.95 1.05a1.5 1.5 0 0 1 2.12 0l.88.88a1.5 1.5 0 0 1 0 2.12L4.5 12.5 1 13l.5-3.5 8.45-8.45z"/><path d="M1 13l.5-3.5 3 3L1 13z"/></svg> Edit</button>
+            <div class="event-row-right">
+              <button class="event-edit-btn" onclick="event.stopPropagation(); handleEditEvent(event, 'LINE-14', 'Chulwoo Kim', '1:00 PM', '05/12 1:00 PM · LINE-14')"><svg width="13" height="13" viewBox="0 0 14 14" fill="currentColor" aria-hidden="true"><path d="M9.95 1.05a1.5 1.5 0 0 1 2.12 0l.88.88a1.5 1.5 0 0 1 0 2.12L4.5 12.5 1 13l.5-3.5 8.45-8.45z"/><path d="M1 13l.5-3.5 3 3L1 13z"/></svg> Edit</button>
+            </div>
           </div>
         </div>
       </div>
@@ -1179,29 +1221,32 @@
           <div class="event-row" style="cursor:pointer" onclick="handleEditEvent(event, 'LINE-14', 'Alexander Taylor', '7:00 AM', '05/13 7:00 AM · LINE-14')">
             <div class="event-icon"><svg viewBox="0 0 10 10" fill="#27ae60" xmlns="http://www.w3.org/2000/svg"><circle cx="5" cy="5" r="5"/></svg></div>
             <div class="event-info">
-              <div class="event-type in">CLOCK-IN</div>
-              <div class="event-datetime">05/13 7:00 AM</div>
-              <div class="event-line">LINE-14</div>
+              <div class="event-datetime-primary">05/13 7:00 AM · LINE-14</div>
+              <div class="event-type-label in">CLOCK-IN</div>
             </div>
-            <button class="event-edit-btn" onclick="event.stopPropagation(); handleEditEvent(event, 'LINE-14', 'Alexander Taylor', '7:00 AM', '05/13 7:00 AM · LINE-14')"><svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="flex-shrink:0"><path d="M9.95 1.05a1.5 1.5 0 0 1 2.12 0l.88.88a1.5 1.5 0 0 1 0 2.12L4.5 12.5 1 13l.5-3.5 8.45-8.45z"/><path d="M1 13l.5-3.5 3 3L1 13z"/></svg> Edit</button>
+            <div class="event-row-right">
+              <button class="event-edit-btn" onclick="event.stopPropagation(); handleEditEvent(event, 'LINE-14', 'Alexander Taylor', '7:00 AM', '05/13 7:00 AM · LINE-14')"><svg width="13" height="13" viewBox="0 0 14 14" fill="currentColor" aria-hidden="true"><path d="M9.95 1.05a1.5 1.5 0 0 1 2.12 0l.88.88a1.5 1.5 0 0 1 0 2.12L4.5 12.5 1 13l.5-3.5 8.45-8.45z"/><path d="M1 13l.5-3.5 3 3L1 13z"/></svg> Edit</button>
+            </div>
           </div>
           <div class="event-row" style="cursor:pointer" onclick="handleEditEvent(event, 'LINE-14', 'Alexander Taylor', '3:30 PM', '05/13 3:30 PM · LINE-14')">
             <div class="event-icon"><svg viewBox="0 0 10 10" fill="#c0392b" xmlns="http://www.w3.org/2000/svg"><circle cx="5" cy="5" r="5"/></svg></div>
             <div class="event-info">
-              <div class="event-type out">CLOCK-OUT</div>
-              <div class="event-datetime">05/13 3:30 PM</div>
-              <div class="event-line">LINE-14</div>
+              <div class="event-datetime-primary">05/13 3:30 PM · LINE-14</div>
+              <div class="event-type-label out">CLOCK-OUT</div>
             </div>
-            <button class="event-edit-btn" onclick="event.stopPropagation(); handleEditEvent(event, 'LINE-14', 'Alexander Taylor', '3:30 PM', '05/13 3:30 PM · LINE-14')"><svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="flex-shrink:0"><path d="M9.95 1.05a1.5 1.5 0 0 1 2.12 0l.88.88a1.5 1.5 0 0 1 0 2.12L4.5 12.5 1 13l.5-3.5 8.45-8.45z"/><path d="M1 13l.5-3.5 3 3L1 13z"/></svg> Edit</button>
+            <div class="event-row-right">
+              <button class="event-edit-btn" onclick="event.stopPropagation(); handleEditEvent(event, 'LINE-14', 'Alexander Taylor', '3:30 PM', '05/13 3:30 PM · LINE-14')"><svg width="13" height="13" viewBox="0 0 14 14" fill="currentColor" aria-hidden="true"><path d="M9.95 1.05a1.5 1.5 0 0 1 2.12 0l.88.88a1.5 1.5 0 0 1 0 2.12L4.5 12.5 1 13l.5-3.5 8.45-8.45z"/><path d="M1 13l.5-3.5 3 3L1 13z"/></svg> Edit</button>
+            </div>
           </div>
           <div class="event-row" style="cursor:pointer" onclick="handleEditEvent(event, 'LINE-14', 'Alexander Taylor', '4:00 PM', '05/13 4:00 PM · LINE-14')">
             <div class="event-icon"><svg viewBox="0 0 10 10" fill="#27ae60" xmlns="http://www.w3.org/2000/svg"><circle cx="5" cy="5" r="5"/></svg></div>
             <div class="event-info">
-              <div class="event-type in">CLOCK-IN</div>
-              <div class="event-datetime">05/13 4:00 PM</div>
-              <div class="event-line">LINE-14</div>
+              <div class="event-datetime-primary">05/13 4:00 PM · LINE-14</div>
+              <div class="event-type-label in">CLOCK-IN</div>
             </div>
-            <button class="event-edit-btn" onclick="event.stopPropagation(); handleEditEvent(event, 'LINE-14', 'Alexander Taylor', '4:00 PM', '05/13 4:00 PM · LINE-14')"><svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="flex-shrink:0"><path d="M9.95 1.05a1.5 1.5 0 0 1 2.12 0l.88.88a1.5 1.5 0 0 1 0 2.12L4.5 12.5 1 13l.5-3.5 8.45-8.45z"/><path d="M1 13l.5-3.5 3 3L1 13z"/></svg> Edit</button>
+            <div class="event-row-right">
+              <button class="event-edit-btn" onclick="event.stopPropagation(); handleEditEvent(event, 'LINE-14', 'Alexander Taylor', '4:00 PM', '05/13 4:00 PM · LINE-14')"><svg width="13" height="13" viewBox="0 0 14 14" fill="currentColor" aria-hidden="true"><path d="M9.95 1.05a1.5 1.5 0 0 1 2.12 0l.88.88a1.5 1.5 0 0 1 0 2.12L4.5 12.5 1 13l.5-3.5 8.45-8.45z"/><path d="M1 13l.5-3.5 3 3L1 13z"/></svg> Edit</button>
+            </div>
           </div>
         </div>
       </div>
@@ -1318,12 +1363,62 @@
       </div>
 
       <div class="modal-actions">
-        <button class="btn-full btn-primary" onclick="closeModal('modal-checkin-edit'); showToast('Check-in time updated')">OK</button>
+        <button class="btn-full btn-primary" onclick="saveCheckinTime()">OK</button>
         <button class="btn-full btn-secondary" onclick="closeModal('modal-checkin-edit')">Cancel</button>
       </div>
     </div>
   </div>
 
+
+  <!-- ══════════════════════════════════════════
+       MODAL — Edit Check-Out Time
+  ══════════════════════════════════════════ -->
+  <div class="modal-backdrop" id="modal-checkout-edit">
+    <div class="modal modal-time-entry">
+      <div class="modal-title">Check-Out Time</div>
+      <div class="modal-subtitle" id="checkout-modal-worker-name">Worker Name</div>
+      <div class="modal-ref-line">
+        Currently recorded: <span id="checkout-current-time" class="modal-ref-time">—</span>
+        · <button class="modal-ref-link" onclick="useCurrentTime('checkout')">Use current time</button>
+      </div>
+
+      <div class="time-input-group">
+        <input class="time-input" id="checkout-hh" type="text" inputmode="none"
+               placeholder="HH" maxlength="2" readonly
+               onfocus="setActiveField('checkout','hh')" onclick="setActiveField('checkout','hh')" />
+        <div class="time-colon">:</div>
+        <input class="time-input" id="checkout-mm" type="text" inputmode="none"
+               placeholder="MM" maxlength="2" readonly
+               onfocus="setActiveField('checkout','mm')" onclick="setActiveField('checkout','mm')" />
+        <div class="ampm-group">
+          <button class="ampm-btn active" id="checkout-am" onclick="selectAMPM('checkout', 'AM')">AM</button>
+          <button class="ampm-btn" id="checkout-pm" onclick="selectAMPM('checkout', 'PM')">PM</button>
+        </div>
+      </div>
+
+      <div class="numpad" id="checkout-numpad" data-prefix="checkout">
+        <button class="numpad-key" onclick="numpadPress('checkout',1)">1</button>
+        <button class="numpad-key" onclick="numpadPress('checkout',2)">2</button>
+        <button class="numpad-key" onclick="numpadPress('checkout',3)">3</button>
+        <button class="numpad-key" onclick="numpadPress('checkout',4)">4</button>
+        <button class="numpad-key" onclick="numpadPress('checkout',5)">5</button>
+        <button class="numpad-key" onclick="numpadPress('checkout',6)">6</button>
+        <button class="numpad-key" onclick="numpadPress('checkout',7)">7</button>
+        <button class="numpad-key" onclick="numpadPress('checkout',8)">8</button>
+        <button class="numpad-key" onclick="numpadPress('checkout',9)">9</button>
+        <button class="numpad-key numpad-blank" disabled></button>
+        <button class="numpad-key" onclick="numpadPress('checkout',0)">0</button>
+        <button class="numpad-key numpad-back" onclick="numpadBack('checkout')">
+          <svg width="20" height="14" viewBox="0 0 24 16" fill="currentColor"><path d="M9 0L0 8l9 8V11h15V5H9V0z"/></svg>
+        </button>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn-full btn-primary" onclick="saveCheckoutTime()">OK</button>
+        <button class="btn-full btn-secondary" onclick="closeModal('modal-checkout-edit')">Cancel</button>
+      </div>
+    </div>
+  </div>
 
   <!-- Training Types modal removed — inline chips on screen -->
 
@@ -1425,6 +1520,7 @@
       target.classList.add('active');
       target.scrollTop = 0;
       if (screenId === 'screen-training') initTrainingScreen();
+      if (screenId === 'screen-checkin') renderCheckinScreen();
     }
   }
 
@@ -1448,8 +1544,8 @@
     openModal('modal-logout');
   });
 
-  // ─── Active field tracking (shared by both time modals) ──────────
-  const activeField = { checkin: 'hh', clock: 'hh' };
+  // ─── Active field tracking (shared by all time modals) ──────────
+  const activeField = { checkin: 'hh', checkout: 'hh', clock: 'hh' };
 
   function setActiveField(prefix, field) {
     activeField[prefix] = field;
@@ -1513,12 +1609,88 @@
     el.value    = val.slice(0, -1);
   }
 
-  // ─── Check-In Times modal ─────────────────────────────────────────
-  function openCheckinModal(workerName, currentTime) {
-    document.getElementById('checkin-modal-worker-name').textContent = workerName;
-    document.getElementById('checkin-current-time').textContent = currentTime;
+  // ─── Check-In Times screen data ───────────────────────────────────
+  const ciWorkers = [
+    { id:'jl',  initials:'JL', name:'Jessica Le',    role:'Line Worker', inTime:'12:30 PM', outTime:'' },
+    { id:'em',  initials:'EM', name:'Emma Moore',     role:'Line Worker', inTime:'12:30 PM', outTime:'' },
+    { id:'jl2', initials:'JL', name:'James Lee',      role:'Line Worker', inTime:'10:44 AM', outTime:'' },
+    { id:'fl',  initials:'FL', name:'Frank Lim',      role:'Line Worker', inTime:'12:30 PM', outTime:'' },
+    { id:'lb',  initials:'LB', name:'Lily Baker',     role:'Line Worker', inTime:'12:30 PM', outTime:'' },
+    { id:'cr',  initials:'CR', name:'Carlos Rivera',  role:'Line Worker', inTime:'11:15 AM', outTime:'' },
+    { id:'an',  initials:'AN', name:'Anh Nguyen',     role:'Line Worker', inTime:'12:30 PM', outTime:'' },
+    { id:'dm',  initials:'DM', name:'David Mitchell', role:'Line Worker', inTime:'9:58 AM',  outTime:'' },
+  ];
 
-    const [timePart, ampm] = currentTime.split(' ');
+  const PENCIL_SVG = '<svg width="13" height="13" viewBox="0 0 14 14" fill="currentColor" aria-hidden="true"><path d="M9.95 1.05a1.5 1.5 0 0 1 2.12 0l.88.88a1.5 1.5 0 0 1 0 2.12L4.5 12.5 1 13l.5-3.5 8.45-8.45z"/><path d="M1 13l.5-3.5 3 3L1 13z"/></svg>';
+
+  function renderCheckinScreen() {
+    const body = document.getElementById('checkin-list-body');
+    if (!body) return;
+    body.innerHTML = '';
+    ciWorkers.forEach((w, idx) => {
+      const hasOut = !!w.outTime;
+      const row = document.createElement('div');
+      row.className = 'list-row';
+      row.style.alignItems = 'center';
+
+      // Left: avatar
+      const avatar = '<div class="avatar">' + w.initials + '</div>';
+
+      // Middle: name+time headline, role below, stacked times if both present
+      let timeHtml;
+      if (hasOut) {
+        timeHtml =
+          '<div class="checkin-times-stack">' +
+            '<div class="checkin-time-line"><span style="color:var(--green-text);font-size:11px;font-weight:700;">↓ In</span> <span class="time-val">' + w.inTime + '</span></div>' +
+            '<div class="checkin-time-line"><span style="color:var(--red-text);font-size:11px;font-weight:700;">↑ Out</span> <span class="time-val">' + w.outTime + '</span></div>' +
+          '</div>';
+      } else {
+        timeHtml = '';
+      }
+
+      const headline = hasOut
+        ? '<div style="font-size:18px;font-weight:700;color:var(--text);">' + w.name + '</div>'
+        : '<div style="font-size:18px;font-weight:700;color:var(--text);">' + w.name + ' · ' + w.inTime + '</div>';
+
+      const info =
+        '<div class="worker-badge-info">' +
+          headline +
+          '<div style="font-size:13px;color:var(--text-sub);margin-top:1px;">' + w.role + '</div>' +
+          timeHtml +
+        '</div>';
+
+      // Right: buttons
+      let buttons;
+      if (hasOut) {
+        buttons =
+          '<div class="checkin-row-buttons">' +
+            '<button class="checkin-action-btn btn-edit" onclick="event.stopPropagation();openCheckinModal(' + idx + ')">' + PENCIL_SVG + ' Edit Check-In</button>' +
+            '<button class="checkin-action-btn btn-checkout" onclick="event.stopPropagation();openCheckoutModal(' + idx + ')">' + PENCIL_SVG + ' Edit Check-Out</button>' +
+          '</div>';
+      } else {
+        buttons =
+          '<div class="checkin-row-buttons">' +
+            '<button class="checkin-action-btn btn-edit" onclick="event.stopPropagation();openCheckinModal(' + idx + ')">' + PENCIL_SVG + ' Edit</button>' +
+            '<button class="checkin-action-btn btn-checkout" onclick="event.stopPropagation();openCheckoutModal(' + idx + ')">Check Out</button>' +
+          '</div>';
+      }
+
+      row.innerHTML = avatar + info + buttons;
+      row.addEventListener('click', () => openCheckinModal(idx));
+      body.appendChild(row);
+    });
+  }
+
+  // ─── Check-In Times modal ─────────────────────────────────────────
+  let ciEditIdx = 0;
+
+  function openCheckinModal(idx) {
+    ciEditIdx = idx;
+    const w = ciWorkers[idx];
+    document.getElementById('checkin-modal-worker-name').textContent = w.name;
+    document.getElementById('checkin-current-time').textContent = w.inTime;
+
+    const [timePart, ampm] = w.inTime.split(' ');
     const [hh, mm] = timePart.split(':');
     document.getElementById('checkin-hh').value = hh;
     document.getElementById('checkin-mm').value = mm;
@@ -1529,6 +1701,55 @@
       setActiveField('checkin', 'hh');
       document.getElementById('checkin-hh').focus();
     }, 80);
+  }
+
+  function saveCheckinTime() {
+    const hh   = document.getElementById('checkin-hh').value || '12';
+    const mm   = document.getElementById('checkin-mm').value || '00';
+    const ampm = document.getElementById('checkin-am').classList.contains('active') ? 'AM' : 'PM';
+    ciWorkers[ciEditIdx].inTime = hh + ':' + mm.padStart(2,'0') + ' ' + ampm;
+    closeModal('modal-checkin-edit');
+    renderCheckinScreen();
+    showToast('Check-in time updated');
+  }
+
+  // ─── Check-Out Time modal ──────────────────────────────────────────
+  let coEditIdx = 0;
+
+  function openCheckoutModal(idx) {
+    coEditIdx = idx;
+    const w = ciWorkers[idx];
+    document.getElementById('checkout-modal-worker-name').textContent = w.name;
+    const recorded = w.outTime || '—';
+    document.getElementById('checkout-current-time').textContent = recorded;
+
+    if (w.outTime) {
+      const [timePart, ampm] = w.outTime.split(' ');
+      const [hh, mm] = timePart.split(':');
+      document.getElementById('checkout-hh').value = hh;
+      document.getElementById('checkout-mm').value = mm;
+      selectAMPM('checkout', ampm);
+    } else {
+      document.getElementById('checkout-hh').value = '';
+      document.getElementById('checkout-mm').value = '';
+      selectAMPM('checkout', 'PM');
+    }
+
+    openModal('modal-checkout-edit');
+    setTimeout(() => {
+      setActiveField('checkout', 'hh');
+      document.getElementById('checkout-hh').focus();
+    }, 80);
+  }
+
+  function saveCheckoutTime() {
+    const hh   = document.getElementById('checkout-hh').value || '12';
+    const mm   = document.getElementById('checkout-mm').value || '00';
+    const ampm = document.getElementById('checkout-am').classList.contains('active') ? 'AM' : 'PM';
+    ciWorkers[coEditIdx].outTime = hh + ':' + mm.padStart(2,'0') + ' ' + ampm;
+    closeModal('modal-checkout-edit');
+    renderCheckinScreen();
+    showToast('Check-out time saved');
   }
 
   // ─── Training Types inline screen ────────────────────────────────
@@ -1552,6 +1773,22 @@
   }
 
   function initTrainingScreen() {
+    // Update banner based on state
+    const anyAssigned = ttWorkers.some(w => workerIsAssigned(w));
+    const missingCount = ttWorkers.filter(w => !workerIsAssigned(w)).length;
+    const alertText = document.getElementById('tt-alert-text');
+    const filterBtn = document.getElementById('tt-filter-btn');
+    if (!anyAssigned) {
+      alertText.textContent = 'No training types assigned yet. Select types for each worker below.';
+      filterBtn.style.display = 'none';
+      ttMissingFilter = false;
+    } else {
+      alertText.textContent = '⚠ Missing Training Types: ' + missingCount + ' worker' + (missingCount !== 1 ? 's' : '') + ' have no types assigned.';
+      filterBtn.style.display = '';
+      filterBtn.textContent = ttMissingFilter ? 'Show all workers' : 'Show missing only';
+      filterBtn.style.background = ttMissingFilter ? '#27ae60' : '';
+    }
+
     const body = document.getElementById('tt-list-body');
     body.innerHTML = '';
     ttWorkers.forEach((w, idx) => {
@@ -1722,7 +1959,7 @@
   function toggleMissingFilter() {
     ttMissingFilter = !ttMissingFilter;
     const btn = document.getElementById('tt-filter-btn');
-    btn.textContent = ttMissingFilter ? 'Show all' : 'Show missing only';
+    btn.textContent = ttMissingFilter ? 'Show all workers' : 'Show missing only';
     btn.style.background = ttMissingFilter ? '#27ae60' : '';
     document.querySelectorAll('.tt-worker-card').forEach(card => {
       const idx = parseInt(card.dataset.idx, 10);
@@ -1762,7 +1999,7 @@
       if (mode === 'all') {
         row.style.display = '';
       } else {
-        const typeEl = row.querySelector('.event-type');
+        const typeEl = row.querySelector('.event-type-label');
         const isIn  = typeEl && typeEl.classList.contains('in');
         const isOut = typeEl && typeEl.classList.contains('out');
         row.style.display = (mode === 'in' && isIn) || (mode === 'out' && isOut) ? '' : 'none';
@@ -1855,6 +2092,9 @@
     document.getElementById(prefix + '-mm').value = String(m).padStart(2, '0');
     selectAMPM(prefix, ampm);
   }
+
+  // Pre-render Check-In Times on load
+  renderCheckinScreen();
 
   // ─── Toast ───────────────────────────────────────────────────────
   let toastTimer = null;
