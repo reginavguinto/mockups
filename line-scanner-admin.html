@@ -354,14 +354,6 @@
     }
 
     /* ── User card (admin menu) ── */
-    .user-card {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      padding: 20px 20px;
-      background: #f0f7ff;
-      border-bottom: 2px solid var(--blue-light);
-    }
     .user-card .avatar {
       width: 54px;
       height: 54px;
@@ -932,7 +924,10 @@
   <div id="screen-admin" class="screen active">
     <div class="header">
       <button class="header-btn" aria-label="Back">←</button>
-      <span class="header-title">Admin Menu</span>
+      <div style="flex:1;display:flex;flex-direction:column;justify-content:center;">
+        <span class="header-title" style="line-height:1.2;">Admin Menu</span>
+        <span style="font-size:13px;color:rgba(255,255,255,0.75);font-weight:400;margin-top:2px;">Regina Guinto · Administrator</span>
+      </div>
       <button class="header-btn header-logout-btn" id="logout-btn" aria-label="Log Out">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
@@ -941,15 +936,6 @@
         </svg>
         <span>Log Out</span>
       </button>
-    </div>
-
-    <!-- Logged-in user card -->
-    <div class="user-card">
-      <div class="avatar">RG</div>
-      <div>
-        <div style="font-size:18px;font-weight:700;">Regina Guinto</div>
-        <div style="font-size:14px;color:var(--text-sub);">Administrator</div>
-      </div>
     </div>
 
     <div class="list-body">
