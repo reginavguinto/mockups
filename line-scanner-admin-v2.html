@@ -41,7 +41,7 @@
     }
 
     #app {
-      max-width: 1024px;
+      max-width: 1280px;
       min-height: 100vh;
       margin: 0 auto;
       background: var(--surface);
@@ -132,18 +132,94 @@
     .alert-banner.blue  .alert-text { color: #1a4a6b; }
     .alert-banner.amber .alert-text { color: #7d4e00; }
 
-    /* ── Search bar ── */
-    .search-bar {
+    /* ── Search + filter bar ── */
+    .search-filter-bar {
       display: flex; align-items: center; gap: 10px;
       padding: 10px 16px; background: var(--surface); border-bottom: 1px solid #e8ecef; flex-shrink: 0;
     }
     .search-input {
-      flex: 1; height: 44px; border: 2px solid var(--gray-border); border-radius: 10px;
-      padding: 0 14px; font-size: 15px; font-family: inherit; color: var(--text);
+      flex: 1; height: 48px; border: 2px solid var(--gray-border); border-radius: 10px;
+      padding: 0 14px 0 40px; font-size: 15px; font-family: inherit; color: var(--text);
       background: #f8fafc; outline: none;
     }
     .search-input:focus { border-color: var(--blue); background: var(--surface); }
     .search-input::placeholder { color: var(--text-sub); }
+    .search-icon-wrap { position: relative; flex: 1; }
+    .search-icon-wrap svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); pointer-events: none; }
+    .filter-modal-btn {
+      display: flex; align-items: center; gap: 8px; height: 48px; padding: 0 20px;
+      border-radius: 10px; border: 2px solid var(--blue); background: transparent;
+      color: var(--blue); font-size: 15px; font-weight: 600; cursor: pointer; white-space: nowrap;
+      flex-shrink: 0; -webkit-tap-highlight-color: transparent; transition: background 0.12s, color 0.12s;
+    }
+    .filter-modal-btn.has-filters { background: var(--blue); color: #fff; }
+    .filter-modal-btn:active { opacity: 0.8; }
+
+    /* ── Active filter chips row ── */
+    .active-filters-bar {
+      display: none; align-items: center; gap: 8px; padding: 8px 16px;
+      background: var(--page-bg); border-bottom: 1px solid #e8ecef; flex-wrap: wrap; flex-shrink: 0;
+    }
+    .active-filters-bar.visible { display: flex; }
+    .active-filter-chip {
+      display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px;
+      background: var(--blue-light); color: var(--blue); border-radius: 999px;
+      font-size: 13px; font-weight: 600;
+    }
+    .active-filter-chip button {
+      background: none; border: none; color: var(--blue); font-size: 15px; cursor: pointer;
+      padding: 0; line-height: 1; -webkit-tap-highlight-color: transparent;
+    }
+    .clear-all-filters { font-size: 13px; font-weight: 600; color: var(--red-text); background: none; border: none; cursor: pointer; padding: 4px 8px; margin-left: 4px; -webkit-tap-highlight-color: transparent; }
+
+    /* ── Filter modal ── */
+    .filter-modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 200; align-items: flex-start; justify-content: flex-end; }
+    .filter-modal-overlay.open { display: flex; }
+    .filter-modal-panel {
+      background: var(--surface); width: 420px; max-width: 100%; height: 100vh;
+      overflow-y: auto; display: flex; flex-direction: column;
+      box-shadow: -8px 0 40px rgba(0,0,0,0.18);
+    }
+    .filter-modal-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 20px 20px 16px; border-bottom: 1px solid #e8ecef; flex-shrink: 0;
+    }
+    .filter-modal-title { font-size: 19px; font-weight: 700; color: var(--text); }
+    .filter-modal-close { background: none; border: none; font-size: 24px; color: var(--gray-text); cursor: pointer; padding: 4px 8px; -webkit-tap-highlight-color: transparent; }
+    .filter-modal-body { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 24px; }
+    .filter-section-label { font-size: 12px; font-weight: 700; color: var(--gray-text); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 10px; }
+    .line-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; }
+    .line-pill {
+      padding: 10px 4px; border-radius: 8px; border: 2px solid var(--gray-border);
+      background: transparent; color: var(--text); font-size: 14px; font-weight: 600;
+      cursor: pointer; text-align: center; -webkit-tap-highlight-color: transparent;
+      transition: background 0.1s, color 0.1s, border-color 0.1s;
+    }
+    .line-pill.active { background: var(--blue); border-color: var(--blue); color: #fff; }
+    .line-pill:active { opacity: 0.8; }
+    .shift-pills { display: flex; gap: 10px; }
+    .shift-pill {
+      flex: 1; padding: 12px; border-radius: 10px; border: 2px solid var(--gray-border);
+      background: transparent; color: var(--text); font-size: 15px; font-weight: 600;
+      cursor: pointer; text-align: center; -webkit-tap-highlight-color: transparent;
+      transition: background 0.1s, color 0.1s, border-color 0.1s;
+    }
+    .shift-pill.active { background: var(--blue); border-color: var(--blue); color: #fff; }
+    .date-pills { display: flex; flex-direction: column; gap: 8px; }
+    .date-pill {
+      padding: 13px 16px; border-radius: 10px; border: 2px solid var(--gray-border);
+      background: transparent; color: var(--text); font-size: 15px; font-weight: 500;
+      cursor: pointer; text-align: left; -webkit-tap-highlight-color: transparent;
+      transition: background 0.1s, color 0.1s, border-color 0.1s;
+    }
+    .date-pill.active { background: var(--blue); border-color: var(--blue); color: #fff; }
+    .filter-modal-footer {
+      padding: 16px 20px; border-top: 1px solid #e8ecef; display: flex; gap: 10px; flex-shrink: 0;
+    }
+    .btn-filter-apply { flex: 1; height: 56px; border-radius: 10px; background: var(--blue); color: #fff; border: none; font-size: 16px; font-weight: 600; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+    .btn-filter-apply:active { opacity: 0.85; }
+    .btn-filter-reset { height: 56px; padding: 0 20px; border-radius: 10px; background: transparent; border: 2px solid var(--gray-border); color: var(--gray-text); font-size: 16px; font-weight: 600; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+    .btn-filter-reset:active { opacity: 0.8; }
 
     /* ── Filter area ── */
     .filter-area {
@@ -190,9 +266,10 @@
     .mw-grid-row:active { background: #f0f4f8; }
     .mw-grid-row.past { background: #fafbfc; }
     .mw-left-group { display: flex; flex-direction: row; align-items: center; gap: 14px; flex-shrink: 0; }
-    .mw-worker-meta { display: flex; flex-direction: column; gap: 2px; width: 190px; flex-shrink: 0; }
+    .mw-worker-meta { display: flex; flex-direction: column; gap: 2px; width: 210px; flex-shrink: 0; }
     .mw-worker-name { font-size: 17px; font-weight: 700; color: var(--text); }
     .mw-worker-id   { font-size: 13px; color: var(--text-sub); }
+    .mw-worker-ctx  { font-size: 12px; color: var(--blue); font-weight: 600; margin-top: 3px; }
     .mw-timestamps  { display: flex; flex-direction: row; }
     .mw-time-col    { display: flex; flex-direction: column; gap: 2px; width: 110px; flex-shrink: 0; }
     .mw-time-type   { font-size: 11px; font-weight: 700; letter-spacing: 0.06em; }
@@ -422,45 +499,67 @@
     </div>
 
     <div class="alert-banner blue" style="padding-top:12px;padding-bottom:12px;">
-      <div class="alert-text" id="mw-banner-text">You are currently on LINE-5 · May 14, 2026 · Shift 2 — Edit check-in and check-out times. Use filters to view workers from other shifts or lines.</div>
+      <div class="alert-text">You are currently on LINE-5 · May 14, 2026 · Shift 2 — Edit check-in and check-out times. Use filters to view workers from other shifts or lines.</div>
     </div>
 
-    <!-- Search -->
-    <div class="search-bar">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--gray-text)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      <input class="search-input" id="mw-search" type="text" placeholder="Search by name or worker ID…" oninput="filterMWRows()" />
+    <!-- Search + Filters bar -->
+    <div class="search-filter-bar">
+      <div class="search-icon-wrap">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--gray-text)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input class="search-input" id="mw-search" type="text" placeholder="Search by name or worker ID…" oninput="renderMWScreen()" />
+      </div>
+      <button class="filter-modal-btn" id="mw-filter-btn" onclick="openMWFilterModal()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
+        Filters
+      </button>
     </div>
 
-    <!-- Filters -->
-    <div class="filter-area">
-      <div class="filter-group">
-        <div class="filter-group-label">Line</div>
-        <div class="filter-group-pills">
-          <button class="filter-pill active" id="mw-line-5"   onclick="setMWFilter('line','5')">Line 5</button>
-          <button class="filter-pill"        id="mw-line-all" onclick="setMWFilter('line','all')">All Lines</button>
-        </div>
-      </div>
-      <div class="filter-group">
-        <div class="filter-group-label">Shift</div>
-        <div class="filter-group-pills">
-          <button class="filter-pill active" id="mw-shift-2"   onclick="setMWFilter('shift','2')">Shift 2</button>
-          <button class="filter-pill"        id="mw-shift-1"   onclick="setMWFilter('shift','1')">Shift 1</button>
-          <button class="filter-pill"        id="mw-shift-3"   onclick="setMWFilter('shift','3')">Shift 3</button>
-          <button class="filter-pill"        id="mw-shift-all" onclick="setMWFilter('shift','all')">All Shifts</button>
-        </div>
-      </div>
-      <div class="filter-group">
-        <div class="filter-group-label">Date</div>
-        <div class="filter-group-pills">
-          <button class="filter-pill active" id="mw-date-today"     onclick="setMWFilter('date','today')">Today</button>
-          <button class="filter-pill"        id="mw-date-yesterday" onclick="setMWFilter('date','yesterday')">Yesterday</button>
-          <button class="filter-pill"        id="mw-date-week"      onclick="setMWFilter('date','week')">Past 7 Days</button>
-        </div>
-      </div>
-    </div>
+    <!-- Active filter chips -->
+    <div class="active-filters-bar" id="mw-active-filters"></div>
 
     <div class="list-body" id="mw-list-body"></div>
     <div class="ec-footer">EC</div>
+  </div>
+
+  <!-- ── Manage Workers Filter Modal ── -->
+  <div class="filter-modal-overlay" id="mw-filter-modal">
+    <div class="filter-modal-panel">
+      <div class="filter-modal-header">
+        <span class="filter-modal-title">Filters</span>
+        <button class="filter-modal-close" onclick="closeMWFilterModal()">✕</button>
+      </div>
+      <div class="filter-modal-body">
+        <!-- Line -->
+        <div>
+          <div class="filter-section-label">Line</div>
+          <div class="line-grid" id="mw-line-grid"></div>
+        </div>
+        <!-- Shift -->
+        <div>
+          <div class="filter-section-label">Shift</div>
+          <div class="shift-pills">
+            <button class="shift-pill active" id="mw-fp-shift-all" onclick="setMWFPShift('all')">All Shifts</button>
+            <button class="shift-pill"        id="mw-fp-shift-1"   onclick="setMWFPShift('1')">Shift 1</button>
+            <button class="shift-pill"        id="mw-fp-shift-2"   onclick="setMWFPShift('2')">Shift 2</button>
+            <button class="shift-pill"        id="mw-fp-shift-3"   onclick="setMWFPShift('3')">Shift 3</button>
+          </div>
+        </div>
+        <!-- Date -->
+        <div>
+          <div class="filter-section-label">Date</div>
+          <div class="date-pills">
+            <button class="date-pill active" id="mw-fp-date-today"     onclick="setMWFPDate('today')">Today</button>
+            <button class="date-pill"        id="mw-fp-date-yesterday" onclick="setMWFPDate('yesterday')">Yesterday</button>
+            <button class="date-pill"        id="mw-fp-date-week"      onclick="setMWFPDate('week')">Past 7 Days</button>
+            <button class="date-pill"        id="mw-fp-date-month"     onclick="setMWFPDate('month')">Past 30 Days</button>
+          </div>
+        </div>
+      </div>
+      <div class="filter-modal-footer">
+        <button class="btn-filter-reset" onclick="resetMWFilters()">Reset</button>
+        <button class="btn-filter-apply" onclick="applyMWFilters()">Apply Filters</button>
+      </div>
+    </div>
   </div>
 
 
@@ -486,7 +585,7 @@
 
     <div class="list-body" id="tt-list-body" style="padding-bottom:80px"></div>
 
-    <div style="position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:1024px;padding:12px 20px;background:var(--surface);border-top:1px solid #e8ecef;z-index:10;">
+    <div style="position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:1280px;padding:12px 20px;background:var(--surface);border-top:1px solid #e8ecef;z-index:10;">
       <button class="btn-full btn-primary" onclick="saveAllTT()">Save all</button>
     </div>
   </div>
@@ -717,85 +816,149 @@
   const PENCIL = '<svg width="13" height="13" viewBox="0 0 14 14" fill="currentColor" aria-hidden="true"><path d="M9.95 1.05a1.5 1.5 0 0 1 2.12 0l.88.88a1.5 1.5 0 0 1 0 2.12L4.5 12.5 1 13l.5-3.5 8.45-8.45z"/><path d="M1 13l.5-3.5 3 3L1 13z"/></svg>';
 
   const mwWorkers = [
-    // Current shift (Shift 2, Line 5, today)
-    { id:'jl',  initials:'JL', name:'Jessica Le',    agencyId:'SAA-1042', inTime:'12:30 PM', outTime:'2:45 PM', shift:2, line:5, past:false },
-    { id:'em',  initials:'EM', name:'Emma Moore',    agencyId:'SAA-2187', inTime:'12:30 PM', outTime:'',        shift:2, line:5, past:false },
-    { id:'jl2', initials:'JL', name:'James Lee',     agencyId:'SAA-3391', inTime:'10:44 AM', outTime:'',        shift:2, line:5, past:false },
-    { id:'fl',  initials:'FL', name:'Frank Lim',     agencyId:'SAA-4056', inTime:'12:30 PM', outTime:'',        shift:2, line:5, past:false },
-    { id:'lb',  initials:'LB', name:'Lily Baker',    agencyId:'SAA-5278', inTime:'12:30 PM', outTime:'',        shift:2, line:5, past:false },
-    { id:'cr',  initials:'CR', name:'Carlos Rivera', agencyId:'SAA-6613', inTime:'11:15 AM', outTime:'',        shift:2, line:5, past:false },
-    { id:'an',  initials:'AN', name:'Anh Nguyen',    agencyId:'SAA-7724', inTime:'12:30 PM', outTime:'',        shift:2, line:5, past:false },
-    { id:'dm',  initials:'DM', name:'David Mitchell',agencyId:'SAA-8899', inTime:'9:58 AM',  outTime:'',        shift:2, line:5, past:false },
-    // Past workers (Shift 1, Line 5, today)
-    { id:'sg',  initials:'SG', name:'Sergey Gorbach',  agencyId:'SAA-2034', inTime:'6:00 AM',  outTime:'2:00 PM', shift:1, line:5, past:true },
-    { id:'ck',  initials:'CK', name:'Chulwoo Kim',     agencyId:'SAA-5591', inTime:'6:15 AM',  outTime:'1:45 PM', shift:1, line:5, past:true },
-    { id:'at',  initials:'AT', name:'Alexander Taylor', agencyId:'SAA-9895', inTime:'6:00 AM', outTime:'2:00 PM', shift:1, line:5, past:true },
-    // Past workers (Shift 2, Line 14, today)
-    { id:'mp',  initials:'MP', name:'Maria Perez',     agencyId:'MBT-3312', inTime:'12:00 PM', outTime:'',       shift:2, line:14, past:true },
-    { id:'tw',  initials:'TW', name:'Tyler Wong',      agencyId:'MBT-4481', inTime:'12:30 PM', outTime:'',       shift:2, line:14, past:true },
+    { id:'jl',  initials:'JL', name:'Jessica Le',     agencyId:'SAA-1042', inTime:'12:30 PM', outTime:'2:45 PM', shift:2, line:5,  date:'May 14', past:false },
+    { id:'em',  initials:'EM', name:'Emma Moore',     agencyId:'SAA-2187', inTime:'12:30 PM', outTime:'',        shift:2, line:5,  date:'May 14', past:false },
+    { id:'jl2', initials:'JL', name:'James Lee',      agencyId:'SAA-3391', inTime:'10:44 AM', outTime:'',        shift:2, line:5,  date:'May 14', past:false },
+    { id:'fl',  initials:'FL', name:'Frank Lim',      agencyId:'SAA-4056', inTime:'12:30 PM', outTime:'',        shift:2, line:5,  date:'May 14', past:false },
+    { id:'lb',  initials:'LB', name:'Lily Baker',     agencyId:'SAA-5278', inTime:'12:30 PM', outTime:'',        shift:2, line:5,  date:'May 14', past:false },
+    { id:'cr',  initials:'CR', name:'Carlos Rivera',  agencyId:'SAA-6613', inTime:'11:15 AM', outTime:'',        shift:2, line:5,  date:'May 14', past:false },
+    { id:'an',  initials:'AN', name:'Anh Nguyen',     agencyId:'SAA-7724', inTime:'12:30 PM', outTime:'',        shift:2, line:5,  date:'May 14', past:false },
+    { id:'dm',  initials:'DM', name:'David Mitchell', agencyId:'SAA-8899', inTime:'9:58 AM',  outTime:'',        shift:2, line:5,  date:'May 14', past:false },
+    { id:'sg',  initials:'SG', name:'Sergey Gorbach', agencyId:'SAA-2034', inTime:'6:00 AM',  outTime:'2:00 PM', shift:1, line:5,  date:'May 14', past:true  },
+    { id:'ck',  initials:'CK', name:'Chulwoo Kim',    agencyId:'SAA-5591', inTime:'6:15 AM',  outTime:'1:45 PM', shift:1, line:5,  date:'May 14', past:true  },
+    { id:'at',  initials:'AT', name:'Alexander Taylor',agencyId:'SAA-9895',inTime:'6:00 AM',  outTime:'2:00 PM', shift:1, line:5,  date:'May 14', past:true  },
+    { id:'mp',  initials:'MP', name:'Maria Perez',    agencyId:'MBT-3312', inTime:'12:00 PM', outTime:'8:00 PM', shift:2, line:14, date:'May 13', past:true  },
+    { id:'tw',  initials:'TW', name:'Tyler Wong',     agencyId:'MBT-4481', inTime:'12:30 PM', outTime:'8:30 PM', shift:2, line:14, date:'May 13', past:true  },
   ];
 
-  let mwSearchQ = '';
+  // ── Filter state (applied on modal close) ──
+  let mwFilters = { lines: [], shift: 'all', date: 'today' }; // lines:[] = current line only
+  // Pending state (inside modal before Apply)
+  let mwPending = { lines: [], shift: 'all', date: 'today' };
 
-  function setMWFilter(group, val) {
-    // Update pill active states
-    const maps = {
-      line:  { '5':'mw-line-5',   'all':'mw-line-all' },
-      shift: { '1':'mw-shift-1','2':'mw-shift-2','3':'mw-shift-3','all':'mw-shift-all' },
-      date:  { 'today':'mw-date-today','yesterday':'mw-date-yesterday','week':'mw-date-week' },
-    };
-    Object.values(maps[group]).forEach(id => document.getElementById(id) && document.getElementById(id).classList.remove('active'));
-    const targetId = maps[group][val];
-    if (targetId) document.getElementById(targetId).classList.add('active');
-    renderMWScreen();
+  function openMWFilterModal() {
+    // Sync pending from applied
+    mwPending = { lines: mwFilters.lines.slice(), shift: mwFilters.shift, date: mwFilters.date };
+    renderMWLineGrid();
+    syncMWFPShift();
+    syncMWFPDate();
+    document.getElementById('mw-filter-modal').classList.add('open');
+  }
+  function closeMWFilterModal() { document.getElementById('mw-filter-modal').classList.remove('open'); }
+
+  function renderMWLineGrid() {
+    const grid = document.getElementById('mw-line-grid');
+    grid.innerHTML = '';
+    // "All Lines" option first
+    const allBtn = document.createElement('button');
+    allBtn.className = 'line-pill' + (mwPending.lines.length === 0 ? ' active' : '');
+    allBtn.textContent = 'All';
+    allBtn.style.gridColumn = 'span 2';
+    allBtn.onclick = () => { mwPending.lines = []; renderMWLineGrid(); };
+    grid.appendChild(allBtn);
+    for (let i = 1; i <= 18; i++) {
+      const btn = document.createElement('button');
+      btn.className = 'line-pill' + (mwPending.lines.includes(i) ? ' active' : '');
+      btn.textContent = i;
+      btn.onclick = () => {
+        const idx = mwPending.lines.indexOf(i);
+        idx === -1 ? mwPending.lines.push(i) : mwPending.lines.splice(idx, 1);
+        renderMWLineGrid();
+      };
+      grid.appendChild(btn);
+    }
   }
 
-  function filterMWRows() {
-    mwSearchQ = document.getElementById('mw-search').value.toLowerCase();
+  function setMWFPShift(val) {
+    mwPending.shift = val;
+    syncMWFPShift();
+  }
+  function syncMWFPShift() {
+    ['all','1','2','3'].forEach(v => {
+      const el = document.getElementById('mw-fp-shift-' + v);
+      if (el) el.classList.toggle('active', mwPending.shift === v);
+    });
+  }
+  function setMWFPDate(val) {
+    mwPending.date = val;
+    syncMWFPDate();
+  }
+  function syncMWFPDate() {
+    ['today','yesterday','week','month'].forEach(v => {
+      const el = document.getElementById('mw-fp-date-' + v);
+      if (el) el.classList.toggle('active', mwPending.date === v);
+    });
+  }
+
+  function resetMWFilters() {
+    mwPending = { lines: [], shift: 'all', date: 'today' };
+    renderMWLineGrid(); syncMWFPShift(); syncMWFPDate();
+  }
+
+  function applyMWFilters() {
+    mwFilters = { lines: mwPending.lines.slice(), shift: mwPending.shift, date: mwPending.date };
+    closeMWFilterModal();
     renderMWScreen();
   }
 
   function renderMWScreen() {
     const body = document.getElementById('mw-list-body');
     if (!body) return;
-
-    const activeLine  = document.querySelector('#mw-line-5.active') ? '5' : 'all';
-    const activeShift = ['mw-shift-1','mw-shift-2','mw-shift-3'].find(id => document.getElementById(id) && document.getElementById(id).classList.contains('active'));
-    const shiftNum    = activeShift ? parseInt(activeShift.replace('mw-shift-','')) : null;
+    const q = (document.getElementById('mw-search') || {}).value || '';
+    const searchQ = q.toLowerCase();
 
     const filtered = mwWorkers.filter(w => {
-      if (activeLine !== 'all' && w.line !== parseInt(activeLine)) return false;
-      if (shiftNum   !== null  && w.shift !== shiftNum)            return false;
-      if (mwSearchQ) {
-        const q = mwSearchQ;
-        if (!w.name.toLowerCase().includes(q) && !w.agencyId.toLowerCase().includes(q)) return false;
-      }
+      if (mwFilters.lines.length > 0 && !mwFilters.lines.includes(w.line)) return false;
+      if (mwFilters.shift !== 'all' && w.shift !== parseInt(mwFilters.shift)) return false;
+      // date filter: for mockup, 'today' hides May 13 workers, others show all
+      if (mwFilters.date === 'today' && w.date !== 'May 14') return false;
+      if (searchQ && !w.name.toLowerCase().includes(searchQ) && !w.agencyId.toLowerCase().includes(searchQ)) return false;
       return true;
     });
 
-    const total = filtered.filter(w => !w.past).length;
     document.getElementById('mw-header-title').textContent = 'Manage Workers (' + filtered.length + ')';
 
-    body.innerHTML = '';
+    // Active filter chips
+    const chipsBar = document.getElementById('mw-active-filters');
+    const chips = [];
+    if (mwFilters.lines.length > 0) chips.push('Line ' + mwFilters.lines.map(l => l).join(', '));
+    if (mwFilters.shift !== 'all')  chips.push('Shift ' + mwFilters.shift);
+    if (mwFilters.date !== 'today') chips.push({ today:'Today', yesterday:'Yesterday', week:'Past 7 Days', month:'Past 30 Days' }[mwFilters.date]);
+    const hasFilters = chips.length > 0;
+    document.getElementById('mw-filter-btn').classList.toggle('has-filters', hasFilters);
+    if (hasFilters) {
+      chipsBar.className = 'active-filters-bar visible';
+      chipsBar.innerHTML = chips.map(c => '<span class="active-filter-chip">' + c + '</span>').join('') +
+        '<button class="clear-all-filters" onclick="resetApplyMW()">Clear all</button>';
+    } else {
+      chipsBar.className = 'active-filters-bar';
+      chipsBar.innerHTML = '';
+    }
 
-    // Section: current
+    body.innerHTML = '';
     const current = filtered.filter(w => !w.past);
     const past     = filtered.filter(w =>  w.past);
 
     if (current.length > 0) {
-      const hdr = document.createElement('div');
-      hdr.style.cssText = 'padding:8px 20px;font-size:11px;font-weight:700;color:var(--gray-text);text-transform:uppercase;letter-spacing:0.07em;background:var(--page-bg);border-bottom:1px solid #e8ecef;';
-      hdr.textContent = 'Current Shift — Line 5';
-      body.appendChild(hdr);
-      current.forEach((w, i) => body.appendChild(buildMWRow(w, mwWorkers.indexOf(w))));
+      body.appendChild(sectionHeader('Current Shift — LINE-5 · May 14, 2026 · Shift 2'));
+      current.forEach(w => body.appendChild(buildMWRow(w, mwWorkers.indexOf(w))));
     }
 
+    // Group past workers by date+line+shift
     if (past.length > 0) {
-      const hdr = document.createElement('div');
-      hdr.style.cssText = 'padding:8px 20px;font-size:11px;font-weight:700;color:var(--gray-text);text-transform:uppercase;letter-spacing:0.07em;background:var(--page-bg);border-bottom:1px solid #e8ecef;margin-top:8px;';
-      hdr.textContent = 'Past Workers';
-      body.appendChild(hdr);
-      past.forEach((w, i) => body.appendChild(buildMWRow(w, mwWorkers.indexOf(w))));
+      // Build unique groups preserving order
+      const groups = [];
+      const seen = {};
+      past.forEach(w => {
+        const key = w.date + '|' + w.line + '|' + w.shift;
+        if (!seen[key]) { seen[key] = true; groups.push({ key, date: w.date, line: w.line, shift: w.shift }); }
+      });
+      groups.forEach(g => {
+        const label = g.date + ' · LINE-' + g.line + ' · Shift ' + g.shift;
+        body.appendChild(sectionHeader(label));
+        past.filter(w => w.date === g.date && w.line === g.line && w.shift === g.shift)
+            .forEach(w => body.appendChild(buildMWRow(w, mwWorkers.indexOf(w))));
+      });
     }
 
     if (filtered.length === 0) {
@@ -806,25 +969,37 @@
     }
   }
 
+  function sectionHeader(text) {
+    const el = document.createElement('div');
+    el.style.cssText = 'padding:8px 20px;font-size:11px;font-weight:700;color:var(--gray-text);text-transform:uppercase;letter-spacing:0.07em;background:var(--page-bg);border-bottom:1px solid #e8ecef;';
+    el.textContent = text;
+    return el;
+  }
+
+  function resetApplyMW() {
+    mwFilters = { lines: [], shift: 'all', date: 'today' };
+    renderMWScreen();
+  }
+
   function buildMWRow(w, idx) {
     const hasOut = !!w.outTime;
     const row = document.createElement('div');
     row.className = 'mw-grid-row' + (w.past ? ' past' : '');
 
+    const ctxHtml = w.past
+      ? '<div class="mw-worker-ctx">LINE-' + w.line + ' · Shift ' + w.shift + ' · ' + w.date + '</div>'
+      : '';
+
     const checkOutCol = hasOut
       ? '<div class="mw-time-col"><div class="mw-time-type out">CHECK-OUT</div><div class="mw-time-val' + (w.past ? ' past' : '') + '">' + w.outTime + '</div></div>'
       : '<div class="mw-time-col"></div>';
 
-    const lineTag = w.past ? '<span class="mw-past-tag">Line ' + w.line + ' · Shift ' + w.shift + '</span>' : '';
-
     const buttons = hasOut
       ? '<div class="mw-buttons">' +
-          lineTag +
           '<button class="mw-action-btn btn-edit"     onclick="event.stopPropagation();openCheckinEditModal(' + idx + ')">' + PENCIL + ' Edit Check-In</button>' +
           '<button class="mw-action-btn btn-checkout" onclick="event.stopPropagation();openCheckoutEditModal(' + idx + ')">' + PENCIL + ' Edit Check-Out</button>' +
         '</div>'
       : '<div class="mw-buttons">' +
-          lineTag +
           '<button class="mw-action-btn btn-edit"     onclick="event.stopPropagation();openCheckinEditModal(' + idx + ')">' + PENCIL + ' Edit Check-In</button>' +
           '<button class="mw-action-btn btn-checkout" onclick="event.stopPropagation();openCheckoutEditModal(' + idx + ')">Check Out</button>' +
         '</div>';
@@ -835,6 +1010,7 @@
         '<div class="mw-worker-meta">' +
           '<div class="mw-worker-name">' + w.name + '</div>' +
           '<div class="mw-worker-id">' + w.agencyId + '</div>' +
+          ctxHtml +
         '</div>' +
         '<div class="mw-timestamps">' +
           '<div class="mw-time-col">' +
