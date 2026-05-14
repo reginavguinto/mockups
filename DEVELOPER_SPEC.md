@@ -9,6 +9,22 @@
 
 The admin panel is a tablet-first UI (15" landscape, max-width 1280px) used by line supervisors to manage worker clock events, view audit history, and assign training types. It is a single-page app with screen-based navigation (no routing). All screens share a common header shell.
 
+Each line scanner device is associated with a specific line at the facility. Throughout this document, **{LINE}** refers to the line number/name the device is registered to, **{SHIFT}** refers to the currently active shift, and **{DATE}** refers to today's date — all resolved at runtime from device/session context.
+
+---
+
+## Device Context
+
+Every screen in the admin panel is scoped to a device context that must be resolved on login:
+
+| Field | Description | Example |
+|---|---|---|
+| `currentLine` | The line this scanner is physically assigned to | `5` |
+| `currentShift` | The shift currently active based on the clock | `2` |
+| `currentDate` | Today's date | `2026-05-14` |
+
+These values are treated as **read-only context**, not user preferences. They are never persisted to session storage — always re-derived from the server/device on login.
+
 ---
 
 ## Design Tokens
@@ -43,7 +59,7 @@ Define these as CSS custom properties on `:root`:
 ## App Shell
 
 - Max-width: **1280px**, centered on screen
-- Each screen is a `div.screen` that is hidden by default; the active screen gets class `.active`
+- Each screen is a `div.screen` hidden by default; the active screen gets class `.active`
 - Navigation sets the active screen and calls the appropriate render function
 - All screens share the same fixed header structure
 
@@ -51,10 +67,11 @@ Define these as CSS custom properties on `:root`:
 
 - Height: 72px, blue background (`--blue`)
 - Left: back `←` button (44px tap target) + screen title
-- Right: two-line context block, right-aligned:
-  - Line 1: `"Line 5 · May 14, 2026"` — 14px, 600 weight, white
-  - Line 2: `"12:30 PM · Shift 2"` — 12px, white 75% opacity
-- The context block is always visible on every screen and reflects the supervisor's current active line/shift/date
+- Right: two-line context block, right-aligned, always visible:
+  - Line 1: `"{LINE_NAME} · {DATE}"` — 14px, 600 weight, white
+  - Line 2: `"{CURRENT_TIME} · Shift {SHIFT}"` — 12px, white 75% opacity
+
+The context block reflects the device's current line, active shift, and today's date. It does not update to reflect filter selections — it always shows where the scanner physically is right now.
 
 ---
 
@@ -66,11 +83,13 @@ Entry point after login. Lists all available actions.
 
 | Label | Subtitle | Destination |
 |---|---|---|
-| Manage Worker Times (Line 5) | View and edit worker check-in and check-out times for this line | Manage Workers screen |
-| Manage Worker Training Types (Line 5) | View and edit training types for workers checked in to this line | Training Types screen |
+| Manage Worker Times ({LINE_NAME}) | View and edit worker check-in and check-out times for this line | Manage Workers screen |
+| Manage Worker Training Types ({LINE_NAME}) | View and edit training types for workers checked in to this line | Training Types screen |
 | Audit Log | View badge scans, check-in and check-out history | Audit Log screen |
 | System Settings | — | Coming Soon screen |
 | Check Out All Workers | Red-accented row, triggers confirmation modal | Modal |
+
+The `{LINE_NAME}` in the label parentheses is dynamically populated from `currentLine` (e.g. `"Line 5"`, `"Line 12"`). It communicates to the supervisor which line they are scoped to by default on those screens.
 
 ### Row layout
 
@@ -110,16 +129,36 @@ Supervisors view and edit check-in / check-out times for workers on their line. 
 
 Use two objects — **applied** (`mwFilters`) and **pending** (`mwPending`). Pending state is only copied to applied when the user taps "Apply Filters". Reset restores pending to defaults without closing the modal.
 
-**Defaults:**
+**Defaults** (resolved at runtime from device context):
 ```js
 {
-  lines: [5],        // array — which lines to show; empty = all lines
-  shift: '2',        // 'all' | '1' | '2' | '3'
-  date: 'today',     // 'today' | 'yesterday' | 'week' | 'month' | 'custom'
-  customStart: null, // { y, m, d } object or null
-  customEnd: null    // { y, m, d } object or null
+  lines:       [currentLine],  // the device's assigned line — always an array
+  shift:       currentShift,   // the currently active shift as a string e.g. '2'
+  date:        'today',
+  customStart: null,           // { y, m, d } or null
+  customEnd:   null
 }
 ```
+
+### Filter Persistence
+
+Filters are split into two categories with different persistence rules:
+
+**Never persisted — always reset to device context on login:**
+| Field | Reason |
+|---|---|
+| `lines` | The scanner is physically on a specific line; defaulting to another line would be disorienting |
+| `date` | "Today" on a new login is always the current date; yesterday's date filter would be stale and confusing |
+
+**Persisted to `sessionStorage` for the duration of the browser session:**
+| Field | Reason |
+|---|---|
+| `shift` | An admin investigating a prior shift mid-day should have that context preserved across quick re-logins |
+| `customStart` / `customEnd` | If a custom date range was set, retain it within the session |
+
+On login: read `shift` (and custom dates if applicable) from `sessionStorage`. If no stored value, use the device default. On logout or new calendar day: clear session storage.
+
+**Detecting a new calendar day:** compare stored `sessionDate` (set at login) against `new Date().toDateString()`. If different, treat as a fresh session and discard all stored filter state.
 
 ### Filter Modal
 
@@ -127,15 +166,15 @@ Slides in from the right (420px wide, full height). Semi-transparent overlay beh
 
 Sections (top to bottom):
 
-**Line** — 6-column grid  
-- "All Lines" pill (full width, selects empty array)  
-- Pills for lines 1–18 (individual, multi-select)
+**Line** — 6-column grid
+- "All Lines" pill (selects empty array — shows all lines)
+- Pills for each available line (multi-select; the number of lines is facility-configured)
 
-**Shift** — 3-column grid  
-- All Shifts, Shift 1, Shift 2, Shift 3 (single-select)
+**Shift** — 3-column grid
+- All Shifts, Shift 1, Shift 2, Shift 3 (single-select; expand if facility has more shifts)
 
-**Date** — vertical stacked pills (full width each)  
-- Today, Yesterday, Past 7 Days, Past 30 Days  
+**Date** — vertical stacked pills (full width each)
+- Today, Yesterday, Past 7 Days, Past 30 Days
 - Custom range… (toggle; reveals inline calendar when selected)
 
 **Custom Calendar** (shown only when Custom range is selected):
@@ -149,14 +188,14 @@ Sections (top to bottom):
 
 ### Active Filter Chips
 
-Generated from the diff between `mwFilters` and defaults:
+Chips are shown only for filters that differ from the current defaults. A chip for `lines` only appears if a line *other than* the device's assigned line is selected (or if "All Lines" is selected).
 
 | Filter changed | Chip label |
 |---|---|
-| Lines | `"Line 5"` or `"Line 5, 14"` |
-| Shift | `"Shift 1"` / `"Shift 2"` / `"Shift 3"` |
+| Lines | `"Line {N}"` or `"Line {N}, {M}"` (comma-separated) or `"All Lines"` |
+| Shift | `"Shift {N}"` or `"All Shifts"` |
 | Date | `"Yesterday"` / `"Past 7 Days"` / `"Past 30 Days"` |
-| Custom date | `"May 13 → May 14"` or `"May 13"` (if only start set) |
+| Custom date | `"{start} → {end}"` or `"{start}"` (if only start set) |
 
 Max 2 chips visible. If 3+, show `+N more` (gray pill, opens modal). Always show `✕` after chips.
 
@@ -164,16 +203,16 @@ Max 2 chips visible. If 3+, show `+N more` (gray pill, opens modal). Always show
 
 ```js
 {
-  id:       string,   // internal key e.g. 'jl', 'em'
-  initials: string,   // 'JL', 'EM' — displayed in avatar circle
+  id:       string,   // internal identifier
+  initials: string,   // 2-char display initials for avatar
   name:     string,   // full name
-  agencyId: string,   // 'SAA-1042', 'MBT-3312'
+  agencyId: string,   // agency worker ID e.g. 'SAA-1042'
   inTime:   string,   // '12:30 PM' — empty string if not clocked in
   outTime:  string,   // '2:45 PM' — empty string if not clocked out
-  shift:    number,   // 1 | 2 | 3
-  line:     number,   // e.g. 5, 14
-  date:     string,   // 'May 14', 'May 13'
-  past:     boolean   // false = current shift, true = historical
+  shift:    number,   // 1 | 2 | 3 (or however many shifts are configured)
+  line:     number,   // which line this record belongs to
+  date:     string,   // display date e.g. 'May 14'
+  past:     boolean   // false = current shift, true = historical record
 }
 ```
 
@@ -190,7 +229,7 @@ Each row is a flex container, `min-height: 72px`, `padding: 14px 20px`.
 **Worker meta** — fixed 210px, `flex-shrink: 0`:
 - Name: 17px, 700 weight
 - Agency ID: 13px, `--text-sub`
-- Context line (past workers only): 12px, blue, 600 weight — `"Line 5 · Shift 2 · May 13"`
+- Context line (past workers only): 12px, blue, 600 weight — `"Line {N} · Shift {N} · {Date}"`
 
 **CHECK-IN column** — fixed 110px, `flex-shrink: 0`:
 - Label: `"CHECK-IN"` — 11px, 700 weight, uppercase, green (`--green-text`), letter-spacing 0.06em
@@ -211,12 +250,12 @@ Each row is a flex container, `min-height: 72px`, `padding: 14px 20px`.
 
 Workers are split into two groups:
 
-1. **Current shift** — `past: false` workers  
-   Section header: `"Current Shift — Line 5 · May 14, 2026 · Shift 2"`  
+1. **Current shift** — `past: false` workers
+   Section header: `"Current Shift — {LINE_NAME} · {DATE} · Shift {SHIFT}"`
    Sorted by `inTime` descending (latest check-in first)
 
-2. **Past workers** — `past: true` workers, grouped by unique `(date, line, shift)` combination  
-   Section header per group: `"{date} · Line {line} · Shift {shift}"`  
+2. **Past workers** — `past: true` workers, grouped by unique `(date, line, shift)` combination
+   Section header per group: `"{date} · Line {N} · Shift {N}"`
    Within each group: sorted by `inTime` descending
 
 Section headers are a gray band: 11px, 700 weight, uppercase, `--gray-text`, `--page-bg` background.
@@ -227,7 +266,7 @@ Section headers are a gray band: 11px, 700 weight, uppercase, `--gray-text`, `--
 
 ### Purpose
 
-Read-only chronological log of all badge scan and clock events on the line. Supervisors can search and filter but cannot edit anything here.
+Read-only chronological log of all badge scan and clock events. Supervisors can search and filter but cannot edit anything here.
 
 ### Layout (top to bottom)
 
@@ -247,29 +286,46 @@ Same pattern as Manage Workers:
 
 ### Filter State
 
-**Defaults:**
+**Defaults** (resolved at runtime from device context):
 ```js
 {
-  lines:  [5],     // array; empty = all lines
-  shift:  'all',   // 'all' | '1' | '2' | '3'
-  date:   'today', // 'today' | 'yesterday' | 'week' | 'month'
-  type:   'all',   // 'all' | 'checkin' | 'checkout' | 'abandoned' | 'error'
-  agency: 'all'    // 'all' | 'saa' | 'mbt'
+  lines:  [currentLine],  // device's assigned line
+  shift:  'all',          // Audit Log defaults to all shifts (broader view)
+  date:   'today',
+  type:   'all',          // all event types
+  agency: 'all'           // all agencies
 }
 ```
 
-Same two-object pattern (applied vs pending), same chip/overflow behavior as Manage Workers.
+### Filter Persistence
+
+Same rules as Manage Workers, with two additional fields:
+
+**Never persisted:**
+| Field | Reason |
+|---|---|
+| `lines` | Always defaults to the device's line |
+| `date` | Always defaults to today |
+
+**Persisted to `sessionStorage`:**
+| Field | Reason |
+|---|---|
+| `shift` | Admin may be reviewing a specific shift throughout their session |
+| `type` | Admin investigating errors or a specific event type should retain that view |
+| `agency` | Admin scoped to a specific agency workforce should retain that context |
+
+Same new-calendar-day detection applies: if `sessionDate` doesn't match today, clear all stored filter state.
 
 ### Filter Modal Sections
 
-**Line** — 6-column grid (lines 1–18 + All Lines)  
-**Shift** — 3-column grid (All Shifts, Shift 1, Shift 2, Shift 3)  
-**Date** — vertical stacked pills (Today, Yesterday, Past 7 Days, Past 30 Days) — no custom calendar  
-**Event Type** — 3-column grid:  
-- All Events, Check-In, Check-Out (row 1)  
-- Abandoned, Errors (row 2)  
+**Line** — 6-column grid (all available lines + "All Lines")
+**Shift** — 3-column grid (All Shifts, Shift 1, Shift 2, Shift 3)
+**Date** — vertical stacked pills (Today, Yesterday, Past 7 Days, Past 30 Days) — no custom calendar
+**Event Type** — 3-column grid:
+- All Events, Check-In, Check-Out (row 1)
+- Abandoned, Errors (row 2)
 
-**Agency** — 3-column grid (All Agencies, SAA, MBT)
+**Agency** — 3-column grid (All Agencies + one pill per configured agency)
 
 ### Column Layout
 
@@ -286,7 +342,7 @@ Row container: `display: flex`, `gap: 24px`, `padding: 12px 20px`, `min-height: 
 
 ### Column Content
 
-**Event (160px)**  
+**Event (160px)**
 Badge pill only — colored dot (10px SVG circle) + label text:
 
 | Type | Dot color | Label | Badge class |
@@ -296,23 +352,23 @@ Badge pill only — colored dot (10px SVG circle) + label text:
 | abandoned | `#e67e22` | ABANDONED | `.badge-orange` |
 | error | `#c0392b` | ERROR | `.badge-red` |
 
-**Time (180px)**  
+**Time (180px)**
 - Time value: 19px, 700 weight (e.g. `"4:09 PM"`)
 - Date below: 12px, `--text-sub` (e.g. `"05/14/2026"`)
 
-Source field: `datetime` string in format `"MM/DD H:MM AM/PM"` — split on first space to get date, remainder is time; append `/2026` to date for display.
+Source: `datetime` string in format `"MM/DD H:MM AM/PM"`. Split on first space to separate date and time; append the 4-digit year to the date portion for display.
 
-**Worker (360px)**  
+**Worker (360px)**
 - Name: 15px, 700 weight
 - ID: 12px, `--text-sub`, monospace, margin-top 2px
-- Note: 12px, `--red-text`, italic, margin-top 2px (only if `note` field exists)
+- Note: 12px, `--red-text`, italic, margin-top 2px (only if `note` field is present)
 
-For unknown badge rows (no `name`/`agencyId`, UUID only):
-- Name field: show the `uuid` value
+For unknown badge rows (UUID-only, no resolved worker):
+- Name field: show the raw `uuid` value
 - ID field: show `"Unknown badge"`
 - Note field: show `note` if present (e.g. `"Invalid badge"`, `"Abandoned after 3s"`)
 
-**Line · Shift (flex)**  
+**Line · Shift (flex)**
 - Line: 15px, 700 weight (e.g. `"Line 5"`)
 - Shift: 12px, `--text-sub`, margin-top 2px (e.g. `"Shift 2"`)
 
@@ -321,30 +377,30 @@ For unknown badge rows (no `name`/`agencyId`, UUID only):
 ```js
 {
   type:     string,        // 'checkin' | 'checkout' | 'abandoned' | 'error'
-  name:     string | null, // Worker full name, or null for unknown badge
-  agencyId: string | null, // e.g. 'SAA-0831', or null
+  name:     string | null, // Resolved worker full name, or null for unknown badge
+  agencyId: string | null, // Agency worker ID e.g. 'SAA-0831', or null
   uuid:     string | null, // Raw badge UUID, or null for known workers
-  line:     number,        // e.g. 5, 14
-  shift:    number,        // 1 | 2 | 3
-  agency:   string | null, // 'SAA' | 'MBT' | null (null for errors)
+  line:     number,        // Which line the event occurred on
+  shift:    number,        // Which shift was active
+  agency:   string | null, // Agency code e.g. 'SAA', 'MBT', or null for errors
   datetime: string,        // 'MM/DD H:MM AM/PM' e.g. '05/14 4:09 PM'
-  note:     string | null  // e.g. 'Invalid badge', 'Abandoned after 6s'
+  note:     string | null  // Optional detail e.g. 'Invalid badge', 'Abandoned after 6s'
 }
 ```
 
 ### Sort
 
-Always sort descending by `datetime` (newest first) after filtering. Parse `datetime` string as:
+Always sort descending by `datetime` (newest first) after filtering. Parse the `datetime` string:
 
 ```js
-// "05/14 4:09 PM" → Date object
 const [md, time, ampm] = dt.split(' ');
 const [month, day] = md.split('/');
 let [h, min] = time.split(':');
 h = parseInt(h);
 if (ampm === 'PM' && h !== 12) h += 12;
 if (ampm === 'AM' && h === 12) h = 0;
-return new Date(2026, parseInt(month) - 1, parseInt(day), h, parseInt(min));
+return new Date(year, parseInt(month) - 1, parseInt(day), h, parseInt(min));
+// where `year` is the current year from device context
 ```
 
 ---
@@ -353,10 +409,11 @@ return new Date(2026, parseInt(month) - 1, parseInt(day), h, parseInt(min));
 
 ### Purpose
 
-Supervisors assign one or more training types to each worker clocked in for the shift. This is a bulk-entry screen — all workers are shown at once, and changes are saved together.
+Supervisors assign one or more training types to each worker clocked in for the current shift. This is a bulk-entry screen — all workers are shown at once, and changes are saved together.
 
 ### Training Types
 
+The list of training types is facility-configured. The mockup uses:
 `['Stocking', 'Packing', 'Folding', 'Receiving', 'Labeling', 'Other', 'N/A']`
 
 ### Worker Card Layout
@@ -412,7 +469,7 @@ All modals use a full-screen dark overlay (rgba 0,0,0,0.45) and a centered white
 
 **Triggered by**: "Check Out All Workers" row on admin menu.
 
-- Confirmation modal: counts active workers on current line
+- Confirmation modal: `"This will check out all {N} workers currently on {LINE_NAME}."`
 - Buttons: **Check Out All** (red/danger) + **Cancel**
 
 ### Log Out
@@ -461,12 +518,12 @@ All interactive buttons: `min-height: var(--touch-min)` (56px) for tablet tap ta
 
 ### Alert Banners
 
-Two variants: `.alert-banner.blue` and `.alert-banner.amber`.  
+Two variants: `.alert-banner.blue` and `.alert-banner.amber`.
 Both: light tinted background, matching-color bottom border, 14px body text.
 
 ### Section Headers (Manage Workers)
 
-Gray band between groups of rows:  
+Gray band between groups of rows:
 - Background: `--page-bg`
 - Text: 11px, 700 weight, uppercase, `--gray-text`, letter-spacing 0.07em
 - Border-bottom: 1px `#e8ecef`
@@ -475,22 +532,26 @@ Gray band between groups of rows:
 
 ## Key Implementation Notes
 
-1. **Pending vs applied filter state** — Always maintain two filter objects (applied and pending). The UI reflects applied state; the modal edits pending state. "Apply" copies pending → applied. "Reset" restores pending to defaults without closing the modal.
+1. **Device context is not user preference** — `currentLine`, `currentShift`, and `currentDate` are resolved from the server/device on login, never from stored state. Treat them as constants for the session.
 
-2. **Line selection is multi-select** — `lines` is always an array. Empty array means "All Lines." Single line default is `[5]`.
+2. **Pending vs applied filter state** — Always maintain two filter objects (applied and pending). The UI reflects applied state; the modal edits pending state. "Apply" copies pending → applied. "Reset" restores pending to defaults without closing the modal.
 
-3. **Shift and date are single-select strings** — not arrays.
+3. **Filter persistence via `sessionStorage`** — Only persist `shift`, `type`, and `agency`. Never persist `lines` or `date`. On each login, check if `sessionDate` matches today — if not, discard all stored filter state and start fresh.
 
-4. **Sort is always applied after filter** — never store pre-sorted data; sort at render time.
+4. **Line selection is multi-select** — `lines` is always an array. Empty array means "All Lines." The default is `[currentLine]` (a single-element array).
 
-5. **Time parsing** — `inTime`/`outTime` are plain strings like `"12:30 PM"`. Parse to minutes-since-midnight for comparison: `h*60 + min`, adjusting for AM/PM.
+5. **The number of lines and shifts is facility-configured** — do not hardcode 18 lines or 3 shifts. Render line and shift pills dynamically from the facility configuration.
 
-6. **Fixed column widths with `flex-shrink: 0`** — critical for both MW and Audit Log rows so content never shifts based on data length. Use `gap` on the row container rather than padding on individual cells for consistent inter-column spacing.
+6. **Active filter chips only show non-default values** — a chip for `lines` only appears when a line other than `currentLine` is selected (or "All Lines" is selected). If the user picks their own line back, the chip disappears.
 
-7. **Search is live** — fire on every `input` event, no debounce needed at this data scale.
+7. **Sort is always applied after filter** — never store pre-sorted data; sort at render time.
 
-8. **All chip and filter logic is client-side** — the mockup has no API calls. Wire these up to your backend filter/search endpoints as needed.
+8. **Time parsing** — `inTime`/`outTime` are plain strings like `"12:30 PM"`. Parse to minutes-since-midnight for sort comparison: `h*60 + min`, adjusting for AM/PM.
 
-9. **The "past" worker concept** — a worker is "past" if their record belongs to a prior shift, line, or date. Past rows render with a slightly gray background and dimmed time values, plus a context line showing their Line · Shift · Date.
+9. **Fixed column widths with `flex-shrink: 0`** — critical for both Manage Workers and Audit Log rows so content never shifts based on data length. Use `gap` on the row container rather than padding on individual cells for consistent inter-column spacing.
 
-10. **Tablet-first, not mobile** — minimum touch target is 56px (buttons) or 44px (chips/icons). The layout assumes 1280px landscape. No hamburger menu or bottom nav needed.
+10. **Search is live** — fire on every `input` event. No debounce needed at this data scale, but add one (~150ms) if querying a backend.
+
+11. **The "past" worker concept** — a worker record is "past" if it belongs to a prior shift, line, or date relative to the current filters. Past rows render with a slightly gray background (`#fafbfc`), dimmed time values, and a context line showing `Line · Shift · Date`.
+
+12. **Tablet-first, not mobile** — minimum touch target is 56px (buttons) or 44px (chips/icons). The layout assumes 1280px landscape. No hamburger menu or bottom nav needed.
