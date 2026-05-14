@@ -954,7 +954,7 @@
       row.innerHTML =
         '<div class="audit-badge-col"><span class="badge ' + BADGE_CLASSES[e.type] + '">' + BADGE_SVGS[e.type] + ' ' + BADGE_LABELS[e.type] + '</span></div>' +
         '<div class="audit-body">' + nameHtml + uuidHtml + metaHtml + noteHtml + '</div>' +
-        '<div class="audit-timestamp">' + e.datetime + '</div>';
+        '<div class="audit-timestamp">' + e.datetime + ' · LINE-' + e.line + ' · Shift ' + e.shift + '</div>';
 
       body.appendChild(row);
     });
