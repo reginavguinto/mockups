@@ -755,8 +755,8 @@
     <!-- Column headers -->
     <div class="audit-col-headers">
       <div class="audit-col-hdr event">Event</div>
-      <div class="audit-col-hdr worker">Description</div>
       <div class="audit-col-hdr time">Time</div>
+      <div class="audit-col-hdr worker">Description</div>
       <div class="audit-col-hdr lineshift">Line · Shift</div>
     </div>
 
@@ -1421,14 +1421,14 @@
 
       row.innerHTML =
         '<div class="audit-col-event"><span class="badge ' + BADGE_CLASSES[e.type] + '">' + BADGE_SVGS[e.type] + ' ' + BADGE_LABELS[e.type] + '</span></div>' +
+        '<div class="audit-col-time">' +
+          '<div class="audit-time-val">' + timeStr + '</div>' +
+          '<div class="audit-date-val">' + dateStr + '</div>' +
+        '</div>' +
         '<div class="audit-col-worker">' +
           '<div class="audit-worker-name">' + workerName + '</div>' +
           '<div class="audit-worker-id">' + workerId + '</div>' +
           noteHtml +
-        '</div>' +
-        '<div class="audit-col-time">' +
-          '<div class="audit-time-val">' + timeStr + '</div>' +
-          '<div class="audit-date-val">' + dateStr + '</div>' +
         '</div>' +
         '<div class="audit-col-ls">' +
           '<div class="audit-line-val">Line ' + e.line + '</div>' +
