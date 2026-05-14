@@ -1381,6 +1381,9 @@
       if (alFilters.agency === 'mbt' && e.agency !== 'MBT') return false;
       if (searchQ && !(e.name && e.name.toLowerCase().includes(searchQ)) && !(e.agencyId && e.agencyId.toLowerCase().includes(searchQ)) && !(e.uuid && e.uuid.toLowerCase().includes(searchQ))) return false;
       return true;
+    }).sort((a, b) => {
+      const parse = dt => { const [md, time, ampm] = dt.split(' '); const [m,d] = md.split('/'); let [h,min] = time.split(':'); h = parseInt(h); if (ampm==='PM' && h!==12) h+=12; if (ampm==='AM' && h===12) h=0; return new Date(2026, parseInt(m)-1, parseInt(d), h, parseInt(min)); };
+      return parse(b.datetime) - parse(a.datetime);
     });
 
     // Active filter chips
