@@ -760,10 +760,9 @@
 
     /* ── Check-In Times row layout ── */
     .checkin-grid-row {
-      display: grid;
-      grid-template-columns: 52px 1fr 120px 120px auto;
+      display: flex;
+      flex-direction: row;
       align-items: center;
-      gap: 16px;
       min-height: var(--row-min);
       padding: 14px 20px;
       background: var(--surface);
@@ -773,7 +772,16 @@
       transition: background 0.1s;
     }
     .checkin-grid-row:active { background: #f0f4f8; }
-    .checkin-time-col { display: flex; flex-direction: column; gap: 2px; }
+    .checkin-left-group {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      gap: 14px;
+      flex-shrink: 0;
+    }
+    .checkin-worker-meta { display: flex; flex-direction: column; gap: 2px; }
+    .checkin-timestamps { display: flex; flex-direction: row; gap: 0; }
+    .checkin-time-col { display: flex; flex-direction: column; gap: 2px; width: 90px; flex-shrink: 0; }
     .checkin-time-type { font-size: 11px; font-weight: 700; letter-spacing: 0.06em; }
     .checkin-time-type.in  { color: var(--green-text); }
     .checkin-time-type.out { color: var(--red-text); }
@@ -783,6 +791,8 @@
       flex-direction: row;
       gap: 8px;
       align-items: center;
+      margin-left: auto;
+      flex-shrink: 0;
     }
     .checkin-action-btn {
       min-height: 56px;
@@ -1669,32 +1679,13 @@
       const row = document.createElement('div');
       row.className = 'checkin-grid-row';
 
-      // Col 1: avatar
-      const avatar = '<div class="avatar">' + w.initials + '</div>';
-
-      // Col 2: name + agency ID
-      const workerInfo =
-        '<div>' +
-          '<div style="font-size:17px;font-weight:700;color:var(--text);">' + w.name + '</div>' +
-          '<div style="font-size:13px;color:var(--text-sub);margin-top:2px;">' + w.agencyId + '</div>' +
-        '</div>';
-
-      // Col 3: check-in (always populated)
-      const checkIn =
-        '<div class="checkin-time-col">' +
-          '<div class="checkin-time-type in">CHECK-IN</div>' +
-          '<div class="checkin-time-val">' + w.inTime + '</div>' +
-        '</div>';
-
-      // Col 4: check-out (empty placeholder when none)
-      const checkOut = hasOut
+      const checkOutCol = hasOut
         ? '<div class="checkin-time-col">' +
             '<div class="checkin-time-type out">CHECK-OUT</div>' +
             '<div class="checkin-time-val">' + w.outTime + '</div>' +
           '</div>'
-        : '<div></div>';
+        : '<div class="checkin-time-col"></div>';
 
-      // Col 5: buttons
       const buttons = hasOut
         ? '<div class="checkin-row-buttons">' +
             '<button class="checkin-action-btn btn-edit" onclick="event.stopPropagation();openCheckinModal(' + idx + ')">' + PENCIL_SVG + ' Edit Check-In</button>' +
@@ -1705,7 +1696,23 @@
             '<button class="checkin-action-btn btn-checkout" onclick="event.stopPropagation();openCheckoutModal(' + idx + ')">Check Out</button>' +
           '</div>';
 
-      row.innerHTML = avatar + workerInfo + checkIn + checkOut + buttons;
+      row.innerHTML =
+        '<div class="checkin-left-group">' +
+          '<div class="avatar">' + w.initials + '</div>' +
+          '<div class="checkin-worker-meta">' +
+            '<div style="font-size:17px;font-weight:700;color:var(--text);">' + w.name + '</div>' +
+            '<div style="font-size:13px;color:var(--text-sub);">' + w.agencyId + '</div>' +
+          '</div>' +
+          '<div class="checkin-timestamps">' +
+            '<div class="checkin-time-col">' +
+              '<div class="checkin-time-type in">CHECK-IN</div>' +
+              '<div class="checkin-time-val">' + w.inTime + '</div>' +
+            '</div>' +
+            checkOutCol +
+          '</div>' +
+        '</div>' +
+        buttons;
+
       row.addEventListener('click', () => openCheckinModal(idx));
       body.appendChild(row);
     });
