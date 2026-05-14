@@ -292,36 +292,46 @@
     .alert-btn { background: var(--blue); }
     .alert-btn:active { background: var(--blue-dark); }
 
-    /* ── Filter pill bar ── */
-    .filter-bar {
+    /* ── Filter area ── */
+    .filter-area {
       display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 10px;
+      flex-direction: row;
+      gap: 24px;
       padding: 14px 20px;
       background: var(--surface);
       border-bottom: 1px solid #e8ecef;
       flex-shrink: 0;
+      flex-wrap: wrap;
     }
-    .filter-divider {
-      width: 1px;
-      height: 28px;
-      background: #d0d5db;
-      margin: 0 4px;
-      flex-shrink: 0;
+    .filter-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .filter-group-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--gray-text);
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+    }
+    .filter-group-pills {
+      display: flex;
+      gap: 8px;
     }
     .filter-pill {
-      padding: 10px 24px;
+      padding: 9px 20px;
       border-radius: 999px;
       border: 2px solid var(--blue);
       background: transparent;
       color: var(--blue);
-      font-size: 15px;
+      font-size: 14px;
       font-weight: 600;
       cursor: pointer;
       min-height: var(--touch-min);
       -webkit-tap-highlight-color: transparent;
       transition: background 0.12s, color 0.12s;
+      white-space: nowrap;
     }
     .filter-pill.active {
       background: var(--blue);
@@ -1101,16 +1111,33 @@
       <span class="header-title">Clock History</span>
     </div>
 
-    <div class="filter-bar">
-      <button class="filter-pill active" id="filter-this-line" onclick="setLineFilter('this')">This Line</button>
-      <button class="filter-pill" id="filter-all-lines" onclick="setLineFilter('all')">All Lines</button>
-      <div class="filter-divider"></div>
-      <button class="filter-pill active" id="filter-all-events" onclick="setEventFilter('all')">All Events</button>
-      <button class="filter-pill" id="filter-clock-in" onclick="setEventFilter('in')">Check-In</button>
-      <button class="filter-pill" id="filter-clock-out" onclick="setEventFilter('out')">Check-Out</button>
-    </div>
-
     <div class="screen-explainer">Use this screen to view and correct historical check-in and check-out events. Edits are logged and attributed to your admin session.</div>
+
+    <div class="filter-area">
+      <div class="filter-group">
+        <div class="filter-group-label">Line</div>
+        <div class="filter-group-pills">
+          <button class="filter-pill active" id="filter-this-line" onclick="setLineFilter('this')">This Line</button>
+          <button class="filter-pill" id="filter-all-lines" onclick="setLineFilter('all')">All Lines</button>
+        </div>
+      </div>
+      <div class="filter-group">
+        <div class="filter-group-label">Event Type</div>
+        <div class="filter-group-pills">
+          <button class="filter-pill active" id="filter-all-events" onclick="setEventFilter('all')">All Events</button>
+          <button class="filter-pill" id="filter-clock-in" onclick="setEventFilter('in')">Check-In</button>
+          <button class="filter-pill" id="filter-clock-out" onclick="setEventFilter('out')">Check-Out</button>
+        </div>
+      </div>
+      <div class="filter-group">
+        <div class="filter-group-label">Time Range</div>
+        <div class="filter-group-pills">
+          <button class="filter-pill active" id="filter-time-8h" onclick="setTimeFilter('8h')">Past 8 Hours</button>
+          <button class="filter-pill" id="filter-time-24h" onclick="setTimeFilter('24h')">Past 24 Hours</button>
+          <button class="filter-pill" id="filter-time-all" onclick="setTimeFilter('all')">All Time</button>
+        </div>
+      </div>
+    </div>
 
     <div class="list-body">
 
@@ -2069,6 +2096,13 @@
       header.style.display    = hasVisible ? '' : 'none';
       eventsList.style.display = hasVisible ? '' : 'none';
     });
+  }
+
+  function setTimeFilter(mode) {
+    document.getElementById('filter-time-8h').classList.toggle('active', mode === '8h');
+    document.getElementById('filter-time-24h').classList.toggle('active', mode === '24h');
+    document.getElementById('filter-time-all').classList.toggle('active', mode === 'all');
+    // In a real app this would filter by time range; for the mockup all ranges show the same data
   }
 
   // ─── Edit event button ────────────────────────────────────────────
