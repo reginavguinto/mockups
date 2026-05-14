@@ -759,16 +759,30 @@
     }
 
     /* ── Check-In Times row layout ── */
+    .checkin-grid-row {
+      display: grid;
+      grid-template-columns: 52px 1fr 120px 120px auto;
+      align-items: center;
+      gap: 16px;
+      min-height: var(--row-min);
+      padding: 14px 20px;
+      background: var(--surface);
+      border-bottom: 1px solid #e8ecef;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      transition: background 0.1s;
+    }
+    .checkin-grid-row:active { background: #f0f4f8; }
+    .checkin-time-col { display: flex; flex-direction: column; gap: 2px; }
+    .checkin-time-type { font-size: 11px; font-weight: 700; letter-spacing: 0.06em; }
+    .checkin-time-type.in  { color: var(--green-text); }
+    .checkin-time-type.out { color: var(--red-text); }
+    .checkin-time-val { font-size: 20px; font-weight: 700; color: var(--text); }
     .checkin-row-buttons {
       display: flex;
       flex-direction: row;
       gap: 8px;
-      flex-shrink: 0;
       align-items: center;
-    }
-    .checkin-row-buttons.stacked {
-      flex-direction: column;
-      align-items: stretch;
     }
     .checkin-action-btn {
       min-height: 56px;
@@ -1653,65 +1667,45 @@
     ciWorkers.forEach((w, idx) => {
       const hasOut = !!w.outTime;
       const row = document.createElement('div');
-      row.className = 'list-row';
-      row.style.alignItems = 'center';
+      row.className = 'checkin-grid-row';
 
-      // Avatar
+      // Col 1: avatar
       const avatar = '<div class="avatar">' + w.initials + '</div>';
 
-      // Name + agency ID headline (shared by both states)
-      const headline =
-        '<div style="font-size:17px;font-weight:700;color:var(--text);">' +
-          w.name +
-          ' <span style="font-size:13px;font-weight:400;color:var(--text-sub);">· ' + w.agencyId + '</span>' +
+      // Col 2: name + agency ID
+      const workerInfo =
+        '<div>' +
+          '<div style="font-size:17px;font-weight:700;color:var(--text);">' + w.name + '</div>' +
+          '<div style="font-size:13px;color:var(--text-sub);margin-top:2px;">' + w.agencyId + '</div>' +
         '</div>';
 
-      let info;
-      if (hasOut) {
-        // Two timestamp columns side by side
-        info =
-          '<div class="worker-badge-info">' +
-            headline +
-            '<div style="display:flex;gap:28px;margin-top:6px;">' +
-              '<div>' +
-                '<div style="font-size:11px;font-weight:700;color:var(--green-text);letter-spacing:0.06em;">CHECK-IN</div>' +
-                '<div style="font-size:20px;font-weight:700;color:var(--text);margin-top:2px;">' + w.inTime + '</div>' +
-              '</div>' +
-              '<div>' +
-                '<div style="font-size:11px;font-weight:700;color:var(--red-text);letter-spacing:0.06em;">CHECK-OUT</div>' +
-                '<div style="font-size:20px;font-weight:700;color:var(--text);margin-top:2px;">' + w.outTime + '</div>' +
-              '</div>' +
-            '</div>' +
-          '</div>';
-      } else {
-        // Single timestamp
-        info =
-          '<div class="worker-badge-info">' +
-            headline +
-            '<div style="margin-top:6px;">' +
-              '<div style="font-size:11px;font-weight:700;color:var(--green-text);letter-spacing:0.06em;">CHECK-IN</div>' +
-              '<div style="font-size:20px;font-weight:700;color:var(--text);margin-top:2px;">' + w.inTime + '</div>' +
-            '</div>' +
-          '</div>';
-      }
+      // Col 3: check-in (always populated)
+      const checkIn =
+        '<div class="checkin-time-col">' +
+          '<div class="checkin-time-type in">CHECK-IN</div>' +
+          '<div class="checkin-time-val">' + w.inTime + '</div>' +
+        '</div>';
 
-      // Buttons: stacked vertically for two-timestamp state, side-by-side for single
-      let buttons;
-      if (hasOut) {
-        buttons =
-          '<div class="checkin-row-buttons">' +
+      // Col 4: check-out (empty placeholder when none)
+      const checkOut = hasOut
+        ? '<div class="checkin-time-col">' +
+            '<div class="checkin-time-type out">CHECK-OUT</div>' +
+            '<div class="checkin-time-val">' + w.outTime + '</div>' +
+          '</div>'
+        : '<div></div>';
+
+      // Col 5: buttons
+      const buttons = hasOut
+        ? '<div class="checkin-row-buttons">' +
             '<button class="checkin-action-btn btn-edit" onclick="event.stopPropagation();openCheckinModal(' + idx + ')">' + PENCIL_SVG + ' Edit Check-In</button>' +
             '<button class="checkin-action-btn btn-checkout" onclick="event.stopPropagation();openCheckoutModal(' + idx + ')">' + PENCIL_SVG + ' Edit Check-Out</button>' +
-          '</div>';
-      } else {
-        buttons =
-          '<div class="checkin-row-buttons">' +
+          '</div>'
+        : '<div class="checkin-row-buttons">' +
             '<button class="checkin-action-btn btn-edit" onclick="event.stopPropagation();openCheckinModal(' + idx + ')">' + PENCIL_SVG + ' Edit Check-In</button>' +
             '<button class="checkin-action-btn btn-checkout" onclick="event.stopPropagation();openCheckoutModal(' + idx + ')">Check Out</button>' +
           '</div>';
-      }
 
-      row.innerHTML = avatar + info + buttons;
+      row.innerHTML = avatar + workerInfo + checkIn + checkOut + buttons;
       row.addEventListener('click', () => openCheckinModal(idx));
       body.appendChild(row);
     });
