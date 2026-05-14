@@ -218,24 +218,67 @@
     .badge-gray   { background: var(--gray-bg);   color: var(--gray-text);  }
     .badge-blue   { background: var(--blue-light); color: var(--blue);      }
 
+    /* ── Mockup state switcher ── */
+    .mockup-switcher {
+      display: flex;
+      gap: 0;
+      padding: 10px 16px;
+      background: #f0f0f0;
+      border-bottom: 1px solid #d8d8d8;
+      flex-shrink: 0;
+      align-items: center;
+    }
+    .mockup-switcher-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-right: 10px;
+      white-space: nowrap;
+    }
+    .mockup-switch-btn {
+      padding: 7px 18px;
+      font-size: 13px;
+      font-weight: 600;
+      border: 1.5px solid #aaa;
+      background: transparent;
+      color: #555;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .mockup-switch-btn:first-of-type { border-radius: 6px 0 0 6px; }
+    .mockup-switch-btn:last-of-type  { border-radius: 0 6px 6px 0; border-left: none; }
+    .mockup-switch-btn.active {
+      background: #444;
+      border-color: #444;
+      color: #fff;
+    }
+
     /* ── Alert banner ── */
     .alert-banner {
       display: flex;
       align-items: center;
-      background: #fef3e2;
-      border-bottom: 2px solid #f39c12;
       padding: 14px 20px;
       gap: 12px;
       flex-shrink: 0;
     }
+    .alert-banner.amber {
+      background: #fef3e2;
+      border-bottom: 2px solid #f39c12;
+    }
+    .alert-banner.blue {
+      background: #e8f4fc;
+      border-bottom: 2px solid #aed6f1;
+    }
     .alert-text {
       flex: 1;
       font-size: 15px;
-      color: #7d4e00;
       font-weight: 500;
     }
+    .alert-banner.amber .alert-text { color: #7d4e00; }
+    .alert-banner.blue  .alert-text { color: #1a4a6b; }
     .alert-btn {
-      background: #e67e22;
       color: #fff;
       border: none;
       border-radius: 8px;
@@ -246,7 +289,14 @@
       min-height: var(--touch-min);
       -webkit-tap-highlight-color: transparent;
     }
-    .alert-btn:active { background: #d35400; }
+    .alert-banner.amber .alert-btn { background: #e67e22; }
+    .alert-banner.amber .alert-btn:active { background: #d35400; }
+    .alert-btn.outline {
+      background: transparent;
+      border: 2px solid var(--text);
+      color: var(--text);
+    }
+    .alert-btn.outline:active { background: rgba(0,0,0,0.06); }
 
     /* ── Filter pill bar ── */
     .filter-bar {
@@ -396,13 +446,13 @@
       margin-top: 2px;
     }
     .event-edit-btn {
-      background: none;
-      border: 1.5px solid var(--gray-border);
+      background: var(--blue);
+      border: none;
       border-radius: 8px;
       padding: 0 18px;
       font-size: 14px;
       font-weight: 600;
-      color: var(--blue);
+      color: #fff;
       cursor: pointer;
       min-height: 56px;
       min-width: 100px;
@@ -413,7 +463,7 @@
       gap: 6px;
       -webkit-tap-highlight-color: transparent;
     }
-    .event-edit-btn:active { background: var(--blue-light); }
+    .event-edit-btn:active { opacity: 0.85; }
 
     /* ── Worker badge info ── */
     .worker-badge-info { flex: 1; min-width: 0; }
@@ -1036,12 +1086,17 @@
       <span class="header-title">Training Types (8)</span>
     </div>
 
-    <div class="screen-explainer">Select the type of work each worker performed during this shift. Tap a chip to assign. Tap Save all when done.</div>
+    <!-- Mockup-only state switcher — remove in real implementation -->
+    <div class="mockup-switcher">
+      <span class="mockup-switcher-label">Mockup state:</span>
+      <button class="mockup-switch-btn active" id="tt-state-empty" onclick="setTTState('empty')">Empty State</button>
+      <button class="mockup-switch-btn" id="tt-state-inprogress" onclick="setTTState('inprogress')">In Progress</button>
+    </div>
 
     <!-- Alert banner -->
-    <div class="alert-banner" id="tt-alert-banner">
-      <div class="alert-text" id="tt-alert-text">⚠ Missing Training Types: 3 workers have no types assigned.</div>
-      <button class="alert-btn" id="tt-filter-btn" onclick="toggleMissingFilter()">Show missing only</button>
+    <div class="alert-banner blue" id="tt-alert-banner">
+      <div class="alert-text" id="tt-alert-text">Select the type of work each worker performed during this shift. Tap a chip to assign — you can select more than one. Tap Save all when finished.</div>
+      <button class="alert-btn outline" id="tt-filter-btn" onclick="toggleMissingFilter()" style="display:none">Show missing only</button>
     </div>
 
     <div class="list-body" id="tt-list-body" style="padding-bottom:80px">
@@ -1069,11 +1124,11 @@
       <button class="filter-pill" id="filter-all-lines" onclick="setLineFilter('all')">All Lines</button>
       <div class="filter-divider"></div>
       <button class="filter-pill active" id="filter-all-events" onclick="setEventFilter('all')">All Events</button>
-      <button class="filter-pill" id="filter-clock-in" onclick="setEventFilter('in')">Clock-In</button>
-      <button class="filter-pill" id="filter-clock-out" onclick="setEventFilter('out')">Clock-Out</button>
+      <button class="filter-pill" id="filter-clock-in" onclick="setEventFilter('in')">Check-In</button>
+      <button class="filter-pill" id="filter-clock-out" onclick="setEventFilter('out')">Check-Out</button>
     </div>
 
-    <div class="screen-explainer">Use this screen to view and correct historical clock-in and clock-out events. Edits are logged and attributed to your admin session.</div>
+    <div class="screen-explainer">Use this screen to view and correct historical check-in and check-out events. Edits are logged and attributed to your admin session.</div>
 
     <div class="list-body">
 
@@ -1091,49 +1146,45 @@
         </div>
 
         <div class="events-list open" id="events-worker-1">
-          <!-- Event 1 — CLOCK-IN, LINE-14 (same line), line transfer -->
-          <div class="event-row" style="cursor:pointer" onclick="handleEditEvent(event, 'LINE-14', 'Sergey Gorbach', '9:01 PM', '05/12 9:01 PM · From LINE-03 → LINE-14')">
+          <!-- Event 1: Check-In, LINE-14, transferred from LINE-03 -->
+          <div class="event-row" style="cursor:pointer" onclick="handleEditEvent(event, 'LINE-14', 'Sergey Gorbach', '9:01 PM', '05/12 9:01 PM · LINE-14')">
             <div class="event-icon"><svg viewBox="0 0 10 10" fill="#27ae60" xmlns="http://www.w3.org/2000/svg"><circle cx="5" cy="5" r="5"/></svg></div>
             <div class="event-info">
-              <div class="event-datetime-primary">05/12 9:01 PM · LINE-14</div>
-              <div class="event-type-label in">CLOCK-IN</div>
-              <div class="event-transfer-line">From LINE-03 → LINE-14</div>
+              <div class="event-type-label in">CHECK-IN</div>
+              <div class="event-datetime-primary">05/12 9:01 PM · LINE-14 <span style="color:var(--text-sub);font-weight:400">(Transferred from LINE-03)</span></div>
             </div>
             <div class="event-row-right">
-              <button class="event-edit-btn" onclick="event.stopPropagation(); handleEditEvent(event, 'LINE-14', 'Sergey Gorbach', '9:01 PM', '05/12 9:01 PM · From LINE-03 → LINE-14')"><svg width="13" height="13" viewBox="0 0 14 14" fill="currentColor" aria-hidden="true"><path d="M9.95 1.05a1.5 1.5 0 0 1 2.12 0l.88.88a1.5 1.5 0 0 1 0 2.12L4.5 12.5 1 13l.5-3.5 8.45-8.45z"/><path d="M1 13l.5-3.5 3 3L1 13z"/></svg> Edit</button>
+              <button class="event-edit-btn" onclick="event.stopPropagation(); handleEditEvent(event, 'LINE-14', 'Sergey Gorbach', '9:01 PM', '05/12 9:01 PM · LINE-14')"><svg width="13" height="13" viewBox="0 0 14 14" fill="currentColor" aria-hidden="true"><path d="M9.95 1.05a1.5 1.5 0 0 1 2.12 0l.88.88a1.5 1.5 0 0 1 0 2.12L4.5 12.5 1 13l.5-3.5 8.45-8.45z"/><path d="M1 13l.5-3.5 3 3L1 13z"/></svg> Edit</button>
             </div>
           </div>
-          <!-- Event 2 — CLOCK-OUT, LINE-03, system-generated (auto clock-out on transfer) -->
-          <div class="event-row" style="cursor:pointer" onclick="handleEditEvent(event, 'LINE-03', 'Sergey Gorbach', '1:07 PM', '05/12 1:07 PM · From LINE-17 → LINE-03')">
+          <!-- Event 2: Check-Out, LINE-03, system-generated on transfer -->
+          <div class="event-row" style="cursor:pointer" onclick="handleEditEvent(event, 'LINE-03', 'Sergey Gorbach', '1:07 PM', '05/12 1:07 PM · LINE-03')">
             <div class="event-icon"><svg viewBox="0 0 10 10" fill="#c0392b" xmlns="http://www.w3.org/2000/svg"><circle cx="5" cy="5" r="5"/></svg></div>
             <div class="event-info">
-              <div class="event-datetime-primary">05/12 1:07 PM · LINE-03</div>
-              <div class="event-type-label out">CLOCK-OUT</div>
-              <div class="event-transfer-line">From LINE-17 → LINE-03</div>
+              <div class="event-type-label out" style="display:flex;align-items:center;gap:8px">CHECK-OUT <span class="event-sys-badge">System Generated</span></div>
+              <div class="event-datetime-primary">05/12 1:07 PM · LINE-03 <span style="color:var(--text-sub);font-weight:400">(Transferred from LINE-17)</span></div>
             </div>
             <div class="event-row-right">
-              <span class="event-sys-badge">System Generated</span>
-              <button class="event-edit-btn" onclick="event.stopPropagation(); handleEditEvent(event, 'LINE-03', 'Sergey Gorbach', '1:07 PM', '05/12 1:07 PM · From LINE-17 → LINE-03')"><svg width="13" height="13" viewBox="0 0 14 14" fill="currentColor" aria-hidden="true"><path d="M9.95 1.05a1.5 1.5 0 0 1 2.12 0l.88.88a1.5 1.5 0 0 1 0 2.12L4.5 12.5 1 13l.5-3.5 8.45-8.45z"/><path d="M1 13l.5-3.5 3 3L1 13z"/></svg> Edit</button>
+              <button class="event-edit-btn" onclick="event.stopPropagation(); handleEditEvent(event, 'LINE-03', 'Sergey Gorbach', '1:07 PM', '05/12 1:07 PM · LINE-03')"><svg width="13" height="13" viewBox="0 0 14 14" fill="currentColor" aria-hidden="true"><path d="M9.95 1.05a1.5 1.5 0 0 1 2.12 0l.88.88a1.5 1.5 0 0 1 0 2.12L4.5 12.5 1 13l.5-3.5 8.45-8.45z"/><path d="M1 13l.5-3.5 3 3L1 13z"/></svg> Edit</button>
             </div>
           </div>
-          <!-- Event 3 — CLOCK-IN, LINE-17, line transfer -->
-          <div class="event-row" style="cursor:pointer" onclick="handleEditEvent(event, 'LINE-17', 'Sergey Gorbach', '8:20 PM', '05/11 8:20 PM · From LINE-03 → LINE-17')">
+          <!-- Event 3: Check-In, LINE-17, transferred from LINE-03 -->
+          <div class="event-row" style="cursor:pointer" onclick="handleEditEvent(event, 'LINE-17', 'Sergey Gorbach', '8:20 PM', '05/11 8:20 PM · LINE-17')">
             <div class="event-icon"><svg viewBox="0 0 10 10" fill="#27ae60" xmlns="http://www.w3.org/2000/svg"><circle cx="5" cy="5" r="5"/></svg></div>
             <div class="event-info">
-              <div class="event-datetime-primary">05/11 8:20 PM · LINE-17</div>
-              <div class="event-type-label in">CLOCK-IN</div>
-              <div class="event-transfer-line">From LINE-03 → LINE-17</div>
+              <div class="event-type-label in">CHECK-IN</div>
+              <div class="event-datetime-primary">05/11 8:20 PM · LINE-17 <span style="color:var(--text-sub);font-weight:400">(Transferred from LINE-03)</span></div>
             </div>
             <div class="event-row-right">
-              <button class="event-edit-btn" onclick="event.stopPropagation(); handleEditEvent(event, 'LINE-17', 'Sergey Gorbach', '8:20 PM', '05/11 8:20 PM · From LINE-03 → LINE-17')"><svg width="13" height="13" viewBox="0 0 14 14" fill="currentColor" aria-hidden="true"><path d="M9.95 1.05a1.5 1.5 0 0 1 2.12 0l.88.88a1.5 1.5 0 0 1 0 2.12L4.5 12.5 1 13l.5-3.5 8.45-8.45z"/><path d="M1 13l.5-3.5 3 3L1 13z"/></svg> Edit</button>
+              <button class="event-edit-btn" onclick="event.stopPropagation(); handleEditEvent(event, 'LINE-17', 'Sergey Gorbach', '8:20 PM', '05/11 8:20 PM · LINE-17')"><svg width="13" height="13" viewBox="0 0 14 14" fill="currentColor" aria-hidden="true"><path d="M9.95 1.05a1.5 1.5 0 0 1 2.12 0l.88.88a1.5 1.5 0 0 1 0 2.12L4.5 12.5 1 13l.5-3.5 8.45-8.45z"/><path d="M1 13l.5-3.5 3 3L1 13z"/></svg> Edit</button>
             </div>
           </div>
-          <!-- Event 4 — CLOCK-IN, LINE-03 -->
+          <!-- Event 4: Check-In, LINE-03 -->
           <div class="event-row" style="cursor:pointer" onclick="handleEditEvent(event, 'LINE-03', 'Sergey Gorbach', '2:47 PM', '05/11 2:47 PM · LINE-03')">
             <div class="event-icon"><svg viewBox="0 0 10 10" fill="#27ae60" xmlns="http://www.w3.org/2000/svg"><circle cx="5" cy="5" r="5"/></svg></div>
             <div class="event-info">
+              <div class="event-type-label in">CHECK-IN</div>
               <div class="event-datetime-primary">05/11 2:47 PM · LINE-03</div>
-              <div class="event-type-label in">CLOCK-IN</div>
             </div>
             <div class="event-row-right">
               <button class="event-edit-btn" onclick="event.stopPropagation(); handleEditEvent(event, 'LINE-03', 'Sergey Gorbach', '2:47 PM', '05/11 2:47 PM · LINE-03')"><svg width="13" height="13" viewBox="0 0 14 14" fill="currentColor" aria-hidden="true"><path d="M9.95 1.05a1.5 1.5 0 0 1 2.12 0l.88.88a1.5 1.5 0 0 1 0 2.12L4.5 12.5 1 13l.5-3.5 8.45-8.45z"/><path d="M1 13l.5-3.5 3 3L1 13z"/></svg> Edit</button>
@@ -1159,30 +1210,29 @@
           <div class="event-row" style="cursor:pointer" onclick="handleEditEvent(event, 'LINE-14', 'Chulwoo Kim', '8:45 AM', '05/12 8:45 AM · LINE-14')">
             <div class="event-icon"><svg viewBox="0 0 10 10" fill="#27ae60" xmlns="http://www.w3.org/2000/svg"><circle cx="5" cy="5" r="5"/></svg></div>
             <div class="event-info">
+              <div class="event-type-label in">CHECK-IN</div>
               <div class="event-datetime-primary">05/12 8:45 AM · LINE-14</div>
-              <div class="event-type-label in">CLOCK-IN</div>
             </div>
             <div class="event-row-right">
               <button class="event-edit-btn" onclick="event.stopPropagation(); handleEditEvent(event, 'LINE-14', 'Chulwoo Kim', '8:45 AM', '05/12 8:45 AM · LINE-14')"><svg width="13" height="13" viewBox="0 0 14 14" fill="currentColor" aria-hidden="true"><path d="M9.95 1.05a1.5 1.5 0 0 1 2.12 0l.88.88a1.5 1.5 0 0 1 0 2.12L4.5 12.5 1 13l.5-3.5 8.45-8.45z"/><path d="M1 13l.5-3.5 3 3L1 13z"/></svg> Edit</button>
             </div>
           </div>
-          <!-- System-generated auto clock-out at lunch -->
+          <!-- System-generated check-out -->
           <div class="event-row" style="cursor:pointer" onclick="handleEditEvent(event, 'LINE-14', 'Chulwoo Kim', '12:00 PM', '05/12 12:00 PM · LINE-14')">
             <div class="event-icon"><svg viewBox="0 0 10 10" fill="#c0392b" xmlns="http://www.w3.org/2000/svg"><circle cx="5" cy="5" r="5"/></svg></div>
             <div class="event-info">
+              <div class="event-type-label out" style="display:flex;align-items:center;gap:8px">CHECK-OUT <span class="event-sys-badge">System Generated</span></div>
               <div class="event-datetime-primary">05/12 12:00 PM · LINE-14</div>
-              <div class="event-type-label out">CLOCK-OUT</div>
             </div>
             <div class="event-row-right">
-              <span class="event-sys-badge">System Generated</span>
               <button class="event-edit-btn" onclick="event.stopPropagation(); handleEditEvent(event, 'LINE-14', 'Chulwoo Kim', '12:00 PM', '05/12 12:00 PM · LINE-14')"><svg width="13" height="13" viewBox="0 0 14 14" fill="currentColor" aria-hidden="true"><path d="M9.95 1.05a1.5 1.5 0 0 1 2.12 0l.88.88a1.5 1.5 0 0 1 0 2.12L4.5 12.5 1 13l.5-3.5 8.45-8.45z"/><path d="M1 13l.5-3.5 3 3L1 13z"/></svg> Edit</button>
             </div>
           </div>
           <div class="event-row" style="cursor:pointer" onclick="handleEditEvent(event, 'LINE-14', 'Chulwoo Kim', '1:00 PM', '05/12 1:00 PM · LINE-14')">
             <div class="event-icon"><svg viewBox="0 0 10 10" fill="#27ae60" xmlns="http://www.w3.org/2000/svg"><circle cx="5" cy="5" r="5"/></svg></div>
             <div class="event-info">
+              <div class="event-type-label in">CHECK-IN</div>
               <div class="event-datetime-primary">05/12 1:00 PM · LINE-14</div>
-              <div class="event-type-label in">CLOCK-IN</div>
             </div>
             <div class="event-row-right">
               <button class="event-edit-btn" onclick="event.stopPropagation(); handleEditEvent(event, 'LINE-14', 'Chulwoo Kim', '1:00 PM', '05/12 1:00 PM · LINE-14')"><svg width="13" height="13" viewBox="0 0 14 14" fill="currentColor" aria-hidden="true"><path d="M9.95 1.05a1.5 1.5 0 0 1 2.12 0l.88.88a1.5 1.5 0 0 1 0 2.12L4.5 12.5 1 13l.5-3.5 8.45-8.45z"/><path d="M1 13l.5-3.5 3 3L1 13z"/></svg> Edit</button>
@@ -1207,8 +1257,8 @@
           <div class="event-row" style="cursor:pointer" onclick="handleEditEvent(event, 'LINE-14', 'Alexander Taylor', '7:00 AM', '05/13 7:00 AM · LINE-14')">
             <div class="event-icon"><svg viewBox="0 0 10 10" fill="#27ae60" xmlns="http://www.w3.org/2000/svg"><circle cx="5" cy="5" r="5"/></svg></div>
             <div class="event-info">
+              <div class="event-type-label in">CHECK-IN</div>
               <div class="event-datetime-primary">05/13 7:00 AM · LINE-14</div>
-              <div class="event-type-label in">CLOCK-IN</div>
             </div>
             <div class="event-row-right">
               <button class="event-edit-btn" onclick="event.stopPropagation(); handleEditEvent(event, 'LINE-14', 'Alexander Taylor', '7:00 AM', '05/13 7:00 AM · LINE-14')"><svg width="13" height="13" viewBox="0 0 14 14" fill="currentColor" aria-hidden="true"><path d="M9.95 1.05a1.5 1.5 0 0 1 2.12 0l.88.88a1.5 1.5 0 0 1 0 2.12L4.5 12.5 1 13l.5-3.5 8.45-8.45z"/><path d="M1 13l.5-3.5 3 3L1 13z"/></svg> Edit</button>
@@ -1217,8 +1267,8 @@
           <div class="event-row" style="cursor:pointer" onclick="handleEditEvent(event, 'LINE-14', 'Alexander Taylor', '3:30 PM', '05/13 3:30 PM · LINE-14')">
             <div class="event-icon"><svg viewBox="0 0 10 10" fill="#c0392b" xmlns="http://www.w3.org/2000/svg"><circle cx="5" cy="5" r="5"/></svg></div>
             <div class="event-info">
+              <div class="event-type-label out">CHECK-OUT</div>
               <div class="event-datetime-primary">05/13 3:30 PM · LINE-14</div>
-              <div class="event-type-label out">CLOCK-OUT</div>
             </div>
             <div class="event-row-right">
               <button class="event-edit-btn" onclick="event.stopPropagation(); handleEditEvent(event, 'LINE-14', 'Alexander Taylor', '3:30 PM', '05/13 3:30 PM · LINE-14')"><svg width="13" height="13" viewBox="0 0 14 14" fill="currentColor" aria-hidden="true"><path d="M9.95 1.05a1.5 1.5 0 0 1 2.12 0l.88.88a1.5 1.5 0 0 1 0 2.12L4.5 12.5 1 13l.5-3.5 8.45-8.45z"/><path d="M1 13l.5-3.5 3 3L1 13z"/></svg> Edit</button>
@@ -1227,8 +1277,8 @@
           <div class="event-row" style="cursor:pointer" onclick="handleEditEvent(event, 'LINE-14', 'Alexander Taylor', '4:00 PM', '05/13 4:00 PM · LINE-14')">
             <div class="event-icon"><svg viewBox="0 0 10 10" fill="#27ae60" xmlns="http://www.w3.org/2000/svg"><circle cx="5" cy="5" r="5"/></svg></div>
             <div class="event-info">
+              <div class="event-type-label in">CHECK-IN</div>
               <div class="event-datetime-primary">05/13 4:00 PM · LINE-14</div>
-              <div class="event-type-label in">CLOCK-IN</div>
             </div>
             <div class="event-row-right">
               <button class="event-edit-btn" onclick="event.stopPropagation(); handleEditEvent(event, 'LINE-14', 'Alexander Taylor', '4:00 PM', '05/13 4:00 PM · LINE-14')"><svg width="13" height="13" viewBox="0 0 14 14" fill="currentColor" aria-hidden="true"><path d="M9.95 1.05a1.5 1.5 0 0 1 2.12 0l.88.88a1.5 1.5 0 0 1 0 2.12L4.5 12.5 1 13l.5-3.5 8.45-8.45z"/><path d="M1 13l.5-3.5 3 3L1 13z"/></svg> Edit</button>
@@ -1703,8 +1753,20 @@
   const TT_TYPES = ['Stocking','Packing','Folding','Gluing','Palletizing',
                     'Weighing','Tray Making','Inspecting','Fastening','Other'];
 
-  // Initial state per worker
-  const ttWorkers = [
+  // Empty state: no assignments
+  const ttWorkersEmpty = [
+    { id:'jl', initials:'JL', name:'Jessica Le',    role:'Line Worker', selected:[], na:false, otherNote:'' },
+    { id:'em', initials:'EM', name:'Emma Moore',     role:'Line Worker', selected:[], na:false, otherNote:'' },
+    { id:'jl2',initials:'JL', name:'James Lee',      role:'Line Worker', selected:[], na:false, otherNote:'' },
+    { id:'fl', initials:'FL', name:'Frank Lim',      role:'Line Worker', selected:[], na:false, otherNote:'' },
+    { id:'lb', initials:'LB', name:'Lily Baker',     role:'Line Worker', selected:[], na:false, otherNote:'' },
+    { id:'cr', initials:'CR', name:'Carlos Rivera',  role:'Line Worker', selected:[], na:false, otherNote:'' },
+    { id:'an', initials:'AN', name:'Anh Nguyen',     role:'Line Worker', selected:[], na:false, otherNote:'' },
+    { id:'dm', initials:'DM', name:'David Mitchell', role:'Line Worker', selected:[], na:false, otherNote:'' },
+  ];
+
+  // In-progress state: 6 assigned, 2 missing (Lily Baker, Carlos Rivera)
+  const ttWorkersInProgress = [
     { id:'jl', initials:'JL', name:'Jessica Le',    role:'Line Worker', selected:['Stocking'], na:false, otherNote:'' },
     { id:'em', initials:'EM', name:'Emma Moore',     role:'Line Worker', selected:['Stocking'], na:false, otherNote:'' },
     { id:'jl2',initials:'JL', name:'James Lee',      role:'Line Worker', selected:['Packing'],  na:false, otherNote:'' },
@@ -1715,25 +1777,45 @@
     { id:'dm', initials:'DM', name:'David Mitchell', role:'Line Worker', selected:[],           na:true,  otherNote:'' },
   ];
 
+  // Deep-clone a workers array so mutations don't bleed between states
+  function cloneWorkers(src) {
+    return src.map(w => Object.assign({}, w, { selected: w.selected.slice() }));
+  }
+
+  let ttState = 'empty';
+  let ttWorkers = cloneWorkers(ttWorkersEmpty);
+
+  function setTTState(state) {
+    ttState = state;
+    ttWorkers = cloneWorkers(state === 'empty' ? ttWorkersEmpty : ttWorkersInProgress);
+    ttMissingFilter = (state === 'inprogress'); // default missing-only for in-progress
+    document.getElementById('tt-state-empty').classList.toggle('active', state === 'empty');
+    document.getElementById('tt-state-inprogress').classList.toggle('active', state === 'inprogress');
+    initTrainingScreen();
+  }
+
   function workerIsAssigned(w) {
     return w.na || w.selected.length > 0;
   }
 
   function initTrainingScreen() {
-    // Update banner based on state
     const anyAssigned = ttWorkers.some(w => workerIsAssigned(w));
     const missingCount = ttWorkers.filter(w => !workerIsAssigned(w)).length;
+    const banner    = document.getElementById('tt-alert-banner');
     const alertText = document.getElementById('tt-alert-text');
     const filterBtn = document.getElementById('tt-filter-btn');
-    if (!anyAssigned) {
-      alertText.textContent = 'No training types assigned yet. Select types for each worker below.';
+
+    if (ttState === 'empty') {
+      banner.className = 'alert-banner blue';
+      alertText.textContent = 'Select the type of work each worker performed during this shift. Tap a chip to assign — you can select more than one. Tap Save all when finished.';
       filterBtn.style.display = 'none';
       ttMissingFilter = false;
     } else {
-      alertText.textContent = '⚠ Missing Training Types: ' + missingCount + ' worker' + (missingCount !== 1 ? 's' : '') + ' have no types assigned.';
+      banner.className = 'alert-banner amber';
+      alertText.textContent = '⚠ Action required: ' + missingCount + ' worker' + (missingCount !== 1 ? 's' : '') + ' are missing assigned training types.';
       filterBtn.style.display = '';
+      filterBtn.className = 'alert-btn outline';
       filterBtn.textContent = ttMissingFilter ? 'Show all workers' : 'Show missing only';
-      filterBtn.style.background = ttMissingFilter ? '#27ae60' : '';
     }
 
     const body = document.getElementById('tt-list-body');
@@ -1899,6 +1981,26 @@
     if (ttMissingFilter) {
       card.classList.toggle('hidden', assigned);
     }
+    // Check if all workers are now assigned — show success and reveal all
+    if (ttState === 'inprogress' && ttWorkers.every(ww => workerIsAssigned(ww))) {
+      showToast('All workers have training types assigned!');
+      // Clear filter and reveal everyone
+      ttMissingFilter = false;
+      document.querySelectorAll('.tt-worker-card').forEach(c => c.classList.remove('hidden'));
+      const filterBtn = document.getElementById('tt-filter-btn');
+      filterBtn.textContent = 'Show missing only';
+      // Update banner to success
+      const banner = document.getElementById('tt-alert-banner');
+      const alertText = document.getElementById('tt-alert-text');
+      banner.className = 'alert-banner blue';
+      alertText.textContent = 'All workers have training types assigned. Review below, then tap Save all.';
+      filterBtn.style.display = 'none';
+    } else if (ttState === 'inprogress') {
+      // Refresh missing count in banner
+      const missingCount = ttWorkers.filter(ww => !workerIsAssigned(ww)).length;
+      document.getElementById('tt-alert-text').textContent =
+        '⚠ Action required: ' + missingCount + ' worker' + (missingCount !== 1 ? 's' : '') + ' are missing assigned training types.';
+    }
   }
 
   // ─── Missing filter ───────────────────────────────────────────────
@@ -1907,7 +2009,6 @@
     ttMissingFilter = !ttMissingFilter;
     const btn = document.getElementById('tt-filter-btn');
     btn.textContent = ttMissingFilter ? 'Show all workers' : 'Show missing only';
-    btn.style.background = ttMissingFilter ? '#27ae60' : '';
     document.querySelectorAll('.tt-worker-card').forEach(card => {
       const idx = parseInt(card.dataset.idx, 10);
       const w   = ttWorkers[idx];
