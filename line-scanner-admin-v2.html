@@ -524,7 +524,7 @@
       <button class="header-btn" onclick="navigate('screen-admin')" aria-label="Back">←</button>
       <span class="header-title" id="mw-header-title">Manage Workers</span>
       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;flex-shrink:0;padding-right:4px;">
-        <span style="font-size:14px;font-weight:600;color:#fff;">LINE-5 · May 14, 2026</span>
+        <span style="font-size:14px;font-weight:600;color:#fff;">Line 5 · May 14, 2026</span>
         <span style="font-size:12px;color:rgba(255,255,255,0.75);font-weight:400;">12:30 PM · Shift 2</span>
       </div>
     </div>
@@ -743,7 +743,7 @@
         <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#c0392b" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="12" r="8"/><path d="M11 8v4l2.5 2"/><path d="M17 17l4 0M19 15l2 2-2 2"/></svg>
       </div>
       <div class="modal-title-center">Check Out All Workers?</div>
-      <div class="modal-body-center">This will check out all 8 workers currently on LINE-5. This cannot be undone.</div>
+      <div class="modal-body-center">This will check out all 8 workers currently on Line 5. This cannot be undone.</div>
       <div class="modal-actions">
         <button class="btn-full btn-danger"    onclick="closeModal('modal-checkout-all')">Check Out All</button>
         <button class="btn-full btn-secondary" onclick="closeModal('modal-checkout-all')">Cancel</button>
@@ -1058,7 +1058,7 @@
     const chips = [];
     const def = MW_DEFAULT();
     const linesChanged = JSON.stringify(mwFilters.lines.slice().sort()) !== JSON.stringify(def.lines.slice().sort());
-    if (linesChanged) chips.push('LINE-' + mwFilters.lines.join(', '));
+    if (linesChanged) chips.push('Line ' + mwFilters.lines.join(', '));
     if (mwFilters.shift !== def.shift) chips.push('Shift ' + mwFilters.shift);
     if (mwFilters.date === 'custom') {
       const s = mwFilters.customStart, e = mwFilters.customEnd;
@@ -1082,7 +1082,7 @@
     const past     = filtered.filter(w =>  w.past);
 
     if (current.length > 0) {
-      body.appendChild(sectionHeader('Current Shift — LINE-5 · May 14, 2026 · Shift 2'));
+      body.appendChild(sectionHeader('Current Shift — Line 5 · May 14, 2026 · Shift 2'));
       current.forEach(w => body.appendChild(buildMWRow(w, mwWorkers.indexOf(w))));
     }
 
@@ -1096,7 +1096,7 @@
         if (!seen[key]) { seen[key] = true; groups.push({ key, date: w.date, line: w.line, shift: w.shift }); }
       });
       groups.forEach(g => {
-        const label = g.date + ' · LINE-' + g.line + ' · Shift ' + g.shift;
+        const label = g.date + ' · Line ' + g.line + ' · Shift ' + g.shift;
         body.appendChild(sectionHeader(label));
         past.filter(w => w.date === g.date && w.line === g.line && w.shift === g.shift)
             .forEach(w => body.appendChild(buildMWRow(w, mwWorkers.indexOf(w))));
@@ -1129,7 +1129,7 @@
     row.className = 'mw-grid-row' + (w.past ? ' past' : '');
 
     const ctxHtml = w.past
-      ? '<div class="mw-worker-ctx">LINE-' + w.line + ' · Shift ' + w.shift + ' · ' + w.date + '</div>'
+      ? '<div class="mw-worker-ctx">Line ' + w.line + ' · Shift ' + w.shift + ' · ' + w.date + '</div>'
       : '';
 
     const checkOutCol = hasOut
@@ -1263,7 +1263,7 @@
         : '';
       const uuidHtml = e.uuid ? '<div class="audit-uuid">' + e.uuid + '</div>' : '';
       const metaHtml = '<div class="audit-meta">'
-        + '<span>LINE-' + e.line + '</span>'
+        + '<span>Line ' + e.line + '</span>'
         + '<span>·</span>'
         + '<span>Shift ' + e.shift + '</span>'
         + '</div>';
@@ -1272,7 +1272,7 @@
       row.innerHTML =
         '<div class="audit-badge-col"><span class="badge ' + BADGE_CLASSES[e.type] + '">' + BADGE_SVGS[e.type] + ' ' + BADGE_LABELS[e.type] + '</span></div>' +
         '<div class="audit-body">' + nameHtml + uuidHtml + metaHtml + noteHtml + '</div>' +
-        '<div class="audit-timestamp">' + e.datetime + ' · LINE-' + e.line + ' · Shift ' + e.shift + '</div>';
+        '<div class="audit-timestamp">' + e.datetime + ' · Line ' + e.line + ' · Shift ' + e.shift + '</div>';
 
       body.appendChild(row);
     });
