@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EC — Worker Timeline</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f4f5f7; color: #1a1a2e; font-size: 14px; }
+
+  /* Header */
+  .header { background: #fff; border-bottom: 1px solid #e5e7eb; padding: 0 24px; height: 52px; display: flex; align-items: center; }
+  .logo { display: flex; align-items: center; gap: 8px; }
+  .logo-mark { width: 28px; height: 28px; background: #0d9488; border-radius: 6px; display: flex; align-items: center; justify-content: center; }
+  .logo-mark svg { width: 16px; height: 16px; fill: #fff; }
+  .logo-text { font-size: 13px; font-weight: 700; color: #0d9488; letter-spacing: 0.04em; }
+
+  /* Tab nav */
+  .tab-nav { background: #fff; border-bottom: 1px solid #e5e7eb; padding: 0 24px; display: flex; gap: 0; }
+  .tab { padding: 14px 18px; font-size: 13px; font-weight: 500; color: #6b7280; cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; }
+  .tab.active { color: #2563eb; border-bottom-color: #2563eb; }
+
+  /* Filter bar */
+  .filter-bar { background: #fff; border-bottom: 1px solid #e5e7eb; padding: 10px 24px; display: flex; align-items: center; gap: 10px; }
+  .filter-bar input { flex: 0 0 220px; padding: 7px 11px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; color: #374151; outline: none; }
+  .filter-bar input::placeholder { color: #9ca3af; }
+  .filter-bar input:focus { border-color: #2563eb; }
+  .date-dropdown { flex: 1; max-width: 200px; padding: 7px 11px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; color: #374151; background: #fff; cursor: pointer; }
+  .spacer { flex: 1; }
+  .btn-outline { padding: 7px 14px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; color: #374151; background: #fff; cursor: pointer; font-weight: 500; }
+  .btn-outline:hover { background: #f9fafb; }
+  .btn-primary { padding: 7px 14px; border: 1px solid #2563eb; border-radius: 6px; font-size: 13px; color: #fff; background: #2563eb; cursor: pointer; font-weight: 500; }
+  .btn-primary:hover { background: #1d4ed8; }
+
+  /* Page content */
+  .content { padding: 20px 24px; max-width: 1100px; margin: 0 auto; }
+
+  /* Page title */
+  .page-title { margin-bottom: 16px; }
+  .page-title h1 { font-size: 18px; font-weight: 700; color: #111827; }
+  .page-title p { font-size: 12px; color: #6b7280; margin-top: 2px; }
+
+  /* Worker card */
+  .worker-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 14px 18px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+  .worker-left { display: flex; flex-direction: column; gap: 4px; }
+  .worker-name-row { display: flex; align-items: center; gap: 8px; }
+  .worker-name { font-size: 15px; font-weight: 700; color: #111827; }
+  .badge-saa { background: #16a34a; color: #fff; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 999px; letter-spacing: 0.03em; }
+  .worker-meta { font-size: 12px; color: #6b7280; }
+  .worker-right { text-align: right; }
+  .worker-right .label { font-size: 10px; font-weight: 600; color: #9ca3af; letter-spacing: 0.08em; text-transform: uppercase; }
+  .worker-right .shift { font-size: 14px; font-weight: 700; color: #111827; margin-top: 2px; }
+
+  /* Summary cards */
+  .summary-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+  .summary-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 14px 16px; }
+  .summary-card-title { font-size: 11px; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 10px; }
+  .summary-row-item { display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: #374151; margin-bottom: 6px; }
+  .summary-row-item:last-child { margin-bottom: 0; }
+  .summary-row-item .val { color: #9ca3af; font-weight: 500; }
+  .summary-total { font-size: 12px; color: #6b7280; margin-top: 8px; }
+  .line-pill-sm { background: #16a34a; color: #fff; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 999px; }
+
+  /* Toggle */
+  .table-controls { display: flex; justify-content: flex-end; margin-bottom: 8px; }
+  .pill-toggle { display: inline-flex; background: #f3f4f6; border: 1px solid #e5e7eb; border-radius: 999px; padding: 2px; }
+  .pill-toggle button { padding: 4px 14px; border: none; background: transparent; border-radius: 999px; font-size: 12px; font-weight: 500; color: #6b7280; cursor: pointer; transition: background 0.15s, color 0.15s; }
+  .pill-toggle button.active { background: #fff; color: #111827; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+
+  /* Table */
+  .table-wrap { background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden; margin-bottom: 20px; }
+  table { width: 100%; border-collapse: collapse; }
+  thead th { background: #f9fafb; padding: 10px 14px; text-align: left; font-size: 11px; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.06em; border-bottom: 1px solid #e5e7eb; }
+  tbody td { padding: 10px 14px; font-size: 13px; color: #374151; border-bottom: 1px solid #f3f4f6; vertical-align: middle; }
+  tbody tr:last-child td { border-bottom: none; }
+
+  /* Banner rows */
+  .banner-row td { background: #fffbeb; padding: 10px 14px; }
+  .banner-text { color: #b45309; font-style: italic; font-size: 13px; }
+
+  /* Status pills */
+  .pill-green { background: #16a34a; color: #fff; font-size: 11px; font-weight: 600; padding: 2px 9px; border-radius: 999px; display: inline-block; }
+  .pill-orange { color: #ea580c; font-size: 12px; font-weight: 500; display: inline-flex; align-items: center; gap: 4px; }
+  .sys-badge { background: #fbbf24; color: #7c2d12; font-size: 10px; font-weight: 700; padding: 1px 5px; border-radius: 4px; margin-left: 5px; vertical-align: middle; letter-spacing: 0.03em; }
+  .line-pill { background: #16a34a; color: #fff; font-size: 11px; font-weight: 700; padding: 2px 9px; border-radius: 999px; display: inline-block; }
+
+  /* Gap Analysis */
+  .gap-section { background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden; }
+  .gap-section-title { padding: 14px 16px 0; font-size: 13px; font-weight: 700; color: #111827; }
+  .gap-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+  .gap-table th { background: #f9fafb; padding: 9px 14px; text-align: left; font-size: 11px; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.06em; border-bottom: 1px solid #e5e7eb; border-top: 1px solid #e5e7eb; }
+  .gap-table td { padding: 9px 14px; font-size: 13px; color: #374151; border-bottom: 1px solid #f3f4f6; }
+  .gap-table tbody tr:last-child td { border-bottom: none; }
+  .gap-type { font-weight: 600; color: #111827; }
+  .gap-dur { color: #2563eb; font-weight: 600; }
+
+  /* Live pulse */
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+  .live-dot { width: 7px; height: 7px; background: #22c55e; border-radius: 50%; display: inline-block; animation: pulse 1.6s ease-in-out infinite; margin-right: 5px; vertical-align: middle; }
+  .live-dur { color: #9ca3af; font-size: 13px; display: flex; align-items: center; }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  <div class="logo">
+    <div class="logo-mark">
+      <svg viewBox="0 0 16 16"><path d="M8 2L2 5.5v5L8 14l6-3.5v-5L8 2zm0 1.8l4.2 2.45v3.5L8 12.2 3.8 9.75v-3.5L8 3.8z"/></svg>
+    </div>
+    <span class="logo-text">EC</span>
+  </div>
+</div>
+
+<!-- Tab nav -->
+<div class="tab-nav">
+  <div class="tab">All Lines</div>
+  <div class="tab">Line Summary</div>
+  <div class="tab">AS400 Compare</div>
+  <div class="tab">Exceptions</div>
+  <div class="tab active">Worker Timeline</div>
+  <div class="tab">Agency View</div>
+</div>
+
+<!-- Filter bar -->
+<div class="filter-bar">
+  <input type="text" placeholder="Search worker name or ID…" />
+  <select class="date-dropdown">
+    <option>Today (May 15, 2026)</option>
+  </select>
+  <div class="spacer"></div>
+  <button class="btn-outline">Export</button>
+  <button class="btn-primary">Refresh Data</button>
+</div>
+
+<!-- Page content -->
+<div class="content">
+
+  <!-- Page title -->
+  <div class="page-title">
+    <h1>Worker Timeline</h1>
+    <p>Chronological view of line scanner check-in/check-out events</p>
+  </div>
+
+  <!-- Worker card -->
+  <div class="worker-card">
+    <div class="worker-left">
+      <div class="worker-name-row">
+        <span class="worker-name">Lucas Garcia</span>
+        <span class="badge-saa">SAA</span>
+      </div>
+      <div class="worker-meta">Worker ID: SAA9889 &nbsp;|&nbsp; Agency: Staffing Agency</div>
+    </div>
+    <div class="worker-right">
+      <div class="label">Planned Shift</div>
+      <div class="shift">7:00 AM – 3:30 PM (Shift 1)</div>
+    </div>
+  </div>
+
+  <!-- Summary cards -->
+  <div class="summary-row">
+    <div class="summary-card">
+      <div class="summary-card-title">Shift Summary</div>
+      <div class="summary-row-item"><span>Time on Lines</span><span class="val">—</span></div>
+      <div class="summary-row-item"><span>Core Clock Duration</span><span class="val">—</span></div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-card-title">Line Assignments</div>
+      <div class="summary-row-item">
+        <span><span class="line-pill-sm">LINE 1</span></span>
+        <span class="val">—</span>
+      </div>
+      <div class="summary-total">Total Lines Worked: 1</div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-card-title">Time Accounting</div>
+      <div class="summary-row-item"><span>Pre-Shift Wait</span><span class="val">—</span></div>
+      <div class="summary-row-item"><span>Travel Time</span><span class="val">—</span></div>
+      <div class="summary-row-item"><span>Post-Line Time</span><span class="val">—</span></div>
+    </div>
+  </div>
+
+  <!-- Toggle -->
+  <div class="table-controls">
+    <div class="pill-toggle">
+      <button class="active" id="btn-events" onclick="showView('events')">Events</button>
+      <button id="btn-sessions" onclick="showView('sessions')">Sessions</button>
+    </div>
+  </div>
+
+  <!-- Events table -->
+  <div id="view-events" class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Time</th>
+          <th>Event Type</th>
+          <th>Location</th>
+          <th>Duration</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Shift start banner -->
+        <tr class="banner-row">
+          <td colspan="5"><span class="banner-text">🕐 7:00 AM &nbsp;|&nbsp; Planned Shift Start</span></td>
+        </tr>
+        <tr>
+          <td>8:17 AM</td>
+          <td>Line Check-in</td>
+          <td><span class="line-pill">LINE 1</span></td>
+          <td>17m</td>
+          <td><span class="pill-green">Working</span></td>
+        </tr>
+        <tr>
+          <td>8:34 AM</td>
+          <td>Line Check-out</td>
+          <td><span class="line-pill">LINE 1</span></td>
+          <td>—</td>
+          <td><span class="pill-orange">⚠ Post-line time</span></td>
+        </tr>
+        <tr>
+          <td>8:47 AM</td>
+          <td>Line Check-in</td>
+          <td><span class="line-pill">LINE 1</span></td>
+          <td>30m</td>
+          <td><span class="pill-green">Working</span></td>
+        </tr>
+        <tr>
+          <td>9:17 AM</td>
+          <td>Line Check-out <span class="sys-badge">SYS</span></td>
+          <td><span class="line-pill">LINE 1</span></td>
+          <td>—</td>
+          <td><span class="pill-orange">⚠</span></td>
+        </tr>
+        <tr>
+          <td>9:17 AM</td>
+          <td>Line Check-in</td>
+          <td><span class="line-pill">LINE 1</span></td>
+          <td>24m</td>
+          <td><span class="pill-green">Working</span></td>
+        </tr>
+        <tr>
+          <td>9:41 AM</td>
+          <td>Line Check-out <span class="sys-badge">SYS</span></td>
+          <td><span class="line-pill">LINE 1</span></td>
+          <td>—</td>
+          <td><span class="pill-orange">⚠</span></td>
+        </tr>
+        <tr>
+          <td>9:41 AM</td>
+          <td>Line Check-in</td>
+          <td><span class="line-pill">LINE 1</span></td>
+          <td>20m</td>
+          <td><span class="pill-green">Working</span></td>
+        </tr>
+        <tr>
+          <td>10:01 AM</td>
+          <td>Line Check-out <span class="sys-badge">SYS</span></td>
+          <td><span class="line-pill">LINE 1</span></td>
+          <td>—</td>
+          <td><span class="pill-orange">⚠</span></td>
+        </tr>
+        <tr>
+          <td>10:01 AM</td>
+          <td>Line Check-in</td>
+          <td><span class="line-pill">LINE 16</span></td>
+          <td>4h 2m</td>
+          <td><span class="pill-green">Working</span></td>
+        </tr>
+        <tr>
+          <td>2:04 PM</td>
+          <td>Line Check-out</td>
+          <td><span class="line-pill">LINE 16</span></td>
+          <td>—</td>
+          <td><span class="pill-orange">⚠ Post-line time</span></td>
+        </tr>
+        <!-- Shift end banner -->
+        <tr class="banner-row">
+          <td colspan="5"><span class="banner-text">🕞 3:30 PM &nbsp;|&nbsp; Planned Shift End</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Sessions table -->
+  <div id="view-sessions" class="table-wrap" style="display:none;">
+    <table>
+      <thead>
+        <tr>
+          <th>Line</th>
+          <th>Check-in</th>
+          <th>Check-out</th>
+          <th>Duration</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="line-pill">LINE 1</span></td>
+          <td>8:17 AM</td>
+          <td>8:34 AM</td>
+          <td>17m</td>
+          <td></td>
+        </tr>
+        <tr>
+          <td><span class="line-pill">LINE 1</span></td>
+          <td>8:47 AM</td>
+          <td>9:17 AM <span class="sys-badge">SYS</span></td>
+          <td>30m</td>
+          <td></td>
+        </tr>
+        <tr>
+          <td><span class="line-pill">LINE 1</span></td>
+          <td>9:17 AM</td>
+          <td>9:41 AM <span class="sys-badge">SYS</span></td>
+          <td>24m</td>
+          <td></td>
+        </tr>
+        <tr>
+          <td><span class="line-pill">LINE 1</span></td>
+          <td>9:41 AM</td>
+          <td>10:01 AM <span class="sys-badge">SYS</span></td>
+          <td>20m</td>
+          <td></td>
+        </tr>
+        <tr>
+          <td><span class="line-pill">LINE 16</span></td>
+          <td>10:01 AM</td>
+          <td>2:04 PM</td>
+          <td>4h 2m</td>
+          <td></td>
+        </tr>
+        <!-- In-progress live row -->
+        <tr>
+          <td><span class="line-pill">LINE 16</span></td>
+          <td>2:04 PM</td>
+          <td>—</td>
+          <td><span class="live-dur"><span class="live-dot"></span>1h 14m</span></td>
+          <td></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Gap Analysis -->
+  <div class="gap-section">
+    <div class="gap-section-title">Gap Analysis</div>
+    <table class="gap-table">
+      <thead>
+        <tr>
+          <th>Gap Type</th>
+          <th>Duration</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="gap-type">Travel Time</td>
+          <td class="gap-dur">1h 17m</td>
+          <td>7:00 AM (Shift Start) to 8:17 AM (LINE 1 Check-in)</td>
+        </tr>
+        <tr>
+          <td class="gap-type">Mid-Shift Gap</td>
+          <td class="gap-dur">13m</td>
+          <td>8:34 AM (LINE 1 Check-out) to 8:47 AM (LINE 1 Check-in)</td>
+        </tr>
+        <tr>
+          <td class="gap-type">Post-line time</td>
+          <td class="gap-dur">1h 26m</td>
+          <td>2:04 PM (LINE 16 Check-out) to 3:30 PM (Shift End)</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<script>
+  function showView(view) {
+    document.getElementById('view-events').style.display = view === 'events' ? '' : 'none';
+    document.getElementById('view-sessions').style.display = view === 'sessions' ? '' : 'none';
+    document.getElementById('btn-events').classList.toggle('active', view === 'events');
+    document.getElementById('btn-sessions').classList.toggle('active', view === 'sessions');
+  }
+</script>
+
+</body>
+</html>
