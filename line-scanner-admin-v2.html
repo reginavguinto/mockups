@@ -312,8 +312,9 @@
     .mw-time-type   { font-size: 11px; font-weight: 700; letter-spacing: 0.06em; }
     .mw-time-type.in  { color: var(--green-text); }
     .mw-time-type.out { color: var(--red-text); }
-    .mw-time-val    { font-size: 20px; font-weight: 700; color: var(--text); white-space: nowrap; }
+    .mw-time-val    { font-size: 20px; font-weight: 700; color: var(--text); white-space: nowrap; display: flex; align-items: center; gap: 6px; }
     .mw-time-val.past { color: var(--text-sub); font-size: 18px; }
+    .mw-edited-dot  { width: 8px; height: 8px; border-radius: 50%; background: var(--orange-text); flex-shrink: 0; display: inline-block; }
     .mw-buttons {
       display: flex; flex-direction: row; gap: 8px; align-items: center;
       margin-left: auto; flex-shrink: 0;
@@ -926,9 +927,9 @@
   const PENCIL = '<svg width="13" height="13" viewBox="0 0 14 14" fill="currentColor" aria-hidden="true"><path d="M9.95 1.05a1.5 1.5 0 0 1 2.12 0l.88.88a1.5 1.5 0 0 1 0 2.12L4.5 12.5 1 13l.5-3.5 8.45-8.45z"/><path d="M1 13l.5-3.5 3 3L1 13z"/></svg>';
 
   const mwWorkers = [
-    { id:'jl',  initials:'JL', name:'Jessica Le',     agencyId:'SAA-1042', inTime:'12:30 PM', outTime:'2:45 PM', shift:2, line:5,  date:'May 14', past:false },
-    { id:'em',  initials:'EM', name:'Emma Moore',     agencyId:'SAA-2187', inTime:'12:30 PM', outTime:'',        shift:2, line:5,  date:'May 14', past:false },
-    { id:'jl2', initials:'JL', name:'James Lee',      agencyId:'SAA-3391', inTime:'10:44 AM', outTime:'',        shift:2, line:5,  date:'May 14', past:false },
+    { id:'jl',  initials:'JL', name:'Jessica Le',     agencyId:'SAA-1042', inTime:'12:30 PM', outTime:'2:45 PM', shift:2, line:5,  date:'May 14', past:false, inEdited:false, outEdited:true  },
+    { id:'em',  initials:'EM', name:'Emma Moore',     agencyId:'SAA-2187', inTime:'12:30 PM', outTime:'',        shift:2, line:5,  date:'May 14', past:false, inEdited:false, outEdited:false },
+    { id:'jl2', initials:'JL', name:'James Lee',      agencyId:'SAA-3391', inTime:'10:44 AM', outTime:'',        shift:2, line:5,  date:'May 14', past:false, inEdited:true,  outEdited:false },
     { id:'fl',  initials:'FL', name:'Frank Lim',      agencyId:'SAA-4056', inTime:'12:30 PM', outTime:'',        shift:2, line:5,  date:'May 14', past:false },
     { id:'lb',  initials:'LB', name:'Lily Baker',     agencyId:'SAA-5278', inTime:'12:30 PM', outTime:'',        shift:2, line:5,  date:'May 14', past:false },
     { id:'cr',  initials:'CR', name:'Carlos Rivera',  agencyId:'SAA-6613', inTime:'11:15 AM', outTime:'',        shift:2, line:5,  date:'May 14', past:false },
@@ -1209,8 +1210,9 @@
       ? '<div class="mw-worker-ctx">Line ' + w.line + ' · Shift ' + w.shift + ' · ' + w.date + '</div>'
       : '';
 
+    const editedDot = '<span class="mw-edited-dot" title="Manually edited"></span>';
     const checkOutCol = hasOut
-      ? '<div class="mw-time-col"><div class="mw-time-type out">CHECK-OUT</div><div class="mw-time-val' + (w.past ? ' past' : '') + '">' + w.outTime + '</div></div>'
+      ? '<div class="mw-time-col"><div class="mw-time-type out">CHECK-OUT</div><div class="mw-time-val' + (w.past ? ' past' : '') + '">' + w.outTime + (w.outEdited ? editedDot : '') + '</div></div>'
       : '<div class="mw-time-col"></div>';
 
     const buttons = hasOut
@@ -1234,7 +1236,7 @@
         '<div class="mw-timestamps">' +
           '<div class="mw-time-col">' +
             '<div class="mw-time-type in">CHECK-IN</div>' +
-            '<div class="mw-time-val' + (w.past ? ' past' : '') + '">' + w.inTime + '</div>' +
+            '<div class="mw-time-val' + (w.past ? ' past' : '') + '">' + w.inTime + (w.inEdited ? editedDot : '') + '</div>' +
           '</div>' +
           checkOutCol +
         '</div>' +
